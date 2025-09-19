@@ -1,5 +1,11 @@
 require('dotenv').config(); //env 
 
+// location 
+
+
+const locationRoutes = require("./routes/locationRoutes");
+
+//
 const express = require('express');
 const mongoose = require('mongoose');
 const { Gig } = require('./models/Gigmodel');
@@ -373,7 +379,27 @@ app.get("/my-applications", isLoggedIn, async (req, res) => {
   }
 });
 
+//
+app.use("/api", locationRoutes);
 
+
+// popular categories
+
+// ✅ Get gigs by category
+app.get('/getGigsByCategory/:category', WrapAsync(async (req, res) => {
+  try {
+    const category = req.params.category;
+    let gigs = await Gig.find({ category: { $regex: new RegExp(category, "i") } });
+    res.json(gigs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server Error" });
+  }
+}));
+
+
+
+//
 
 app.listen(PORT,()=>{
     console.log("App started!")

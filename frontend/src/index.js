@@ -17,6 +17,11 @@ import { AuthProvider } from './context/AuthContext';
 import Footer from './Landing_page/Footer';
 import ApplyGigForm from './Landing_page/Apply/ApplyGigForm';
 import ApplicationHistory from './Landing_page/Apply/ApplicationHistory';
+import EditProfile from './Update_pro/EditProfile';
+import CategoryGigs from './Landing_page/Home/CategoryGigs';
+
+
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -34,8 +39,13 @@ root.render(
       <Route path='/postService' element={<PostServiceForm/>}></Route>
       <Route path='/signUp' element={<SignUp/>}></Route>
       <Route path='/login' element={<SignIn/>}></Route>
+
       <Route path='/apply/:gigId' element={<ApplyGigForm/>}></Route>
       <Route path='/applications' element={<ApplicationHistory/>}></Route>
+
+      <Route path='/update-profile' element={<EditProfile/>}></Route>
+      <Route path='/gigs/category/:category' element={<CategoryGigs />} />
+
     </Routes>
     <Footer/>
   </CityProvider>  

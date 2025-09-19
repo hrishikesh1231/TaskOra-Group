@@ -7,16 +7,33 @@ import "./HeroSection.css";
 // ✅ Import your local image
 import heroImage from "./task.jpg";
 
+// ✅ Import Autocomplete
+import AutocompleteInput from "../../Update_pro/AutocompleteInput";
+
+// ✅ Fetch locations (same as in EditProfile.js)
+const API_BASE = "http://localhost:3002";
+const fetchLocations = async (query) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/locations?query=${query}`);
+    if (!res.ok) throw new Error("Bad response " + res.status);
+    const cities = await res.json();
+    return cities;
+  } catch (err) {
+    console.error("Error fetching locations:", err);
+    return [];
+  }
+};
+
 const HeroSection = () => {
   const navigate = useNavigate();
-  const [input, setInput] = useState("");
+  const [cityInput, setCityInput] = useState("");
   const { setCity } = useContext(CityContext);
 
   const handleSearch = () => {
-    const city = input.trim();
+    const city = cityInput.trim();
     if (!city) return;
     setCity(city);
-    setInput("");
+    setCityInput("");
     navigate(`/gigs/${city}`);
   };
 
@@ -25,18 +42,23 @@ const HeroSection = () => {
       <div className="hero-content">
         <div className="left">
           <h1 className="hero-title">
-            Discover <span className="blue-text">Daily</span> <span className="green-text">Tasks</span>
+            Discover <span className="blue-text">Daily</span>{" "}
+            <span className="green-text">Tasks</span>
           </h1>
-          <h5 className="hero-subtitle">Hyperlocal task seeker at your service 🚀</h5>
+          <h5 className="hero-subtitle">
+            Hyperlocal task seeker at your service 🚀
+          </h5>
 
           <div className="search-wrapper">
             <div className="search-box">
               <FaSearch className="icon" />
-              <input
-                type="text"
-                placeholder="Enter Location"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+              {/* ✅ Replace normal input with Autocomplete */}
+              <AutocompleteInput
+                label=""
+                name="city"
+                value={cityInput}
+                onChange={(e) => setCityInput(e.target.value)}
+                fetchSuggestions={fetchLocations}
               />
               <button onClick={handleSearch} className="search-btn">
                 Search
