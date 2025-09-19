@@ -15,6 +15,10 @@ import { Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from './context/AuthContext';
 import Footer from './Landing_page/Footer';
+import EditProfile from './Update_pro/EditProfile';
+import CategoryGigs from './Landing_page/Home/CategoryGigs';
+
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -32,6 +36,9 @@ root.render(
       <Route path='/postService' element={<PostServiceForm/>}></Route>
       <Route path='/signUp' element={<SignUp/>}></Route>
       <Route path='/login' element={<SignIn/>}></Route>
+       <Route path='/update-profile' element={<EditProfile/>}></Route>
+        <Route path='/gigs/category/:category' element={<CategoryGigs />} />
+
     </Routes>
     <Footer/>
   </CityProvider>  

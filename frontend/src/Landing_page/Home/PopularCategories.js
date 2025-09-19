@@ -1,5 +1,6 @@
 import React from "react";
 import "./PopularCategories.css";
+import { useNavigate } from "react-router-dom";
 import { FaCog, FaBook, FaBroom, FaCalendarAlt, FaChalkboardTeacher, FaEllipsisH } from "react-icons/fa";
 
 const categories = [
@@ -12,6 +13,12 @@ const categories = [
 ];
 
 const PopularCategories = () => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (category) => {
+    navigate(`/gigs/category/${category}`); // navigate to new route
+  };
+
   return (
     <section className="categories-section">
       <div className="categories-container">
@@ -19,7 +26,11 @@ const PopularCategories = () => {
 
         <div className="categories-grid">
           {categories.map((cat, index) => (
-            <div className="category-card" key={index}>
+            <div
+              className="category-card"
+              key={index}
+              onClick={() => handleCategoryClick(cat.title)}
+            >
               {cat.icon}
               <h3>{cat.title}</h3>
             </div>
