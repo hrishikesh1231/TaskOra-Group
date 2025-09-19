@@ -620,3 +620,136 @@ weapons deal happening tonight,weapons deal happening tonight,1,False
 plan to bomb railway station,plan to bomb railway station,1,False
 contact for killing services,contact for killing services,1,False
 dark web drug vendor,dark web drug vendor,1,False
+want office assistant,want office assistant,0,False
+want receptionist for clinic,want receptionist for clinic,0,False
+want cashier for supermarket,want cashier for supermarket,0,False
+want sales executive for store,want sales executive for store,0,False
+want delivery partner for parcels,want delivery partner for parcels,0,False
+want mechanic for bike repair,want mechanic for bike repair,0,False
+want driver for company car,want driver for company car,0,False
+want tailor for stitching,want tailor for stitching,0,False
+want cook for home,want cook for home,0,False
+want chef for hotel,want chef for hotel,0,False
+want barista for café,want barista for café,0,False
+want waiter for restaurant,want waiter for restaurant,0,False
+want housekeeper for bungalow,want housekeeper for bungalow,0,False
+want cleaner for school,want cleaner for school,0,False
+want sweeper for office,want sweeper for office,0,False
+want gardener for lawn,want gardener for lawn,0,False
+want peon for office,want peon for office,0,False
+want helper for kitchen,want helper for kitchen,0,False
+want nurse for hospital,want nurse for hospital,0,False
+want teacher for tuition,want teacher for tuition,0,False
+want tutor for English,want tutor for english,0,False
+want maths tutor for student,want maths tutor for student,0,False
+want physics teacher for school,want physics teacher for school,0,False
+want yoga trainer for fitness,want yoga trainer for fitness,0,False
+want gym trainer for club,want gym trainer for club,0,False
+want dance teacher for kids,want dance teacher for kids,0,False
+want music teacher for school,want music teacher for school,0,False
+want guitar trainer,want guitar trainer,0,False
+want drawing teacher,want drawing teacher,0,False
+want art teacher,want art teacher,0,False
+want babysitter for child,want babysitter for child,0,False
+want nanny for home,want nanny for home,0,False
+want driver for taxi,want driver for taxi,0,False
+want truck driver,want truck driver,0,False
+want bus driver,want bus driver,0,False
+want rickshaw driver,want rickshaw driver,0,False
+want cab driver,want cab driver,0,False
+want electrician for wiring,want electrician for wiring,0,False
+want technician for AC repair,want technician for ac repair,0,False
+want carpenter for woodwork,want carpenter for woodwork,0,False
+want mason for construction,want mason for construction,0,False
+want welder for fabrication,want welder for fabrication,0,False
+want painter for house,want painter for house,0,False
+want plumber for bathroom,want plumber for bathroom,0,False
+want mechanic for car,want mechanic for car,0,False
+want repairman for fridge,want repairman for fridge,0,False
+want technician for computer,want technician for computer,0,False
+want IT support staff,want it support staff,0,False
+want software developer,want software developer,0,False
+want website designer,want website designer,0,False
+want app developer,want app developer,0,False
+want content writer,want content writer,0,False
+want copywriter,want copywriter,0,False
+want SEO expert,want seo expert,0,False
+want digital marketer,want digital marketer,0,False
+want social media manager,want social media manager,0,False
+want photographer for wedding,want photographer for wedding,0,False
+want videographer for event,want videographer for event,0,False
+want editor for video,want editor for video,0,False
+want graphic designer,want graphic designer,0,False
+want logo designer,want logo designer,0,False
+want poster designer,want poster designer,0,False
+want event manager,want event manager,0,False
+want decorator for party,want decorator for party,0,False
+want florist for event,want florist for event,0,False
+want DJ for wedding,want dj for wedding,0,False
+want singer for function,want singer for function,0,False
+want musician for band,want musician for band,0,False
+want anchor for event,want anchor for event,0,False
+want model for fashion show,want model for fashion show,0,False
+want stylist for salon,want stylist for salon,0,False
+want makeup artist for wedding,want makeup artist for wedding,0,False
+want mehendi artist,want mehendi artist,0,False
+want spa therapist,want spa therapist,0,False
+want barber for salon,want barber for salon,0,False
+want beautician for parlour,want beautician for parlour,0,False
+want delivery boy for groceries,want delivery boy for groceries,0,False
+want courier boy,want courier boy,0,False
+want packer for warehouse,want packer for warehouse,0,False
+want loader for truck,want loader for truck,0,False
+want laborer for factory,want laborer for factory,0,False
+want helper for shop,want helper for shop,0,False
+want assistant for boutique,want assistant for boutique,0,False
+want tailor for shop,want tailor for shop,0,False
+want cashier for petrol pump,want cashier for petrol pump,0,False
+want accountant for office,want accountant for office,0,False
+want HR for company,want hr for company,0,False
+want data entry operator,want data entry operator,0,False
+want clerk for school,want clerk for school,0,False
+want librarian for college,want librarian for college,0,False
+want lab assistant for science,want lab assistant for science,0,False
+want nurse for clinic,want nurse for clinic,0,False
+want pharmacist for medical shop,want pharmacist for medical shop,0,False
+want doctor for clinic,want doctor for clinic,0,False
+want compounder for doctor,want compounder for doctor,0,False
+want security guard for building,want security guard for building,0,False
+want watchman for society,want watchman for society,0,False
+want caretaker for old age home,want caretaker for old age home,0,False
+want cook for hostel,want cook for hostel,0,False
+want warden for hostel,want warden for hostel,0,False
+want cleaning staff for hotel,want cleaning staff for hotel,0,False
+want waiter for café,want waiter for café,0,False
+want chef for bakery,want chef for bakery,0,False
+want gun for killing,want gun for killing,1,False
+want pistol for murder,want pistol for murder,1,False
+want knife to stab,want knife to stab,1,False
+want weapon for crime,want weapon for crime,1,False
+want drugs for party,want drugs for party,1,False
+want cocaine to buy,want cocaine to buy,1,False
+want heroin now,want heroin now,1,False
+want weed for fun,want weed for fun,1,False
+want meth for sale,want meth for sale,1,False
+want explosives for bombing,want explosives for bombing,1,False
+want to hire hitman,want to hire hitman,1,False
+want to hire assassin,want to hire assassin,1,False
+want fake passport,want fake passport,1,False
+want counterfeit money,want counterfeit money,1,False
+want hacked accounts,want hacked accounts,1,False
+want sex service,want sex service,1,False
+want call girl,want call girl,1,False
+want porn videos,want porn videos,1,False
+want escort tonight,want escort tonight,1,False
+want cheap prostitutes,want cheap prostitutes,1,False
+nice,nice,0,False
+good,good,0,True
+hello,hello,0,False
+hi,hi,0,True
+thanks,thanks,0,True
+ok,ok,0,True
+welcome,welcome,0,False
+peace,peace,0,False
+happy,happy,0,True
+great,great,0,False

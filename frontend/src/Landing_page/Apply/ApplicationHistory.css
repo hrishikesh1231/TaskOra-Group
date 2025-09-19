@@ -1,0 +1,52 @@
+.history-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.history-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.history-card:hover {
+  transform: translateY(-3px);
+}
+
+.preview-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.applied-date {
+  font-size: 13px;
+  color: gray;
+  margin-top: 8px;
+}
+
+.no-history {
+  text-align: center;
+  font-size: 16px;
+  color: #888;
+}
+
+.loading {
+  text-align: center;
+  font-size: 16px;
+  margin-top: 30px;
+}

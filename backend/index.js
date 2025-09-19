@@ -22,6 +22,11 @@ const WrapAsync = require('./utils/WrapAsync');
 const { isLoggedIn } = require('./middlewares/middleware');
 const axios = require("axios");
 
+const multer = require("multer");
+const path = require("path");
+const { upload } = require('./utils/Cloudinary');
+const { Application } = require('./models/ApplicationModel');
+
 
 const url = process.env.MONGO_URL;
 const PORT = process.env.PORT || 3002;
@@ -86,6 +91,17 @@ app.get('/app',(req,res)=>{
 });
 
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // make sure uploads/ exists in backend root
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+// const upload = multer({ storage });
+
 
 
 app.post('/dummy1', WrapAsync(async (req, res) => {
@@ -102,33 +118,33 @@ app.post('/dummy1', WrapAsync(async (req, res) => {
 //new Gig post
 // New Gig post with AI moderation
 // GIGS
+// New Gig post with AI moderation
 app.post('/addGig', isLoggedIn, async (req, res) => {
   try {
     const aiRes = await axios.post(`${FASTAPI_URL}/analyze`, req.body);
 
-    // ✅ Save only if FastAPI says ok
     if (aiRes.data.status === "ok") {
-      const newGig = new Gig(req.body);
+      const newGig = new Gig({
+        ...req.body,
+        postedBy: req.user._id // ✅ store user’s ObjectId
+      });
+
       await newGig.save();
       return res.status(201).json({ message: "✅ Gig created successfully", gig: newGig });
     }
 
-    // (Usually won't reach here, but safe check)
     return res.status(400).json({ error: aiRes.data.message });
 
   } catch (err) {
-    // ✅ If FastAPI rejected with 400, forward reason
     if (err.response && err.response.data) {
       return res.status(err.response.status || 400).json({
         error: err.response.data.message || "Rejected by AI validation"
       });
     }
-
-    console.error("Error in /addGig:", err.message);
+    console.error("Error in /addGig:", err);
     res.status(500).json({ error: "Server error while creating gig" });
   }
 });
-
 
 // SERVICES
 // SERVICES
@@ -221,15 +237,20 @@ app.post("/addService", isLoggedIn, async (req, res) => {
 // }))
 // backend: filter gigs by city
 app.get('/getGigs/:city', WrapAsync(async (req, res) => {
-    try {
-        const city = req.params.city;
-        let gigs = await Gig.find({ location: { $regex: new RegExp(city, "i") } });
-        res.json(gigs);
-    } catch (err) {
-        console.log(err);
-        res.status(500).send("Server Error");
-    }
+  try {
+    const city = req.params.city;
+
+    // ✅ Populate postedBy with username + email
+    let gigs = await Gig.find({ location: { $regex: new RegExp(city, "i") } })
+      .populate("postedBy", "username email");
+
+    res.json(gigs);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server Error");
+  }
 }));
+
 
 app.get('/getService/:city', WrapAsync(async(req,res)=>{
     try{
@@ -310,6 +331,46 @@ app.get("/logout", (req, res) => {
             return res.status(200).json({ success: true, message: "Logged out successfully" });
         });
     });
+});
+
+//post application form
+app.post("/applyGig/:gigId", isLoggedIn, upload.array("pictures", 5), async (req, res) => {
+  try {
+    const { name, message, contact, charges } = req.body;
+
+    const application = new Application({
+      gig: req.params.gigId,
+      applicant: req.user._id,
+      name,
+      message,
+      contact,
+      charges,
+      // ✅ Cloudinary stores URLs in req.files
+      pictures: req.files.map((file) => file.path), 
+    });
+
+    await application.save();
+    res.status(201).json({ message: "Application submitted successfully ✅" });
+  } catch (err) {
+    console.error("❌ Error in /applyGig:", err);
+    res.status(500).json({ error: "Failed to apply", details: err.message });
+  }
+});
+
+
+//get task appiled history
+app.get("/my-applications", isLoggedIn, async (req, res) => {
+  // console.log(req.user);
+  try {
+    const apps = await Application.find({ applicant: req.user._id })
+      .populate("gig", "title location date category")  // show gig info
+      .sort({ createdAt: -1 }); // latest first
+
+    res.json(apps);
+  } catch (err) {
+    console.error("❌ Error fetching applications:", err);
+    res.status(500).json({ error: "Failed to fetch applications" });
+  }
 });
 
 

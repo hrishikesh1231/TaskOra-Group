@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom"; // ✅ to get /gigs/:city
+import React, { useEffect, useState, useContext } from "react";
+import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import "./GigSection.css";
+import { AuthContext } from "../../context/AuthContext"; // ✅ bring in logged-in user
 
 const GigSection = () => {
   const [gigsData, setGigsData] = useState([]);
-  const { city } = useParams(); // ✅ extract city from URL
-  
+  const { city } = useParams();
+  const { user } = useContext(AuthContext); // ✅ get current user
+
   useEffect(() => {
     const fetchGigs = async () => {
       try {
-        let res = await axios.get(`http://localhost:3002/getGigs/${city}`); // ✅ send city to backend
+        let res = await axios.get(`http://localhost:3002/getGigs/${city}`);
         setGigsData(res.data);
       } catch (error) {
         console.error("Error fetching gigs:", error);
@@ -18,7 +20,7 @@ const GigSection = () => {
     };
 
     fetchGigs();
-  }, [city]); // ✅ refetch if city changes
+  }, [city]);
 
   return (
     <div className="gig-section">
@@ -29,44 +31,42 @@ const GigSection = () => {
             <div key={gig._id} className="gig-card">
               <h3>{gig.title}</h3>
               <p>{gig.description}</p>
-              {/* <p>
-                <strong>Pay:</strong> {gig.payment}
-              </p> */}
-              {/* <p>
-                <strong>Duration:</strong> {gig.workDays} day(s)
-              </p> */}
-              <p>
-                {/* <strong>Posted By:</strong> {gig.postedBy} */}
-              </p>
+
               <p>
                 <strong>Contact:</strong> {gig.contact}
               </p>
               <p>
                 <strong>Event Date:</strong>{" "}
                 {new Date(gig.date).toLocaleString("en-IN", {
-                  weekday: "long",   // Monday
+                  weekday: "long",
                   year: "numeric",
-                  month: "short",    // Sep
+                  month: "short",
                   day: "2-digit",
-                  // hour: "2-digit",
-                  // minute: "2-digit",
-                  // hour12: true
                 })}
               </p>
               <p>
                 <strong>Posted At:</strong>{" "}
                 {new Date(gig.createdAt).toLocaleString("en-IN", {
-                  weekday: "long",   // Monday
+                  weekday: "long",
                   year: "numeric",
-                  month: "short",    // Sep
+                  month: "short",
                   day: "2-digit",
                   hour: "2-digit",
                   minute: "2-digit",
-                  hour12: true       // 12-hour format
+                  hour12: true,
                 })}
               </p>
+              <p>
+                <strong>Posted By:</strong>{" "}
+                <i>@{gig.postedBy?.username || "Unknown"}</i>
+              </p>
 
-              <button className="apply-button">Apply Now</button>
+              {/* ✅ Hide Apply button if current user is the poster */}
+              {user && gig.postedBy?._id !== user._id && (
+                <Link to={`/apply/${gig._id}`}>
+                  <button className="apply-button">Apply Now</button>
+                </Link>
+              )}
             </div>
           ))}
         </>

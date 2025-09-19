@@ -83,6 +83,7 @@ const Navbar = () => {
                   }}
                 >
                   <Link className="dropdown-item" to="/applications">Task Applied History</Link>
+                  <Link className="dropdown-item" to="/update-profile">Task Post History</Link>
                   <Link className="dropdown-item" to="/update-profile">Update Profile</Link>
                   <div className="dropdown-divider"></div>
                   <button
