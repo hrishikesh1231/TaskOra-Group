@@ -153,7 +153,6 @@ app.post('/addGig', isLoggedIn, async (req, res) => {
 });
 
 // SERVICES
-// SERVICES
 app.post("/addService", isLoggedIn, async (req, res) => {
   try {
     let { title, description, salary, location, postedBy, contact, date } = req.body;
@@ -398,8 +397,88 @@ app.get('/getGigsByCategory/:category', WrapAsync(async (req, res) => {
 }));
 
 
+//my gigs-history
+// backend/index.js
+app.get("/my-gigs", isLoggedIn, async (req, res) => {
+  try {
+    const gigs = await Gig.find({ postedBy: req.user._id })
+      .sort({ createdAt: -1 }); // latest first
 
-//
+    res.json(gigs);
+  } catch (err) {
+    console.error("❌ Error fetching user gigs:", err);
+    res.status(500).json({ error: "Failed to fetch your gigs" });
+  }
+});
+// Edit Gig (with AI moderation)
+app.put("/gig/:id", isLoggedIn, async (req, res) => {
+  try {
+    // 🔎 Call FastAPI moderation first
+    const aiRes = await axios.post(`${FASTAPI_URL}/analyze`, req.body);
+
+    if (aiRes.data.status !== "ok") {
+      return res.status(400).json({ error: aiRes.data.message });
+    }
+
+    // ✅ Update gig if safe
+    const updatedGig = await Gig.findOneAndUpdate(
+      { _id: req.params.id, postedBy: req.user._id }, // only allow owner to update
+      req.body,
+      { new: true }
+    );
+
+    if (!updatedGig) {
+      return res.status(404).json({ error: "Gig not found or not authorized ❌" });
+    }
+
+    res.status(200).json({ message: "✅ Gig updated successfully", gig: updatedGig });
+  } catch (err) {
+    console.error("❌ Error updating gig:", err);
+    if (err.response?.data) {
+      return res.status(400).json({ error: err.response.data.message });
+    }
+    res.status(500).json({ error: "Server error while updating gig" });
+  }
+});
+
+
+app.get("/gig/:id", isLoggedIn, async (req, res) => {
+  try {
+    const gig = await Gig.findOne({
+      _id: req.params.id,
+      postedBy: req.user._id, // ✅ only your own gigs
+    });
+    if (!gig) return res.status(404).json({ error: "Gig not found ❌" });
+    res.json(gig);
+  } catch (err) {
+    console.error("❌ Error fetching gig:", err);
+    res.status(500).json({ error: "Failed to fetch gig" });
+  }
+});
+
+//delete functionality
+// Delete Gig (only owner can delete)
+app.delete("/gig/:id", isLoggedIn, async (req, res) => {
+  try {
+    const deletedGig = await Gig.findOneAndDelete({
+      _id: req.params.id,
+      postedBy: req.user._id, // only allow the owner to delete
+    });
+
+    if (!deletedGig) {
+      return res.status(404).json({ error: "Gig not found or not authorized ❌" });
+    }
+
+    res.status(200).json({ message: "✅ Gig deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting gig:", err);
+    res.status(500).json({ error: "Server error while deleting gig" });
+  }
+});
+
+
+
+
 
 app.listen(PORT,()=>{
     console.log("App started!")

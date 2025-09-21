@@ -19,6 +19,8 @@ import ApplyGigForm from './Landing_page/Apply/ApplyGigForm';
 import ApplicationHistory from './Landing_page/Apply/ApplicationHistory';
 import EditProfile from './Update_pro/EditProfile';
 import CategoryGigs from './Landing_page/Home/CategoryGigs';
+import MyGigsHistory from './Landing_page/Gigs/MyGigsHistory';
+import EditGigForm from './Landing_page/Gigs/EditGigForm';
 
 
 
@@ -45,6 +47,10 @@ root.render(
 
       <Route path='/update-profile' element={<EditProfile/>}></Route>
       <Route path='/gigs/category/:category' element={<CategoryGigs />} />
+ 
+      <Route path='/my-gigs' element={<MyGigsHistory/>} />
+      <Route path="/edit-gig/:id" element={<EditGigForm/>} />
+
 
     </Routes>
     <Footer/>

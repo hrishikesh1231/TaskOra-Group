@@ -77,3 +77,43 @@
 .apply-button:hover {
   background-color: #005bb5;
 }
+
+/* Button base styles */
+.gig-card .edit-btn,
+.gig-card .delete-btn {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  letter-spacing: 0.5px;
+}
+
+/* Edit button: professional blue gradient */
+.gig-card .edit-btn {
+  background: linear-gradient(135deg, #4facfe, #00c6ff);
+  color: white;
+  margin-right: 1rem;
+}
+
+.gig-card .edit-btn:hover {
+  background: linear-gradient(135deg, #00c6ff, #4facfe);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 198, 255, 0.3);
+}
+
+/* Delete button: professional red/orange gradient */
+.gig-card .delete-btn {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: white;
+}
+
+.gig-card .delete-btn:hover {
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 75, 43, 0.3);
+}

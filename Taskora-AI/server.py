@@ -40,7 +40,6 @@ class ServiceData(BaseModel):
     description: str
     salary: str
     location: str
-    postedBy: str
     contact: str
     date: datetime.date
 
@@ -214,7 +213,7 @@ def analyze_gig(gig: GigData):
 @app.post("/analyze_service")
 def analyze_service(service: ServiceData):
     # ✅ Removed "salary" from ML/gibberish check
-    fields = ["title", "description", "location", "postedBy"]
+    fields = ["title", "description", "location"]
     ok, msg = analyze_fields_with_model(service.dict(), fields)
     if not ok:
         return JSONResponse(status_code=400, content={"status": "error", "message": msg})
