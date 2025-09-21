@@ -1,7 +1,5 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const { ApplicationSchema } = require("../schemas/ApplicationSchema");
 
-const { ApplicationSchema } = require('../schemas/ApplicationSchema');
-
-const Application = mongoose.model('application', ApplicationSchema);
-
-module.exports={Application};
+const Application = mongoose.model("Application", ApplicationSchema);
+module.exports = { Application };
