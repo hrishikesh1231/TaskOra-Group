@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const ApplicationSchema = new Schema({
-  gig: { type: mongoose.Schema.Types.ObjectId, ref: "Gig", required: true },
-  applicant: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+const ServiceApplicationSchema = new Schema({
+  service: { type: mongoose.Schema.Types.ObjectId, ref: "service", required: true },
+  applicant: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
   name: { type: String, required: true },
   message: { type: String, required: true },
   contact: { type: String, required: true },
@@ -12,4 +12,4 @@ const ApplicationSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = { ApplicationSchema };
+module.exports = { ServiceApplicationSchema };

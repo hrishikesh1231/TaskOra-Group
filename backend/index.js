@@ -33,6 +33,9 @@ const path = require("path");
 const { upload } = require('./utils/Cloudinary');
 const { Application } = require('./models/ApplicationModel');
 
+// services
+const { ServiceApplication } = require("./models/ServiceApplicationModel");
+
 
 const url = process.env.MONGO_URL;
 const PORT = process.env.PORT || 3002;
@@ -42,6 +45,7 @@ const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000"; // Pytho
 
 
 app.use(express.json());
+
 //
 app.use(express.urlencoded({ extended: true }));
 
@@ -378,8 +382,49 @@ app.get("/my-applications", isLoggedIn, async (req, res) => {
   }
 });
 
-//
 app.use("/api", locationRoutes);
+
+//
+
+// services
+
+app.post("/applyService/:serviceId", isLoggedIn, upload.array("pictures", 5), async (req, res) => {
+  try {
+    const { name, message, contact, charges } = req.body;
+
+    const application = new ServiceApplication({
+      service: req.params.serviceId,
+      applicant: req.user._id,
+      name,
+      message,
+      contact,
+      charges,
+      pictures: req.files.map((file) => file.path), // Cloudinary URLs
+    });
+
+    await application.save();
+    res.status(201).json({ message: "✅ Service application submitted successfully" });
+  } catch (err) {
+    console.error("❌ Error in /applyService:", err);
+    res.status(500).json({ error: "Failed to apply for service", details: err.message });
+  }
+});
+
+app.get("/my-service-applications", isLoggedIn, async (req, res) => {
+  try {
+    const apps = await ServiceApplication.find({ applicant: req.user._id })
+      .populate("service", "title description location date salary contact postedBy") // include more fields
+      .sort({ createdAt: -1 });
+
+    res.json(apps);
+  } catch (err) {
+    console.error("❌ Error fetching service applications:", err);
+    res.status(500).json({ error: "Failed to fetch service applications" });
+  }
+});
+
+
+
 
 
 // popular categories
@@ -486,3 +531,4 @@ app.listen(PORT,()=>{
     mongoose.connect(url);
     console.log("DB connected..")
 }) 
+

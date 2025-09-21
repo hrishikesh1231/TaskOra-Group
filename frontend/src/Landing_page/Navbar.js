@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import "./Navbar.css";
 import { useContext, useState } from "react";
@@ -15,11 +16,14 @@ const Navbar = () => {
       style={{ backgroundColor: "white", height: "4.4rem" }}
     >
       <div className="container-fluid d-flex justify-content-between align-items-center px-5">
-        
         {/* Left Side */}
         <div className="d-flex align-items-center">
           <Link className="navbar-brand me-4" to="/">
-            <img src="/media/logo.svg" alt="Taskora Logo" style={{ height: "40px" }} />
+            <img
+              src="/media/logo.svg"
+              alt="Taskora Logo"
+              style={{ height: "40px" }}
+            />
           </Link>
           <ul className="navbar-nav d-flex flex-row gap-4">
             <li className="nav-item" style={{ marginRight: "2rem" }}>
@@ -42,7 +46,13 @@ const Navbar = () => {
               className="profile-dropdown"
               onMouseEnter={() => setDropdownOpen(true)}
               onMouseLeave={() => setDropdownOpen(false)}
-              style={{ position: "relative", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                cursor: "pointer",
+              }}
             >
               <span className="fw-bold text-primary">
                 Hi, {user.username} 👋
@@ -60,7 +70,7 @@ const Navbar = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
                 }}
               >
                 {user.username.charAt(0).toUpperCase()}
@@ -79,25 +89,38 @@ const Navbar = () => {
                     borderRadius: "8px",
                     boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
                     zIndex: 1000,
-                    minWidth: "200px"
+                    minWidth: "220px",
                   }}
                 >
+
                   <Link className="dropdown-item" to="/applications">Task Applied History</Link>
                   <Link className="dropdown-item" to="/my-gigs">Task Post History</Link>
+                  <Link className="dropdown-item" to="/service-applications">Service Appied History</Link>
                   <Link className="dropdown-item" to="/update-profile">Update Profile</Link>
+                  {/* Application Histories */}
+                  
+
+                  {/* Post history (future feature) */}
+                 
+                  
+
+                  
+
                   <div className="dropdown-divider"></div>
-                  <button
-                    onClick={logout}
-                    className="dropdown-item text-danger"
-                  >
-                    Logout
+
+                  {/* Logout */}
+                  <button onClick={logout} className="dropdown-item text-danger">
+                     Logout
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <>
-              <Link to="/login" className="btn btn-outline-primary rounded-pill px-4">
+              <Link
+                to="/login"
+                className="btn btn-outline-primary rounded-pill px-4"
+              >
                 Login
               </Link>
               <Link to="/signUp" className="btn btn-danger rounded-pill px-4">

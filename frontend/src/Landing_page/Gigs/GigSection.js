@@ -63,7 +63,7 @@ const GigSection = () => {
 
               {/* ✅ Hide Apply button if current user is the poster */}
               {user && gig.postedBy?._id !== user._id && (
-                <Link to={`/apply/${gig._id}`}>
+                <Link to={`/applyGig/${gig._id}`}>
                   <button className="apply-button">Apply Now</button>
                 </Link>
               )}
