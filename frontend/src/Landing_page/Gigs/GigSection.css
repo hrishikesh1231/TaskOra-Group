@@ -110,6 +110,7 @@
 .gig-card .delete-btn {
   background: linear-gradient(135deg, #ff416c, #ff4b2b);
   color: white;
+  margin-right: 1rem;
 }
 
 .gig-card .delete-btn:hover {
@@ -117,3 +118,5 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(255, 75, 43, 0.3);
 }
+
+

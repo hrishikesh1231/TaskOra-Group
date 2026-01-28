@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// frontend/src/pages/ApplyGigForm.js
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify"; // ✅ toast for popup
@@ -7,50 +8,91 @@ import "./ApplyGigForm.css";
 
 const MAX_PHOTOS = 5;
 
+const initialState = {
+  name: "",
+  message: "",
+  contact: "",
+  charges: "",
+  pictures: [],   // File objects
+  previews: [],   // Object URLs for previews
+};
+
 const ApplyGigForm = () => {
   const { gigId } = useParams();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    message: "",
-    contact: "",
-    charges: "",
-    pictures: [],
-  });
+  const [formData, setFormData] = useState(initialState);
+  const [submitting, setSubmitting] = useState(false);
+
+  // cleanup object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      formData.previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     if (name === "pictures") {
+      const newFiles = Array.from(files || []);
       setFormData((prev) => {
-        const newFiles = Array.from(files);
-        const combined = [...prev.pictures, ...newFiles];
+        const combinedFiles = [...prev.pictures, ...newFiles].slice(0, MAX_PHOTOS);
 
-        if (combined.length > MAX_PHOTOS) {
+        // create previews for new files
+        const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
+        const combinedPreviews = [...prev.previews, ...newPreviews].slice(0, MAX_PHOTOS);
+
+        if (prev.pictures.length + newFiles.length > MAX_PHOTOS) {
           toast.warn(`⚠️ You can upload a maximum of ${MAX_PHOTOS} photos.`, {
             autoClose: 2000,
           });
-          return { ...prev, pictures: combined.slice(0, MAX_PHOTOS) };
         }
 
-        return { ...prev, pictures: combined };
+        return {
+          ...prev,
+          pictures: combinedFiles,
+          previews: combinedPreviews,
+        };
       });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // ✅ Remove picture by index
+  // remove picture by index (and revoke its object URL)
   const handleRemovePic = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      pictures: prev.pictures.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => {
+      const newPics = prev.pictures.filter((_, i) => i !== index);
+      const removedUrl = prev.previews[index];
+      const newPreviews = prev.previews.filter((_, i) => i !== index);
+      if (removedUrl) URL.revokeObjectURL(removedUrl);
+      return {
+        ...prev,
+        pictures: newPics,
+        previews: newPreviews,
+      };
+    });
+  };
+
+  // reset form and revoke all preview urls
+  const resetForm = (navigateBack = false) => {
+    formData.previews.forEach((u) => {
+      try {
+        URL.revokeObjectURL(u);
+      } catch (e) {}
+    });
+    setFormData({ ...initialState });
+    if (navigateBack) {
+      navigate(-1);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
 
     const data = new FormData();
     data.append("name", formData.name);
@@ -68,13 +110,23 @@ const ApplyGigForm = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      // show success toast and reset form
       toast.success("✅ Application submitted successfully!", {
-        autoClose: 2000,
-        onClose: () => navigate(-1), // go back after toast closes
+        autoClose: 2200,
+        onClose: () => {
+          // navigate(-1); // optional: uncomment if you want to go back after toast
+        },
       });
+
+      // Clear inputs & previews immediately
+      resetForm(false);
+
     } catch (err) {
       console.error("❌ Error applying:", err);
-      toast.error("❌ Failed to apply", { autoClose: 2000 });
+      const msg = err.response?.data?.error || "❌ Failed to apply";
+      toast.error(msg, { autoClose: 3000 });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -111,20 +163,17 @@ const ApplyGigForm = () => {
             className="form-input-file"
           />
 
-          {/* ✅ Preview Selected Images with Delete Button */}
+          {/* Preview Selected Images with Delete Button */}
           <div className="preview-container">
-            {formData.pictures.length > 0 &&
-              formData.pictures.map((pic, idx) => (
+            {formData.previews.length > 0 &&
+              formData.previews.map((url, idx) => (
                 <div key={idx} className="preview-wrapper">
-                  <img
-                    src={URL.createObjectURL(pic)}
-                    alt={`preview-${idx}`}
-                    className="preview-img"
-                  />
+                  <img src={url} alt={`preview-${idx}`} className="preview-img" />
                   <button
                     type="button"
                     className="remove-btn"
                     onClick={() => handleRemovePic(idx)}
+                    title="Remove"
                   >
                     ×
                   </button>
@@ -152,14 +201,22 @@ const ApplyGigForm = () => {
             className="form-input"
           />
 
-          <button type="submit" className="submit-btn">Submit Application</button>
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={() => navigate(-1)}
-          >
-            Cancel
-          </button>
+          <div className="form-actions">
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? "Submitting..." : "Submit Application"}
+            </button>
+
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => {
+                // revoke created preview urls and go back
+                resetForm(true);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </div>
     </div>

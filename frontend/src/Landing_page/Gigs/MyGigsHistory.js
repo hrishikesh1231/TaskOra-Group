@@ -99,6 +99,10 @@ const MyGigsHistory = () => {
             Delete Post
             </button>
 
+            <Link to={`/gig/${gig._id}/applicants`}>
+              <button className="btn btn-outline-primary">👥 View Applicants</button>
+            </Link>            
+
           </div>
         ))
       ) : (

@@ -532,3 +532,27 @@ app.listen(PORT,()=>{
     console.log("DB connected..")
 }) 
 
+
+/// gig view applicants
+// GET applicants for a gig (only owner)
+app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
+  try {
+    // console.log("hell");
+    // verify the gig belongs to the logged-in user
+    const gig = await Gig.findById(req.params.id);
+    if (!gig) return res.status(404).json({ error: "Gig not found" });
+    if (String(gig.postedBy) !== String(req.user._id)) {
+      return res.status(403).json({ error: "Not authorized to view applicants" });
+    }
+
+    // fetch applications for this gig, populate applicant basic info
+    const apps = await Application.find({ gig: req.params.id })
+      .populate("applicant", "username email") // add any fields you want
+      .sort({ createdAt: -1 });
+
+    res.json({ count: apps.length, applications: apps });
+  } catch (err) {
+    console.error("❌ Error fetching applicants:", err);
+    res.status(500).json({ error: "Failed to fetch applicants" });
+  }
+});

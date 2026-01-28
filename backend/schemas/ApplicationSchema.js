@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const ApplicationSchema = new Schema({
   gig: { type: mongoose.Schema.Types.ObjectId, ref: "Gig", required: true },
-  applicant: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  applicant: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
   name: { type: String, required: true },
   message: { type: String, required: true },
   contact: { type: String, required: true },
