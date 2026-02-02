@@ -12,7 +12,10 @@ const ApplicantsList = () => {
   const [count, setCount] = useState(0);
   const [expanded, setExpanded] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedApplicants, setSelectedApplicants] = useState([]); // <-- NEW state
+  const [selectedApplicants, setSelectedApplicants] = useState([]);
+  const [contractId, setContractId] = useState(null);
+  const [contractStatus, setContractStatus] = useState(null);
+ // <-- NEW state
 
   useEffect(() => {
     const fetchApplicants = async () => {
@@ -43,15 +46,27 @@ const ApplicantsList = () => {
   const closeImage = () => setSelectedImage(null);
 
   // ✅ Handle applicant selection
-  const handleSelect = (appId) => {
-    setSelectedApplicants((prev) => {
-      if (prev.includes(appId)) {
-        return prev.filter((id) => id !== appId); // unselect
-      } else {
-        return [...prev, appId]; // select
-      }
-    });
-  };
+const handleSelect = async (app) => {
+  try {
+    const res = await axios.post(
+      "http://localhost:3002/api/contracts/select",
+      {
+        gigId: id,
+        applicantId: app.applicant._id,
+      },
+      { withCredentials: true }
+    );
+
+    setContractId(res.data._id);
+    setContractStatus(res.data.status);
+
+    toast.success("Applicant selected. Please confirm.");
+
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Select failed");
+  }
+};
+
 
   if (loading)
     return (
@@ -113,11 +128,41 @@ const ApplicantsList = () => {
 
                   {/* ✅ Select Button */}
                   <button
-                    className={`select-btn ${isSelected ? "selected" : ""}`}
-                    onClick={() => handleSelect(app._id)}
+                    className="select-btn"
+                    onClick={() => handleSelect(app)}
+                    disabled={contractId !== null}
                   >
-                    {isSelected ? "Selected ✔" : "Select"}
+                    {contractId ? "Selected" : "Select"}
                   </button>
+                  {contractId && contractStatus !== "both_confirmed" && (
+                    <button
+                      className="confirm-btn"
+                      onClick={async () => {
+                        try {
+                          const res = await axios.post(
+                            `http://localhost:3002/api/contracts/${contractId}/confirm`,
+                            {},
+                            { withCredentials: true }
+                          );
+
+                          setContractStatus(res.data.status);
+                          toast.success("You confirmed successfully");
+
+                        } catch (err) {
+                          toast.error(err.response?.data?.message || "Confirm failed");
+                        }
+                      }}
+                    >
+                      Confirm
+                    </button>
+                    
+                  )}
+                      {contractStatus && (
+                        <p className="contract-status">
+                          Status : {contractStatus}
+                        </p>
+                      )}
+
 
                   {/* ✅ Show More / Less */}
                   {app.pictures && app.pictures.length > 0 && (

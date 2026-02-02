@@ -4,6 +4,7 @@ require('dotenv').config(); //env
 
 
 const locationRoutes = require("./routes/locationRoutes");
+const contractRoutes = require("./routes/contractRoutes");
 
 //
 const express = require('express');
@@ -383,6 +384,7 @@ app.get("/my-applications", isLoggedIn, async (req, res) => {
 });
 
 app.use("/api", locationRoutes);
+app.use("/api", contractRoutes);
 
 //
 

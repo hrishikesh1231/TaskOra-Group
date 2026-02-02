@@ -55,7 +55,10 @@ const Navbar = () => {
               }}
             >
               <span className="fw-bold text-primary">
-                Hi, {user.username} 👋
+                👤{user.username} 
+              </span>
+              <span className="coin fw-bold">
+                 🪙{user.tokens} 
               </span>
 
               {/* Profile Circle */}
