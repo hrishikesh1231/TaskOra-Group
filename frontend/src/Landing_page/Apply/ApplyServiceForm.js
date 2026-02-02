@@ -8,7 +8,9 @@ import "./ApplyGigForm.css"; // ✅ reuse same CSS
 const MAX_PHOTOS = 5;
 
 const ApplyServiceForm = () => {
-  const { serviceId } = useParams(); // ✅ serviceId from URL
+  // const { serviceId } = useParams(); // ✅ serviceId from URL
+  const { id: serviceId } = useParams();
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({

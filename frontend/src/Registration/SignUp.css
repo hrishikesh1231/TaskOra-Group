@@ -4,7 +4,6 @@
   align-items: center;
   height: 100vh;
   background: #f0f4f8;
-  /* padding: 12px; */
 }
 
 .signup-form {
@@ -22,15 +21,26 @@
   color: #333;
 }
 
-.signup-form input {
+/* INPUT + SELECT SAME STYLE */
+.signup-form input,
+.signup-form select {
   width: 100%;
   padding: 12px 15px;
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 16px;
+  background-color: #fff;
+  appearance: none; /* removes default arrow styling */
 }
 
+/* Disabled dropdown */
+.signup-form select:disabled {
+  background-color: #f1f1f1;
+  cursor: not-allowed;
+}
+
+/* BUTTON */
 .signup-form button {
   width: 100%;
   padding: 12px;
@@ -46,4 +56,18 @@
 
 .signup-form button:hover {
   background-color: #1b5e20;
+}
+
+/* LOGIN LINK */
+.signup-form a {
+  display: block;
+  margin-top: 12px;
+  text-align: center;
+  color: #2e7d32;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.signup-form a:hover {
+  text-decoration: underline;
 }

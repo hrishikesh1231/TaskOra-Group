@@ -76,6 +76,54 @@
 
 // export default ApplicationHistory;
 
+// import React, { useEffect, useState } from "react";
+// import axios from "axios";
+
+// const ApplicationHistory = () => {
+//   const [applications, setApplications] = useState([]);
+
+//   useEffect(() => {
+//     const fetchApplications = async () => {
+//       try {
+//         const res = await axios.get("/my-applications");
+//         setApplications(res.data);
+//       } catch (err) {
+//         console.error("❌ Error fetching applications:", err);
+//       }
+//     };
+
+//     fetchApplications();
+//   }, []);
+
+//   return (
+//     <div className="application-history">
+//       <h2>My Applications</h2>
+
+//       {applications.length === 0 ? (
+//         <p>You have not applied to any tasks yet.</p>
+//       ) : (
+//         applications.map((app) => (
+//           <div key={app._id} className="application-card">
+//             <h3>{app.gig?.title}</h3>
+//             <p><strong>Category:</strong> {app.gig?.category}</p>
+//             <p><strong>Location:</strong> {app.gig?.location}</p>
+//             <p>
+//               <strong>Date:</strong>{" "}
+//               {new Date(app.gig?.date).toLocaleDateString()}
+//             </p>
+//             <p>
+//               <strong>Applied At:</strong>{" "}
+//               {new Date(app.createdAt).toLocaleString()}
+//             </p>
+//           </div>
+//         ))
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ApplicationHistory;
+
 
 
 import React, { useEffect, useState } from "react";
@@ -89,9 +137,8 @@ const ApplicationHistory = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const res = await axios.get("http://localhost:3002/my-applications", {
-          withCredentials: true, // ✅ include cookies for auth
-        });
+        // axios baseURL is already set globally
+        const res = await axios.get("/my-applications");
         setApplications(res.data);
       } catch (err) {
         console.error("❌ Error fetching applications:", err);
@@ -113,56 +160,33 @@ const ApplicationHistory = () => {
 
       {applications.length > 0 ? (
         applications.map((app) => (
-          <div
-            key={app._id}
-            className={`history-card ${app.gig ? "gig-card" : "service-card"}`}
-          >
-            {/* ✅ Show Gig or Service Title */}
-            <h3>
-              {app.gig
-                ? `🎯 Gig: ${app.gig.title}`
-                : app.service
-                ? `🛠️ Service: ${app.service.title}`
-                : "❌ Deleted Posting"}
-            </h3>
+          <div key={app._id} className="history-card">
+            <h3>{app.gig?.title || "Deleted Gig"}</h3>
 
-            {/* ✅ Show common details */}
             <p>
-              <strong>Location:</strong>{" "}
-              {app.gig?.location || app.service?.location || "N/A"}
-            </p>
-            <p>
-              <strong>Date:</strong>{" "}
-              {app.gig?.date || app.service?.date
-                ? new Date(app.gig?.date || app.service?.date).toLocaleDateString(
-                    "en-IN"
-                  )
-                : "N/A"}
+              <strong>Category:</strong> {app.gig?.category || "—"}
             </p>
 
-            {/* ✅ Gig-specific */}
-            {app.gig && (
-              <p>
-                <strong>Category:</strong> {app.gig.category}
-              </p>
-            )}
-
-            {/* ✅ Service-specific */}
-            {app.service && (
-              <p>
-                <strong>Salary:</strong> {app.service.salary}
-              </p>
-            )}
-
-            {/* ✅ Applicant’s input */}
             <p>
-              <strong>Your Message:</strong> {app.message}
-            </p>
-            <p>
-              <strong>Your Charges:</strong> {app.charges}
+              <strong>Location:</strong> {app.gig?.location || "—"}
             </p>
 
-            {/* ✅ Uploaded Images */}
+            <p>
+              <strong>Gig Date:</strong>{" "}
+              {app.gig?.date
+                ? new Date(app.gig.date).toLocaleDateString("en-IN")
+                : "—"}
+            </p>
+
+            <p>
+              <strong>Your Message:</strong> {app.message || "—"}
+            </p>
+
+            <p>
+              <strong>Your Charges:</strong> {app.charges || "—"}
+            </p>
+
+            {/* ✅ Preview uploaded images */}
             {app.pictures && app.pictures.length > 0 && (
               <div className="preview-container">
                 {app.pictures.map((pic, idx) => (
@@ -176,7 +200,6 @@ const ApplicationHistory = () => {
               </div>
             )}
 
-            {/* ✅ Application timestamp */}
             <p className="applied-date">
               Applied on{" "}
               {new Date(app.createdAt).toLocaleString("en-IN", {
@@ -191,11 +214,10 @@ const ApplicationHistory = () => {
           </div>
         ))
       ) : (
-        <p className="no-history">❌ You haven’t applied to any gigs or services yet.</p>
+        <p className="no-history">❌ You haven’t applied to any gigs yet.</p>
       )}
     </div>
   );
 };
 
 export default ApplicationHistory;
-
