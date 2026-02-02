@@ -1,14 +1,49 @@
 
+
+
 import { Link } from "react-router-dom";
 import "./Navbar.css";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import axios from "axios";
+
 import { CityContext } from "../context/CityContext";
 import { AuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
   const { city } = useContext(CityContext);
   const { user, logout } = useContext(AuthContext);
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [gigCount, setGigCount] = useState(null);
+  const [serviceCount, setServiceCount] = useState(null);
+
+  useEffect(() => {
+    if (!city) {
+      setGigCount(null);
+      setServiceCount(null);
+      return;
+    }
+
+    const normalizedCity = city.trim();
+
+    const fetchCounts = async () => {
+      try {
+        const [gigRes, serviceRes] = await Promise.all([
+          axios.get(`/count/gigs/${encodeURIComponent(normalizedCity)}`),
+          axios.get(`/count/services/${encodeURIComponent(normalizedCity)}`),
+        ]);
+
+        setGigCount(gigRes.data.count);
+        setServiceCount(serviceRes.data.count);
+      } catch (err) {
+        console.error("Count fetch failed", err);
+        setGigCount(0);
+        setServiceCount(0);
+      }
+    };
+
+    fetchCounts();
+  }, [city]);
 
   return (
     <nav
@@ -16,7 +51,7 @@ const Navbar = () => {
       style={{ backgroundColor: "white", height: "4.4rem" }}
     >
       <div className="container-fluid d-flex justify-content-between align-items-center px-5">
-        {/* Left Side */}
+        {/* LEFT */}
         <div className="d-flex align-items-center">
           <Link className="navbar-brand me-4" to="/">
             <img
@@ -25,61 +60,96 @@ const Navbar = () => {
               style={{ height: "40px" }}
             />
           </Link>
+
+          {city ? (
+            <span className="me-4 fw-semibold text-muted">📍 {city}</span>
+          ) : (
+            <span className="me-4 text-muted">📍 Select location</span>
+          )}
+
           <ul className="navbar-nav d-flex flex-row gap-4">
-            <li className="nav-item" style={{ marginRight: "2rem" }}>
-              <Link className="nav-link" to={`/gigs/${city}`}>
+            <li className="nav-item">
+              <Link className="nav-link" to="/gigs">
                 Gigs
+                {gigCount !== null && (
+                  <span className="badge bg-primary ms-2">
+                    {gigCount}
+                  </span>
+                )}
               </Link>
             </li>
-            <li className="nav-item" style={{ marginRight: "20rem" }}>
-              <Link className="nav-link" to={`/services/${city}`}>
+
+            <li className="nav-item">
+              <Link className="nav-link" to="/services">
                 Services
+                {serviceCount !== null && (
+                  <span className="badge bg-danger ms-2">
+                    {serviceCount}
+                  </span>
+                )}
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* Right Side */}
+        {/* RIGHT */}
         <div className="d-flex align-items-center gap-3">
+          
           {user ? (
             <div
-              className="profile-dropdown"
               onMouseEnter={() => setDropdownOpen(true)}
               onMouseLeave={() => setDropdownOpen(false)}
-              style={{
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                cursor: "pointer",
-              }}
+              style={{ position: "relative", cursor: "pointer" }}
             >
-              <span className="fw-bold text-primary">
+              {/* 👋 Greeting */}
+              <span onClick={console.log(user)} className="fw-bold text-primary">
+{/* <<<<<<< HEAD */}
                 👤{user.username} 
               </span>
+              
               <span className="coin fw-bold">
                  🪙{user.tokens} 
+{/* ======= */}
+                {/* Hi, {user.name || user.username} 👋 */}
+{/* >>>>>>> origin/feature/atharva */}
               </span>
 
-              {/* Profile Circle */}
-              <div
-                className="profile-circle"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: "#007bff",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                {user.username.charAt(0).toUpperCase()}
-              </div>
+              {/* 🖼️ Avatar */}
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="profile"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginLeft: "10px",
+                    border: "2px solid #007bff",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "bold",
+                    marginLeft: "10px",
+                  }}
+                >
+                  {(user.name || user.username)
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )}
 
-              {/* Dropdown Menu */}
+              {/* ⬇ Dropdown */}
               {dropdownOpen && (
                 <div
                   className="dropdown-menu show"
@@ -87,33 +157,36 @@ const Navbar = () => {
                     position: "absolute",
                     top: "50px",
                     right: "0",
-                    backgroundColor: "white",
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                    zIndex: 1000,
                     minWidth: "220px",
+                    zIndex: 1000,
                   }}
                 >
-
-                  <Link className="dropdown-item" to="/applications">Task Applied History</Link>
-                  <Link className="dropdown-item" to="/my-gigs">Task Post History</Link>
-                  <Link className="dropdown-item" to="/service-applications">Service Appied History</Link>
-                  <Link className="dropdown-item" to="/update-profile">Update Profile</Link>
-                  {/* Application Histories */}
-                  
-
-                  {/* Post history (future feature) */}
-                 
-                  
-
-                  
+                  <Link className="dropdown-item" to="/applications">
+                    Task Applied History
+                  </Link>
+                  <Link className="dropdown-item" to="/my-gigs">
+                    Task Post History
+                  </Link>
+                  <Link
+                    className="dropdown-item"
+                    to="/service-applications"
+                  >
+                    Service Applied History
+                  </Link>
+                  <Link className="dropdown-item" to="/my-services">
+                    Service Post History
+                  </Link>
+                  <Link className="dropdown-item" to="/update-profile">
+                    Update Profile
+                  </Link>
 
                   <div className="dropdown-divider"></div>
 
-                  {/* Logout */}
-                  <button onClick={logout} className="dropdown-item text-danger">
-                     Logout
+                  <button
+                    onClick={logout}
+                    className="dropdown-item text-danger"
+                  >
+                    Logout
                   </button>
                 </div>
               )}
@@ -126,7 +199,10 @@ const Navbar = () => {
               >
                 Login
               </Link>
-              <Link to="/signUp" className="btn btn-danger rounded-pill px-4">
+              <Link
+                to="/signUp"
+                className="btn btn-danger rounded-pill px-4"
+              >
                 Register
               </Link>
             </>

@@ -1,46 +1,101 @@
-import { createContext, useState, useEffect } from "react";
+
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import axios from "axios";
+import { CityContext } from "./CityContext";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    // ✅ Check localStorage for logged-in user
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const { setCity } = useContext(CityContext);
 
-  // Get logged-in user on mount (for session persistence)
+  const [user, setUserState] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🔑 prevents auth race condition
+  const justLoggedInRef = useRef(false);
+
   useEffect(() => {
     const fetchUser = async () => {
+      // 🚫 Skip check right after login
+      if (justLoggedInRef.current) {
+        justLoggedInRef.current = false;
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await axios.get("http://localhost:3002/current-user", {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      } catch (err) {
-        setUser(null);
-        localStorage.removeItem("user");
+        const res = await axios.get("/current-user");
+        const loggedUser = res.data.user;
+
+        setUserState(loggedUser);
+
+        if (loggedUser?.district) {
+          setCity(loggedUser.district);
+        }
+      } catch {
+        setUserState(null);
+        setCity(null);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchUser();
-  }, []);
 
-  // Logout Function
-  const logout = async () => {
-    try {
-      await axios.get("http://localhost:3002/logout", { withCredentials: true });
-      setUser(null);
-      localStorage.removeItem("user");
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout failed:", error);
+    fetchUser();
+  }, [setCity]);
+
+  // ✅ THIS is what SignIn must use
+  const loginUser = (userData) => {
+    justLoggedInRef.current = true;
+    setUserState(userData);
+
+    if (userData?.district) {
+      setCity(userData.district);
     }
   };
 
+  // 🔄 ADDITION: refresh user after profile update
+  const refreshUser = async () => {
+    try {
+      const res = await axios.get("/current-user");
+      const updatedUser = res.data.user;
+
+      setUserState(updatedUser);
+
+      if (updatedUser?.district) {
+        setCity(updatedUser.district);
+      }
+    } catch (err) {
+      console.error("❌ Failed to refresh user", err);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await axios.get("/logout");
+    } catch {}
+
+    setUserState(null);
+    setCity(null);
+    localStorage.clear();
+    window.location.href = "/";
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser: loginUser, // 🔥 IMPORTANT (unchanged)
+        refreshUser,        // ✅ NEW (used by EditProfile)
+        logout,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
