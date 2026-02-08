@@ -1,22 +1,28 @@
 :root {
   --blue: #4a90e2;
-  --blue-tint: rgba(74, 144, 226, 0.10);
   --green: #2ecc71;
-  --green-tint: rgba(46, 204, 113, 0.08);
   --yellow: #f5a623;
-  --yellow-tint: rgba(245, 166, 35, 0.08);
   --text-dark: #1a2b4c;
-  --muted: #556;
 }
 
-/* full-width section with gradient background */
+/* ================= SECTION ================= */
 .howitworks-container {
   width: 100%;
-  box-sizing: border-box;
   background: linear-gradient(135deg, #e7edf0 30%, #aef1f7d9 60%);
   padding: 60px 20px;
+  box-sizing: border-box;
+
+  /* base hidden state */
+  opacity: 0;
+  transform: translateY(70px);
 }
 
+/* animation trigger */
+.howitworks-container.animate {
+  animation: sectionFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ================= INNER ================= */
 .howitworks-inner {
   max-width: 1200px;
   margin: 0 auto;
@@ -29,36 +35,57 @@
   color: var(--text-dark);
 }
 
-.howitworks-inner .subtitle {
+.subtitle {
   color: #7b8a97;
   margin-bottom: 40px;
 }
 
+/* ================= STEPS ================= */
 .steps {
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  width: 100%;
-  align-items: flex-start;
 }
 
+/* ================= CARD ================= */
 .step-card {
-  flex: 1 1 0;
+  flex: 1;
   min-width: 240px;
+  background: #fff;
   border-radius: 12px;
   padding: 28px 20px;
-  background: #fff; /* cards stay white so gradient shows behind */
-  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
   position: relative;
   text-align: center;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
+
+  /* base hidden state */
+  opacity: 0;
+  transform: translateY(40px) scale(0.96);
 }
 
+/* cards animate when section animates */
+.howitworks-container.animate .step-card {
+  animation: cardFadeUp 0.6s ease forwards;
+}
+
+/* stagger effect */
+.howitworks-container.animate .step-card:nth-child(1) {
+  animation-delay: 0.15s;
+}
+.howitworks-container.animate .step-card:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.howitworks-container.animate .step-card:nth-child(3) {
+  animation-delay: 0.45s;
+}
+
+/* hover */
 .step-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.10);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.1);
 }
 
+/* ================= ICON ================= */
 .step-icon {
   width: 80px;
   height: 80px;
@@ -72,6 +99,17 @@
   box-shadow: 0 8px 20px rgba(17, 24, 39, 0.06);
 }
 
+.step-one .step-icon svg {
+  color: var(--blue);
+}
+.step-two .step-icon svg {
+  color: var(--green);
+}
+.step-three .step-icon svg {
+  color: var(--yellow);
+}
+
+/* ================= NUMBER ================= */
 .step-number {
   position: absolute;
   top: 14px;
@@ -84,10 +122,11 @@
   border-radius: 999px;
 }
 
+/* ================= TEXT ================= */
 .step-card h3 {
-  margin: 8px 0 8px;
-  color: var(--text-dark);
+  margin: 8px 0;
   font-size: 1.15rem;
+  color: var(--text-dark);
 }
 
 .step-card p {
@@ -96,10 +135,31 @@
   line-height: 1.4;
 }
 
-.step-one .step-icon svg { color: var(--blue); }
-.step-two .step-icon svg { color: var(--green); }
-.step-three .step-icon svg { color: var(--yellow); }
+/* ================= KEYFRAMES ================= */
 
+@keyframes sectionFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(70px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ================= RESPONSIVE ================= */
 @media (max-width: 880px) {
   .steps {
     flex-direction: column;
@@ -109,9 +169,5 @@
   .step-card {
     width: 100%;
     max-width: 640px;
-  }
-
-  .step-number {
-    right: 20px;
   }
 }

@@ -2,7 +2,7 @@
   background: #0d1b2a;
   color: #ddd;
   padding: 3rem 2rem 1rem;
-  margin-top: 2rem;
+  margin-top: auto; /* ✅ THIS IS KEY */
 }
 
 .footer-container {

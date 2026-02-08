@@ -31,3 +31,14 @@ dist
 ########################
 .DS_Store
 Thumbs.db
+
+
+########################
+# AI Models (DO NOT PUSH)
+########################
+Taskora-AI/model/
+Taskora-AI/model/**
+*.safetensors
+*.pt
+*.pth
+checkpoint*

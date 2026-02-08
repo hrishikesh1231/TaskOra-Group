@@ -1,41 +1,89 @@
-import React from "react";
-import "./PopularCategories.css";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaCog, FaBook, FaBroom, FaCalendarAlt, FaChalkboardTeacher, FaEllipsisH } from "react-icons/fa";
+import "./PopularCategories.css";
+import {
+  FaCog,
+  FaBook,
+  FaBroom,
+  FaCalendarAlt,
+  FaChalkboardTeacher,
+  FaEllipsisH,
+} from "react-icons/fa";
 
 const categories = [
-  { icon: <FaCog className="cat-icon blue" />, title: "Technical" },
-  { icon: <FaBook className="cat-icon purple" />, title: "Education" },
-  { icon: <FaBroom className="cat-icon black" />, title: "Cleaning" },
-  { icon: <FaCalendarAlt className="cat-icon black" />, title: "Event Management" },
-  { icon: <FaChalkboardTeacher className="cat-icon black" />, title: "Teaching" },
-  { icon: <FaEllipsisH className="cat-icon black" />, title: "Others" },
+  { name: "Technical", icon: <FaCog /> },
+  { name: "Education", icon: <FaBook /> },
+  { name: "Cleaning", icon: <FaBroom /> },
+  { name: "Event Management", icon: <FaCalendarAlt /> },
+  { name: "Teaching", icon: <FaChalkboardTeacher /> },
+  { name: "Others", icon: <FaEllipsisH /> },
 ];
 
 const PopularCategories = () => {
   const navigate = useNavigate();
+  const sectionRef = useRef(null);
+  const [index, setIndex] = useState(0);
 
-  const handleCategoryClick = (category) => {
-    navigate(`/gigs/category/${category}`); // navigate to new route
+  const visibleCards = 3;
+  const maxIndex = categories.length - visibleCards;
+
+  const next = () => setIndex((prev) => (prev < maxIndex ? prev + 1 : prev));
+  const prev = () => setIndex((prev) => (prev > 0 ? prev - 1 : prev));
+
+  const handleClick = (category) => {
+    navigate(`/gigs/category/${encodeURIComponent(category)}`);
   };
 
-  return (
-    <section className="categories-section">
-      <div className="categories-container">
-        <h2 className="categories-title">Popular Categories</h2>
+  /* ================= RE-ANIMATE EVERY TIME ================= */
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
 
-        <div className="categories-grid">
-          {categories.map((cat, index) => (
-            <div
-              className="category-card"
-              key={index}
-              onClick={() => handleCategoryClick(cat.title)}
-            >
-              {cat.icon}
-              <h3>{cat.title}</h3>
-            </div>
-          ))}
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          section.classList.add("show");
+        } else {
+          section.classList.remove("show"); // reset animation
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section className="categories-section" ref={sectionRef}>
+      <h2 className="categories-title">Popular Categories</h2>
+
+      <div className="categories-slider">
+        <button className="cat-btn prev" onClick={prev}>
+          ❮
+        </button>
+
+        <div className="categories-window">
+          <div
+            className="categories-track"
+            style={{ transform: `translateX(-${index * 260}px)` }}
+          >
+            {categories.map((cat) => (
+              <div
+                key={cat.name}
+                className="category-card"
+                onClick={() => handleClick(cat.name)}
+              >
+                <span className="category-icon">{cat.icon}</span>
+                <h3>{cat.name}</h3>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <button className="cat-btn next" onClick={next}>
+          ❯
+        </button>
       </div>
     </section>
   );

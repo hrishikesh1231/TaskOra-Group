@@ -9,7 +9,8 @@ import HeroSection from './HeroSection';
 import WhyChooseTaskOra from './WhyChooseTaskOra';
 import PopularCategories from './PopularCategories';
 import HowItWorks from './HowItWorks';
-import Testimonials from './Testimonials';
+
+import TestimonialSection from './TestimonialSection';
 
 const HomePage = () => {
   return (
@@ -21,7 +22,7 @@ const HomePage = () => {
       <WhyChooseTaskOra></WhyChooseTaskOra>
       <PopularCategories></PopularCategories>
       <HowItWorks></HowItWorks>
-      <Testimonials></Testimonials>
+      <TestimonialSection></TestimonialSection>
       
      
       

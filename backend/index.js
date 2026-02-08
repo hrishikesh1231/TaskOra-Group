@@ -13,8 +13,15 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
+const Notification = require("./models/Notification");
+const sendEmail = require("./utils/sendEmail");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // ================= MODELS =================
+
+// ✅ VERY IMPORTANT — register all models
+require("./models");
+
 const { Gig } = require("./models/Gigmodel");
 const { Service } = require("./models/Servicemodel");
 const { UserModel } = require("./models/UserModel");
@@ -80,6 +87,11 @@ app.use(
 // ================= PASSPORT =================
 app.use(passport.initialize());
 app.use(passport.session());
+
+
+/// notification
+
+app.use("/api", notificationRoutes);
 
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
@@ -564,33 +576,33 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
 ///////////////////////
 
 
-app.post(
-  "/applyService/:serviceId",
-  isLoggedIn,
-  upload.array("pictures", 5),
-  async (req, res) => {
-    try {
-      const application = new ServiceApplication({
-        service: req.params.serviceId,
-        applicant: req.user._id,
+// app.post(
+//   "/applyService/:serviceId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     try {
+//       const application = new ServiceApplication({
+//         service: req.params.serviceId,
+//         applicant: req.user._id,
 
-        name: req.body.name,
-        message: req.body.message,
-        contact: req.body.contact,
-        charges: req.body.charges,
+//         name: req.body.name,
+//         message: req.body.message,
+//         contact: req.body.contact,
+//         charges: req.body.charges,
 
-        pictures: (req.files || []).map((f) => f.path),
-      });
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
 
-      await application.save();
+//       await application.save();
 
-      res.json({ success: true });
-    } catch (err) {
-      console.error("❌ APPLY SERVICE ERROR:", err);
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ APPLY SERVICE ERROR:", err);
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
 
 
 
@@ -653,25 +665,106 @@ app.get("/services-near-me", isLoggedIn, async (req, res) => {
 });
 
 // ================= APPLICATIONS =================   for gig
+// app.post(
+//   "/applyGig/:gigId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     const application = new Application({
+//       gig: req.params.gigId,
+//       applicant: req.user._id,
+//       ...req.body,
+//       pictures: req.files.map((f) => f.path),
+//     });
+
+//     await application.save();
+//     res.json({ success: true });
+//   }
+// );
+
 app.post(
   "/applyGig/:gigId",
   isLoggedIn,
   upload.array("pictures", 5),
   async (req, res) => {
-    const application = new Application({
-      gig: req.params.gigId,
-      applicant: req.user._id,
-      ...req.body,
-      pictures: req.files.map((f) => f.path),
-    });
+    try {
+      // ================= EXISTING LOGIC (DO NOT CHANGE) =================
+      const application = new Application({
+        gig: req.params.gigId,
+        applicant: req.user._id,
+        ...req.body,
+        pictures: (req.files || []).map((f) => f.path),
+      });
 
-    await application.save();
-    res.json({ success: true });
+      await application.save();
+
+      // ================= STEP 3: NOTIFICATION + EMAIL =================
+      try {
+        const gig = await Gig.findById(req.params.gigId);
+
+        if (gig) {
+          // ✅ IMPORTANT: UserModel (NOT User)
+          const owner = await UserModel.findById(gig.postedBy);
+
+          if (owner) {
+            // 🔔 Notification
+            await Notification.create({
+              user: owner._id,
+              title: "New Application",
+              message: `${req.user.username} applied to your gig`,
+              type: "APPLY",
+              link: `/gig/${gig._id}/applicants`,
+            });
+
+            // 📧 Email
+            await sendEmail({
+              to: owner.email,
+              subject: "New Application Received",
+              html: `
+                <h2>New Application</h2>
+                <p><b>${req.user.username}</b> has applied to your gig.</p>
+              `,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("STEP 3 notification/email error:", err.message);
+      }
+      // ================= END STEP 3 =================
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ APPLY GIG ERROR:", err);
+      res.status(500).json({ error: "Failed to apply gig" });
+    }
   }
 );
 
 
+// app.post(
+//   "/applyService/:serviceId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     try {
+//       const application = new ServiceApplication({
+//         service: req.params.serviceId,
+//         applicant: req.user._id,
+//         name: req.body.name,
+//         message: req.body.message,
+//         contact: req.body.contact,
+//         charges: req.body.charges,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
 
+//       await application.save();
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ APPLY SERVICE ERROR:", err);
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
 
 app.post(
   "/applyService/:serviceId",
@@ -679,7 +772,9 @@ app.post(
   upload.array("pictures", 5),
   async (req, res) => {
     try {
-      const application = new ServiceApplication({
+      console.log("🔥 APPLY SERVICE ROUTE HIT");
+
+      const application = await ServiceApplication.create({
         service: req.params.serviceId,
         applicant: req.user._id,
         name: req.body.name,
@@ -689,8 +784,41 @@ app.post(
         pictures: (req.files || []).map((f) => f.path),
       });
 
-      await application.save();
+      console.log("✅ Service application saved");
+
+      // 1️⃣ Fetch service
+      const service = await Service.findById(req.params.serviceId);
+      if (!service) return res.json({ success: true });
+
+      // 2️⃣ Fetch owner
+      const owner = await UserModel.findById(service.postedBy);
+      if (!owner) return res.json({ success: true });
+
+      // 3️⃣ Notification
+      await Notification.create({
+        user: owner._id,
+        title: "New Service Application",
+        message: `${req.user.username} applied to your service`,
+        type: "APPLY",
+        link: `/service/${service._id}/applicants`,
+      });
+
+      console.log("🔔 Service notification created");
+
+      // 4️⃣ Email
+      await sendEmail({
+        to: owner.email,
+        subject: "New Service Application",
+        html: `
+          <h3>New Service Application</h3>
+          <p><b>${req.user.username}</b> applied to your service.</p>
+        `,
+      });
+
+      console.log("📧 Service email sent");
+
       res.json({ success: true });
+
     } catch (err) {
       console.error("❌ APPLY SERVICE ERROR:", err);
       res.status(500).json({ error: err.message });
@@ -911,6 +1039,73 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
 });
 
 
+///////////////////// email  
+
+// ================= SELECT GIG APPLICANT =================
+app.post(
+  "/gig-application/:applicationId/select",
+  isLoggedIn,
+  async (req, res) => {
+    try {
+      const application = await Application.findById(req.params.applicationId);
+
+      if (!application) {
+        return res.status(404).json({ error: "Application not found" });
+      }
+
+      // 🔒 Only gig owner can select
+      const gig = await Gig.findById(application.gig);
+      if (!gig || gig.postedBy.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+
+      // ✅ EXISTING LOGIC (status update)
+      application.status = "selected";
+      await application.save();
+
+      // ================= STEP 4: NOTIFICATION + EMAIL =================
+      try {
+        const applicant = await UserModel.findById(application.applicant);
+
+        if (applicant) {
+          // 🔔 Notification
+          await Notification.create({
+            user: applicant._id,
+            title: "Application Selected 🎉",
+            message: "You have been selected for a gig",
+            type: "CONFIRM",
+            link: "/my-applications",
+          });
+
+          // 📧 Email
+          await sendEmail({
+            to: applicant.email,
+            subject: "You have been selected 🎉",
+            html: `
+              <h2>Congratulations!</h2>
+              <p>You have been selected for the gig.</p>
+            `,
+          });
+        }
+      } catch (err) {
+        console.error("STEP 4 GIG notify error:", err.message);
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ SELECT GIG APPLICANT ERROR:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+
+
+
+
+
+///////////////
+
 
 // ================= VIEW SERVICE APPLICANTS (OWNER ONLY) =================
 app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
@@ -951,6 +1146,73 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   }
 });
 
+
+////////////////// email +noti
+
+// ================= SELECT SERVICE APPLICANT =================
+app.post(
+  "/service-application/:applicationId/select",
+  isLoggedIn,
+  async (req, res) => {
+    try {
+      const application = await ServiceApplication.findById(
+        req.params.applicationId
+      );
+
+      if (!application) {
+        return res.status(404).json({ error: "Application not found" });
+      }
+
+      // 🔒 Only service owner can select
+      const service = await Service.findById(application.service);
+      if (
+        !service ||
+        service.postedBy.toString() !== req.user._id.toString()
+      ) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+
+      // ✅ EXISTING LOGIC
+      application.status = "selected";
+      await application.save();
+
+      // ================= STEP 4: NOTIFICATION + EMAIL =================
+      try {
+        const applicant = await UserModel.findById(application.applicant);
+
+        if (applicant) {
+          await Notification.create({
+            user: applicant._id,
+            title: "Application Selected 🎉",
+            message: "You have been selected for a service",
+            type: "CONFIRM",
+            link: "/my-applications",
+          });
+
+          await sendEmail({
+            to: applicant.email,
+            subject: "Service Application Selected 🎉",
+            html: `
+              <h2>Congratulations!</h2>
+              <p>You have been selected for the service.</p>
+            `,
+          });
+        }
+      } catch (err) {
+        console.error("STEP 4 SERVICE notify error:", err.message);
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ SELECT SERVICE APPLICANT ERROR:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+
+
+///////////
 
 // ================= GET CURRENT USER =================
 app.get("/me", isLoggedIn, (req, res) => {
@@ -1016,12 +1278,58 @@ app.put(
 // ================= EXTRA ROUTES =================
 app.use("/api", locationRoutes);
 app.use("/api", contractRoutes);
+
+
+app.get("/debug-users", async (req, res) => {
+  try {
+    const users = await UserModel.find({})
+      .select("username email state district tokens createdAt");
+
+    res.json({
+      count: users.length,
+      users,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+
+
+app.get("/notifications", isLoggedIn, async (req, res) => {
+  try {
+    const notifications = await Notification.find({
+      user: req.user._id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load notifications" });
+  }
+});
+
+app.post("/notifications/mark-read", isLoggedIn, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user: req.user._id, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to mark read" });
+  }
+});
+
+
+
 // ================= START =================
 app.listen(PORT, async () => {
   await mongoose.connect(url);
   console.log("🚀 Server running & DB connected");
 });
-
 
 
 

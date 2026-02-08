@@ -1,50 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import "./CategoryGigs.css";
 
-import {
-  FaCog,
-  FaBriefcase,
-  FaBook,
-  FaUsers,
-  FaBroom,
-  FaCalendarAlt,
-  FaChalkboardTeacher,
-  FaEllipsisH,
-} from "react-icons/fa";
+const CategoryGigs = () => {
+  const { category } = useParams();
+  const decodedCategory = decodeURIComponent(category);
 
-const Categories = () => {
+  const [gigs, setGigs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGigsByCategory = async () => {
+      try {
+        const res = await axios.get(
+          `/api/gigs?category=${decodedCategory}`
+        );
+        setGigs(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGigsByCategory();
+  }, [decodedCategory]);
+
+  if (loading) return <p>Loading...</p>;
+
   return (
-    <div className="categories-section">
-      <h2>Popular Categories</h2>
-      <div className="categories-grid">
-        <div className="category-card">
-          <FaCog className="category-icon blue" />
-          <p>Technical</p>
-        </div>
-        
-        <div className="category-card">
-          <FaBook className="category-icon purple" />
-          <p>Education</p>
-        </div>
-        
-        <div className="category-card">
-          <FaBroom className="category-icon orange" />
-          <p>Cleaning</p>
-        </div>
-        <div className="category-card">
-          <FaCalendarAlt className="category-icon teal" />
-          <p>Event Management</p>
-        </div>
-        <div className="category-card">
-          <FaChalkboardTeacher className="category-icon indigo" />
-          <p>Teaching</p>
-        </div>
-        <div className="category-card">
-          <FaEllipsisH className="category-icon gray" />
-          <p>Others</p>
-        </div>
-      </div>
+    <div className="category-gigs-page">
+      <h2>{decodedCategory} Gigs</h2>
+
+      {gigs.length === 0 ? (
+        <p>No gigs found in this category</p>
+      ) : (
+        gigs.map((gig) => (
+          <div key={gig._id} className="gig-card">
+            <h4>{gig.title}</h4>
+            <p>{gig.description}</p>
+          </div>
+        ))
+      )}
     </div>
   );
 };
 
-export default Categories;
+export default CategoryGigs;
