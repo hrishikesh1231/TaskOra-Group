@@ -10,7 +10,8 @@ import WhyChooseTaskOra from './WhyChooseTaskOra';
 import PopularCategories from './PopularCategories';
 import HowItWorks from './HowItWorks';
 
-import TestimonialSection from './TestimonialSection';
+import TestimonialSection from './TestimonialSection.jsx';
+
 
 const HomePage = () => {
   return (

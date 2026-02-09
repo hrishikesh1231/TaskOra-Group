@@ -203,6 +203,8 @@ import ScrollToTop from "./Landing_page/ScrollToTop";
 import OtpVerify from "./pages/OtpVerify";
 import EditServiceForm from "./Landing_page/ServiceSection/EditServiceForm";
 import ServiceApplicantsList from "./Landing_page/ServiceSection/ServiceApplicantsList";
+import { TokenProvider } from "./context/TokenContext";
+
 
 
 
@@ -218,6 +220,7 @@ root.render(
     <ScrollToTop />
     <CityProvider>
       <AuthProvider>
+         <TokenProvider>
         <Navbar />
 
         <ToastContainer position="top-center" autoClose={3000} />
@@ -276,6 +279,7 @@ root.render(
         </Routes>
 
         <Footer />
+        </TokenProvider>
       </AuthProvider>
     </CityProvider>
   </BrowserRouter>,

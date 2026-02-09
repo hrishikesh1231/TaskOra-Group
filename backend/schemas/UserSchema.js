@@ -30,3 +30,4 @@ UserSchema.plugin(passportLocalMongoose); // adds username + password hash
 
 module.exports = { UserSchema };
 
+

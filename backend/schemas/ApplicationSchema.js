@@ -13,3 +13,4 @@ const ApplicationSchema = new Schema({
 });
 
 module.exports = { ApplicationSchema };
+
