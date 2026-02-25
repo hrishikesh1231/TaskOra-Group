@@ -491,6 +491,32 @@
   font-size: 13px;
 }
 
+.notif-dropdown {
+  position: absolute;
+  top: 35px;
+  right: 0;
+  width: 320px;
+
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  z-index: 999;
+
+  max-height: 350px;   /* 🔥 limits height */
+  overflow-y: auto;    /* 🔥 enables scrollbar */
+}
+
+.notif-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notif-dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
 /* ================= PROFILE ================= */
 .profile-circle {
   width: 36px;
