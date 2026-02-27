@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
@@ -15,17 +14,17 @@ const GigSchema = new Schema({
 
   state: {
     type: String,
-    required: true,   // e.g. Maharashtra
+    required: true, // e.g. Maharashtra
   },
 
   district: {
     type: String,
-    required: true,   // 🔥 MAIN FILTER FIELD
+    required: true, // 🔥 MAIN FILTER FIELD
     index: true,
   },
 
   location: {
-    type: String,     // area / locality (Panaji, Andheri, etc.)
+    type: String, // area / locality (Panaji, Andheri, etc.)
   },
 
   category: {
@@ -52,6 +51,11 @@ const GigSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+  
 });
 
 module.exports = { GigSchema };

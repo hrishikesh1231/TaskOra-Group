@@ -1,5 +1,3 @@
-
-
 require("dotenv").config();
 
 // ================= IMPORTS =================
@@ -18,7 +16,6 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const { deductTokens } = require("./utils/tokenManager");
 const tokenRoutes = require("./routes/tokenRoutes");
 
-
 // ================= MODELS =================
 
 // ✅ VERY IMPORTANT — register all models
@@ -29,8 +26,7 @@ const { Service } = require("./models/Servicemodel");
 const { UserModel } = require("./models/UserModel");
 const { Application } = require("./models/ApplicationModel");
 // const { ServiceApplication } = require("./models/ServiceApplicationModel");
- const ServiceApplication = require("./models/ServiceApplicationModel");
-
+const ServiceApplication = require("./models/ServiceApplicationModel");
 
 const Otp = require("./models/OtpModel");
 
@@ -59,7 +55,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 
 app.set("trust proxy", 1);
@@ -83,13 +79,12 @@ app.use(
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
-  })
+  }),
 );
 
 // ================= PASSPORT =================
 app.use(passport.initialize());
 app.use(passport.session());
-
 
 /// notification
 
@@ -98,8 +93,6 @@ app.use("/api", notificationRoutes);
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
 passport.deserializeUser(UserModel.deserializeUser());
-
-
 
 ///   token
 app.use("/api/tokens", tokenRoutes);
@@ -119,7 +112,9 @@ app.post("/send-otp", async (req, res) => {
   try {
     const { email } = req.body || {};
     if (!email) {
-      return res.status(400).json({ success: false, message: "Email required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email required" });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -147,7 +142,6 @@ app.post("/send-otp", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 app.post("/verify-otp", async (req, res) => {
   try {
@@ -207,8 +201,6 @@ app.post("/verify-otp", async (req, res) => {
   }
 });
 
-
-
 app.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user) => {
     if (err) return next(err);
@@ -229,11 +221,6 @@ app.post("/login", (req, res, next) => {
     });
   })(req, res, next);
 });
-
-
-
-
-
 
 app.get("/current-user", (req, res) => {
   if (!req.isAuthenticated()) {
@@ -261,8 +248,6 @@ app.get("/logout", (req, res) => {
     res.json({ success: true });
   });
 });
-
-
 
 // ================= ADD GIG (BASELINE + AI) =================
 app.post("/addGig", isLoggedIn, async (req, res) => {
@@ -335,18 +320,15 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
       message: "Gig created successfully",
       gig: newGig,
     });
-
   } catch (err) {
     console.error("ADD GIG ERROR:", err.response?.data || err.message);
 
     return res.status(400).json({
       error:
-        err.response?.data?.message ||
-        "Gig rejected by AI or invalid data",
+        err.response?.data?.message || "Gig rejected by AI or invalid data",
     });
   }
 });
-
 
 // ================= ADD SERVICE (BASELINE + AI) =================
 app.post("/addService", isLoggedIn, async (req, res) => {
@@ -439,7 +421,6 @@ app.post("/addService", isLoggedIn, async (req, res) => {
       message: "Service created successfully",
       service: newService,
     });
-
   } catch (err) {
     console.error("🔥 ADD SERVICE ERROR:");
     console.error("Message:", err.message);
@@ -497,7 +478,7 @@ app.put("/gig/:id", isLoggedIn, async (req, res) => {
     const updatedGig = await Gig.findOneAndUpdate(
       { _id: req.params.id, postedBy: req.user._id },
       req.body,
-      { new: true }
+      { new: true },
     );
 
     if (!updatedGig) {
@@ -510,7 +491,6 @@ app.put("/gig/:id", isLoggedIn, async (req, res) => {
       message: "Gig updated successfully",
       gig: updatedGig,
     });
-
   } catch (err) {
     console.error("❌ UPDATE GIG ERROR:", err.response?.data || err.message);
 
@@ -523,9 +503,6 @@ app.put("/gig/:id", isLoggedIn, async (req, res) => {
     res.status(500).json({ error: "Failed to update gig" });
   }
 });
-
-
-
 
 ///////
 console.log("🔥 REGISTERING SERVICE ROUTES");
@@ -573,7 +550,7 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
     const updatedService = await Service.findOneAndUpdate(
       { _id: req.params.id, postedBy: req.user._id },
       req.body,
-      { new: true }
+      { new: true },
     );
 
     if (!updatedService) {
@@ -586,11 +563,10 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
       message: "Service updated successfully",
       service: updatedService,
     });
-
   } catch (err) {
     console.error(
       "❌ UPDATE SERVICE ERROR:",
-      err.response?.data || err.message
+      err.response?.data || err.message,
     );
 
     if (err.response?.data?.message) {
@@ -602,9 +578,6 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
     res.status(500).json({ error: "Failed to update service" });
   }
 });
-
-
-
 
 ////////////////   my service application histroy
 
@@ -625,19 +598,55 @@ app.get("/my-service-applications", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
 // ================= SEARCH (OPTION B) =================
+// app.get("/getGigs/:city", async (req, res) => {
+//   const city = req.params.city;
+//   const gigs = await Gig.find({
+//     $or: [
+//       { location: new RegExp(city, "i") },
+//       { district: new RegExp(city, "i") },
+//     ],
+//   }).populate("postedBy", "username email");
+//   res.json(gigs);
+// });
+
+// app.get("/getGigs/:city", async (req, res) => {
+//   const city = req.params.city;
+
+//   const gigs = await Gig.find({
+//     isActive: true, // ✅ THIS IS THE REAL FIELD YOU USE
+//     $or: [
+//       { location: new RegExp(city, "i") },
+//       { district: new RegExp(city, "i") },
+//     ],
+//   }).populate("postedBy", "username email");
+
+//   res.json(gigs);
+// });
+
+
 app.get("/getGigs/:city", async (req, res) => {
   const city = req.params.city;
+  console.log("🔍 Searching gigs for:", city);
+
   const gigs = await Gig.find({
+    isActive: true,
     $or: [
       { location: new RegExp(city, "i") },
       { district: new RegExp(city, "i") },
     ],
   }).populate("postedBy", "username email");
+
+  console.log("📦 Found gigs:", gigs.length);
+
   res.json(gigs);
 });
+
+
+
+
+
+
 
 
 app.get("/getService/:city", async (req, res) => {
@@ -659,11 +668,20 @@ app.get("/getService/:city", async (req, res) => {
 });
 
 // ================= NEAR ME =================
+// app.get("/gigs-near-me", isLoggedIn, async (req, res) => {
+//   const gigs = await Gig.find({ district: req.user.district }).populate(
+//     "postedBy",
+//     "username email"
+//   );
+//   res.json(gigs);
+// });
+
 app.get("/gigs-near-me", isLoggedIn, async (req, res) => {
-  const gigs = await Gig.find({ district: req.user.district }).populate(
-    "postedBy",
-    "username email"
-  );
+  const gigs = await Gig.find({
+    district: req.user.district,
+    isActive: true, // ✅ ADD THIS
+  }).populate("postedBy", "username email");
+
   res.json(gigs);
 });
 
@@ -672,17 +690,81 @@ app.get("/services-near-me", isLoggedIn, async (req, res) => {
   res.json(services);
 });
 
-
-
 ///// apply on gig
+// app.post(
+//   "/applyGig/:gigId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     try {
+//       // ================= EXISTING LOGIC (DO NOT CHANGE) =================
+//       const application = new Application({
+//         gig: req.params.gigId,
+//         applicant: req.user._id,
+//         ...req.body,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
+
+//       await application.save();
+
+//       /**
+//        * 🔥 TOKEN DEDUCTION (SAFE POINT)
+//        */
+//       await deductTokens({
+//         userId: req.user._id,
+//         amount: 2, // 🔧 applying to gig cost
+//         reason: "Apply Gig",
+//       });
+
+//       // ================= STEP 3: NOTIFICATION + EMAIL =================
+//       try {
+//         const gig = await Gig.findById(req.params.gigId);
+
+//         if (gig) {
+//           const owner = await UserModel.findById(gig.postedBy);
+
+//           if (owner) {
+//             await Notification.create({
+//               user: owner._id,
+//               title: "New Application",
+//               message: `${req.user.username} applied to your gig`,
+//               type: "APPLY",
+//               link: `/gig/${gig._id}/applicants`,
+//             });
+
+//             await sendEmail({
+//               to: owner.email,
+//               subject: "New Application Received",
+//               html: `
+//                 <h2>New Application</h2>
+//                 <p><b>${req.user.username}</b> has applied to your gig.</p>
+//               `,
+//             });
+//           }
+//         }
+//       } catch (err) {
+//         console.error("STEP 3 notification/email error:", err.message);
+//       }
+//       // ================= END STEP 3 =================
+
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ APPLY GIG ERROR:", err);
+//       res.status(500).json({ error: "Failed to apply gig" });
+//     }
+//   },
+// );
+
 app.post(
   "/applyGig/:gigId",
   isLoggedIn,
   upload.array("pictures", 5),
   async (req, res) => {
+    let application;
+
     try {
-      // ================= EXISTING LOGIC (DO NOT CHANGE) =================
-      const application = new Application({
+      // ================= EXISTING LOGIC (NOT CHANGED) =================
+      application = new Application({
         gig: req.params.gigId,
         applicant: req.user._id,
         ...req.body,
@@ -691,12 +773,10 @@ app.post(
 
       await application.save();
 
-      /**
-       * 🔥 TOKEN DEDUCTION (SAFE POINT)
-       */
+      // ================= TOKEN DEDUCTION =================
       await deductTokens({
         userId: req.user._id,
-        amount: 2, // 🔧 applying to gig cost
+        amount: 2,
         reason: "Apply Gig",
       });
 
@@ -729,17 +809,24 @@ app.post(
       } catch (err) {
         console.error("STEP 3 notification/email error:", err.message);
       }
-      // ================= END STEP 3 =================
 
       res.json({ success: true });
+
     } catch (err) {
-      console.error("❌ APPLY GIG ERROR:", err);
-      res.status(500).json({ error: "Failed to apply gig" });
+
+      console.error("❌ APPLY GIG ERROR:", err.message);
+
+      // 🔥 IMPORTANT: CLEANUP IF TOKEN FAILED
+      if (application && application._id) {
+        await Application.findByIdAndDelete(application._id);
+      }
+
+      return res.status(400).json({
+        error: err.message || "Insufficient tokens to apply",
+      });
     }
   }
 );
-
-
 
 app.post(
   "/applyService/:serviceId",
@@ -802,14 +889,12 @@ app.post(
       console.log("📧 Service email sent");
 
       res.json({ success: true });
-
     } catch (err) {
       console.error("❌ APPLY SERVICE ERROR:", err);
       res.status(500).json({ error: err.message });
     }
-  }
+  },
 );
-
 
 app.get("/my-applications", isLoggedIn, async (req, res) => {
   const apps = await Application.find({
@@ -817,8 +902,6 @@ app.get("/my-applications", isLoggedIn, async (req, res) => {
   }).populate("gig");
   res.json(apps);
 });
-
-
 
 app.get("/count/gigs/:city", async (req, res) => {
   try {
@@ -838,7 +921,6 @@ app.get("/count/gigs/:city", async (req, res) => {
   }
 });
 
-
 // ================= SERVICE COUNT BY DISTRICT =================
 app.get("/count/services/:district", async (req, res) => {
   try {
@@ -855,12 +937,13 @@ app.get("/count/services/:district", async (req, res) => {
 
 app.get("/debug-users", async (req, res) => {
   const users = await UserModel.find({});
-  res.json(users.map(u => ({
-    username: u.username,
-    email: u.email,
-  })));
+  res.json(
+    users.map((u) => ({
+      username: u.username,
+      email: u.email,
+    })),
+  );
 });
-
 
 // ================= MY GIGS =================
 app.get("/my-gigs", isLoggedIn, async (req, res) => {
@@ -878,7 +961,7 @@ app.get("/my-gigs", isLoggedIn, async (req, res) => {
   }
 });
 
-1
+1;
 
 // ================= MY SERVICES =================
 app.get("/my-services", isLoggedIn, async (req, res) => {
@@ -897,7 +980,6 @@ app.get("/my-services", isLoggedIn, async (req, res) => {
     });
   }
 });
-
 
 // ================= MY APPLICATIONS =================
 app.get("/my-applications", isLoggedIn, async (req, res) => {
@@ -921,7 +1003,6 @@ app.get("/my-applications", isLoggedIn, async (req, res) => {
   }
 });
 
-
 // ================= DELETE GIG (OWNER ONLY) =================
 app.delete("/gig/:id", isLoggedIn, async (req, res) => {
   try {
@@ -939,7 +1020,6 @@ app.delete("/gig/:id", isLoggedIn, async (req, res) => {
     res.status(200).json({
       message: "✅ Gig deleted successfully",
     });
-
   } catch (err) {
     console.error("❌ Error deleting gig:", err);
     res.status(500).json({
@@ -975,7 +1055,6 @@ app.delete("/service/:id", isLoggedIn, async (req, res) => {
     res.status(200).json({
       message: "✅ Service deleted successfully",
     });
-
   } catch (err) {
     console.error("❌ Error deleting service:", err);
     res.status(500).json({
@@ -984,8 +1063,41 @@ app.delete("/service/:id", isLoggedIn, async (req, res) => {
   }
 });
 
-
 // ================= VIEW GIG APPLICANTS (OWNER ONLY) =================
+// app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
+//   try {
+//     // 1️⃣ Verify gig exists
+//     const gig = await Gig.findById(req.params.id);
+
+//     if (!gig) {
+//       return res.status(404).json({ error: "Gig not found" });
+//     }
+
+//     // 2️⃣ Owner-only access
+//     if (gig.postedBy.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({
+//         error: "Not authorized to view applicants",
+//       });
+//     }
+
+//     // 3️⃣ Fetch applications for this gig
+//     const applications = await Application.find({ gig: gig._id })
+//       .populate("applicant", "username email") // safe public info
+//       .sort({ createdAt: -1 });
+
+//     // 4️⃣ Response
+//     res.status(200).json({
+//       count: applications.length,
+//       applications,
+//     });
+//   } catch (err) {
+//     console.error("❌ Error fetching applicants:", err);
+//     res.status(500).json({
+//       error: "Failed to fetch applicants",
+//     });
+//   }
+// });
+
 app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
   try {
     // 1️⃣ Verify gig exists
@@ -1002,12 +1114,30 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
       });
     }
 
-    // 3️⃣ Fetch applications for this gig
-    const applications = await Application.find({ gig: gig._id })
-      .populate("applicant", "username email") // safe public info
-      .sort({ createdAt: -1 });
+    // 🔥 CHECK IF SOMEONE IS SELECTED
+    const selectedApp = await Application.findOne({
+      gig: gig._id,
+      status: "selected",
+    });
 
-    // 4️⃣ Response
+    let applications;
+
+    if (selectedApp) {
+      // ✅ If selected exists → return only that one
+      applications = await Application.find({
+        gig: gig._id,
+        status: "selected",
+      })
+        .populate("applicant", "username email")
+        .sort({ createdAt: -1 });
+
+    } else {
+      // ✅ Otherwise return all (your original logic)
+      applications = await Application.find({ gig: gig._id })
+        .populate("applicant", "username email")
+        .sort({ createdAt: -1 });
+    }
+
     res.status(200).json({
       count: applications.length,
       applications,
@@ -1021,8 +1151,7 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
   }
 });
 
-
-///////////////////// email  
+///////////////////// email
 
 // ================= SELECT GIG APPLICANT =================
 app.post(
@@ -1079,16 +1208,10 @@ app.post(
       console.error("❌ SELECT GIG APPLICANT ERROR:", err);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
 
-
-
-
-
-
 ///////////////
-
 
 // ================= VIEW SERVICE APPLICANTS (OWNER ONLY) =================
 app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
@@ -1129,7 +1252,6 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   }
 });
 
-
 ////////////////// email +noti
 
 // ================= SELECT SERVICE APPLICANT =================
@@ -1139,7 +1261,7 @@ app.post(
   async (req, res) => {
     try {
       const application = await ServiceApplication.findById(
-        req.params.applicationId
+        req.params.applicationId,
       );
 
       if (!application) {
@@ -1148,10 +1270,7 @@ app.post(
 
       // 🔒 Only service owner can select
       const service = await Service.findById(application.service);
-      if (
-        !service ||
-        service.postedBy.toString() !== req.user._id.toString()
-      ) {
+      if (!service || service.postedBy.toString() !== req.user._id.toString()) {
         return res.status(403).json({ error: "Not authorized" });
       }
 
@@ -1190,10 +1309,8 @@ app.post(
       console.error("❌ SELECT SERVICE APPLICANT ERROR:", err);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
-
-
 
 ///////////
 
@@ -1233,7 +1350,7 @@ app.put(
       const updatedUser = await UserModel.findByIdAndUpdate(
         req.user._id,
         updates,
-        { new: true }
+        { new: true },
       );
 
       if (!updatedUser) {
@@ -1254,19 +1371,18 @@ app.put(
       console.error("UPDATE PROFILE ERROR:", err);
       res.status(500).json({ success: false });
     }
-  }
+  },
 );
-
 
 // ================= EXTRA ROUTES =================
 app.use("/api", locationRoutes);
-app.use("/api", contractRoutes);
 
 
 app.get("/debug-users", async (req, res) => {
   try {
-    const users = await UserModel.find({})
-      .select("username email state district tokens createdAt");
+    const users = await UserModel.find({}).select(
+      "username email state district tokens createdAt",
+    );
 
     res.json({
       count: users.length,
@@ -1276,8 +1392,6 @@ app.get("/debug-users", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
-
-
 
 app.get("/notifications", isLoggedIn, async (req, res) => {
   try {
@@ -1297,7 +1411,7 @@ app.post("/notifications/mark-read", isLoggedIn, async (req, res) => {
   try {
     await Notification.updateMany(
       { user: req.user._id, isRead: false },
-      { $set: { isRead: true } }
+      { $set: { isRead: true } },
     );
 
     res.json({ success: true });
@@ -1306,15 +1420,18 @@ app.post("/notifications/mark-read", isLoggedIn, async (req, res) => {
   }
 });
 
-
 app.get("/getGigsByCategory/:category", async (req, res) => {
   try {
     const { category } = req.params;
 
     console.log("Fetching category:", category);
 
+    // const gigs = await Gig.find({
+    //   category: new RegExp(`^${category}$`, "i"), // ✅ case-insensitive exact match
+    // })
     const gigs = await Gig.find({
-      category: new RegExp(`^${category}$`, "i"), // ✅ case-insensitive exact match
+      category: new RegExp(`^${category}$`, "i"),
+      isActive: true, // ✅ ADD THIS
     })
       .populate("postedBy", "username")
       .sort({ createdAt: -1 });
@@ -1329,6 +1446,28 @@ app.get("/getGigsByCategory/:category", async (req, res) => {
 });
 
 
+app.get("/admin/reactivate-everything", async (req, res) => {
+  try {
+    const gigResult = await Gig.updateMany(
+      {},
+      { $set: { isActive: true } }
+    );
+
+    const serviceResult = await Service.updateMany(
+      {},
+      { $set: { isActive: true } }
+    );
+
+    res.json({
+      message: "All gigs & services activated",
+      gigsModified: gigResult.modifiedCount,
+      servicesModified: serviceResult.modifiedCount,
+    });
+  } catch (err) {
+    console.error("Reactivate error:", err);
+    res.status(500).json({ error: "Failed" });
+  }
+});
 
 // ================= START =================
 app.listen(PORT, async () => {
