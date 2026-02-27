@@ -1,0 +1,74 @@
+.contracts-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.contracts-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.contract-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.3s ease;
+}
+
+.contract-card:hover {
+  transform: translateY(-3px);
+}
+
+.contract-info h3 {
+  margin: 0 0 10px;
+}
+
+.status {
+  font-weight: 600;
+}
+
+.status.pending {
+  color: #888;
+}
+
+.status.waiting {
+  color: #ff9800;
+}
+
+.status.confirmed {
+  color: #4caf50;
+}
+
+.confirm-btn {
+  padding: 8px 16px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.confirm-btn:hover {
+  background-color: #125ea5;
+}
+
+.completed-text {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.loading,
+.no-contracts {
+  text-align: center;
+  font-size: 18px;
+  color: #777;
+}

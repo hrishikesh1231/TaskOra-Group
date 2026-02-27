@@ -1,9 +1,9 @@
-/* ================= HERO CONTAINER ================= */
+/* ================== HERO CONTAINER ================= */
 .hero-container {
   width: 100%;
   min-height: 100vh;
 
-  /* 🔥 LIGHTER & CLEAN BACKGROUND (not too dark) */
+  /* 🔥 LIGHTER & CLEAN BACKGROUND (UNCHANGED) */
   background:
     linear-gradient(
       to right,
@@ -21,9 +21,8 @@
   align-items: center;
   justify-content: center;
 
-  /* 🔥 REMOVE NAVBAR GAP */
   margin-top: 0;
-  padding: 20px 5vw 70px; /* reduced top padding */
+  padding: 20px 5vw 70px;
 
   box-sizing: border-box;
 }
@@ -83,8 +82,7 @@
   padding: 16px 24px;
   border-radius: 60px;
 
-  box-shadow:
-    0 18px 36px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.12);
 }
 
 .search-box input {
@@ -206,4 +204,101 @@
   .right img {
     max-width: 75%;
   }
+}
+
+/* ========================================================= */
+/* 🌫 PREMIUM GLASSMORPHISM MODAL (ONLY VERSION KEPT) */
+/* ========================================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.25s ease;
+}
+
+.modal-box {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  padding: 28px 26px;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 430px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: modalPop 0.28s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.modal-box h3 {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  color: #222;
+}
+
+.modal-box p {
+  font-size: 0.95rem;
+  color: #444;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #f3f3f3;
+}
+
+.agree-btn {
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 18px rgba(0, 123, 255, 0.35);
+}
+
+.agree-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 123, 255, 0.45);
+}
+
+/* ✨ Animations */
+
+@keyframes modalPop {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

@@ -12,13 +12,13 @@ const contractSchema = new Schema(
 
     recruiter: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true
     },
 
     applicant: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true
     },
 

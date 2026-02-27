@@ -103,6 +103,7 @@ passport.deserializeUser(UserModel.deserializeUser());
 
 ///   token
 app.use("/api/tokens", tokenRoutes);
+app.use("/api", contractRoutes);
 
 // ================= EMAIL =================
 const transporter = nodemailer.createTransport({
@@ -263,85 +264,6 @@ app.get("/logout", (req, res) => {
 
 
 
-// // ================= ADD GIG (BASELINE + AI) =================
-// // ================= ADD GIG (BASELINE + AI) =================
-// app.post("/addGig", isLoggedIn, async (req, res) => {
-//   try {
-//     const {
-//       title,
-//       description,
-//       category,
-//       state,
-//       district,
-//       location,
-//       date,
-//       contact,
-//     } = req.body;
-
-//     /**
-//      * 0️⃣ Hard backend validation (baseline safety)
-//      */
-//     if (
-//       !title ||
-//       !description ||
-//       !category ||
-//       !state ||
-//       !district ||
-//       !date ||
-//       !contact
-//     ) {
-//       return res.status(400).json({ error: "Missing required fields" });
-//     }
-
-//     /**
-//      * 1️⃣ AI CHECK (ONLY checks title & description internally)
-//      *    ⚠️ We still send all required fields to FastAPI schema
-//      */
-//     await axios.post(`${process.env.FASTAPI_URL}/analyze`, {
-//       title,
-//       description,
-
-//       // required by FastAPI schema (NOT ML-checked)
-//       location: location || "na",
-//       category,
-//       date,       // must be YYYY-MM-DD
-//       contact,
-//     });
-
-//     /**
-//      * 2️⃣ SAVE GIG (BASELINE LOGIC — DO NOT CHANGE)
-//      */
-//     const newGig = new Gig({
-//       title,
-//       description,
-//       category,
-//       state,
-//       district,      // ✅ FROM FORM
-//       location,      // ✅ FROM FORM
-//       date,
-//       contact,
-//       postedBy: req.user._id, // ✅ AUTH
-//     });
-
-//     await newGig.save();
-
-//     return res.status(201).json({
-//       message: "Gig created successfully",
-//       gig: newGig,
-//     });
-
-//   } catch (err) {
-//     console.error("ADD GIG ERROR:", err.response?.data || err.message);
-
-//     return res.status(400).json({
-//       error:
-//         err.response?.data?.message ||
-//         "Gig rejected by AI or invalid data",
-//     });
-//   }
-// });
-
-
 // ================= ADD GIG (BASELINE + AI) =================
 app.post("/addGig", isLoggedIn, async (req, res) => {
   try {
@@ -425,174 +347,6 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
   }
 });
 
-
-
-
-// // ================= ADD SERVICE (BASELINE + AI) =================
-// // ================= ADD SERVICE (BASELINE + AI) =================
-// app.post("/addService", isLoggedIn, async (req, res) => {
-//   try {
-//     const {
-//       title,
-//       description,
-//       salary,
-//       state,
-//       district,
-//       location,
-//       date,
-//       contact,
-//     } = req.body;
-
-//     /**
-//      * 0️⃣ Hard backend validation (baseline safety)
-//      */
-//     if (
-//       !title ||
-//       !description ||
-//       !salary ||
-//       !state ||
-//       !district ||
-//       !date ||
-//       !contact
-//     ) {
-//       return res.status(400).json({
-//         error: "Missing required fields",
-//       });
-//     }
-
-//     /**
-//      * 1️⃣ AI CHECK (ONLY checks title & description internally)
-//      *    ⚠️ We still send all required fields to FastAPI schema
-//      */
-//     await axios.post(`${process.env.FASTAPI_URL}/analyze_service`, {
-//       title,
-//       description,
-
-//       // required by FastAPI schema (NOT ML-checked)
-//       salary,
-//       location: location || "na",
-//       date,          // YYYY-MM-DD
-//       contact,
-//     });
-
-//     /**
-//      * 2️⃣ SAVE SERVICE (BASELINE LOGIC — DO NOT CHANGE)
-//      */
-//     const newService = new Service({
-//       title,
-//       description,
-//       salary,
-//       state,
-//       district,      // ✅ FROM FORM
-//       location,      // ✅ FROM FORM
-//       date,
-//       contact,
-//       postedBy: req.user._id, // ✅ AUTH
-//     });
-
-//     await newService.save();
-
-//     return res.status(201).json({
-//       message: "Service created successfully",
-//       service: newService,
-//     });
-
-//   } catch (err) {
-//     console.error("ADD SERVICE ERROR:", err.response?.data || err.message);
-
-//     return res.status(400).json({
-//       error:
-//         err.response?.data?.message ||
-//         "Service rejected by AI or invalid data",
-//     });
-//   }
-// });
-
-
-// // ================= ADD SERVICE (BASELINE + AI) =================
-// app.post("/addService", isLoggedIn, async (req, res) => {
-//   try {
-//     const {
-//       title,
-//       description,
-//       salary,
-//       state,
-//       district,
-//       location,
-//       date,
-//       contact,
-//     } = req.body;
-
-//     /**
-//      * 0️⃣ Hard backend validation (baseline safety)
-//      */
-//     if (
-//       !title ||
-//       !description ||
-//       !salary ||
-//       !state ||
-//       !district ||
-//       !date ||
-//       !contact
-//     ) {
-//       return res.status(400).json({
-//         error: "Missing required fields",
-//       });
-//     }
-
-//     /**
-//      * 1️⃣ AI CHECK (ONLY checks title & description internally)
-//      */
-//     await axios.post(`${process.env.FASTAPI_URL}/analyze_service`, {
-//       title,
-//       description,
-//       salary,
-//       location: location || "na",
-//       date,
-//       contact,
-//     });
-
-//     /**
-//      * 2️⃣ SAVE SERVICE (BASELINE LOGIC — DO NOT CHANGE)
-//      */
-//     const newService = new Service({
-//       title,
-//       description,
-//       salary,
-//       state,
-//       district,
-//       location,
-//       date,
-//       contact,
-//       postedBy: req.user._id,
-//     });
-
-//     await newService.save();
-
-//     /**
-//      * 3️⃣ TOKEN DEDUCTION (🔥 NEW — SAFE POINT)
-//      */
-//     await deductTokens({
-//       userId: req.user._id,
-//       amount: 3, // 🔧 service posting cost
-//       reason: "Post Service",
-//     });
-
-//     return res.status(201).json({
-//       message: "Service created successfully",
-//       service: newService,
-//     });
-
-//   } catch (err) {
-//     console.error("ADD SERVICE ERROR:", err.response?.data || err.message);
-
-//     return res.status(400).json({
-//       error:
-//         err.response?.data?.message ||
-//         "Service rejected by AI or invalid data",
-//     });
-//   }
-// });
 
 // ================= ADD SERVICE (BASELINE + AI) =================
 app.post("/addService", isLoggedIn, async (req, res) => {
@@ -851,38 +605,6 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
 
 
 
-///////////////////////
-
-
-// app.post(
-//   "/applyService/:serviceId",
-//   isLoggedIn,
-//   upload.array("pictures", 5),
-//   async (req, res) => {
-//     try {
-//       const application = new ServiceApplication({
-//         service: req.params.serviceId,
-//         applicant: req.user._id,
-
-//         name: req.body.name,
-//         message: req.body.message,
-//         contact: req.body.contact,
-//         charges: req.body.charges,
-
-//         pictures: (req.files || []).map((f) => f.path),
-//       });
-
-//       await application.save();
-
-//       res.json({ success: true });
-//     } catch (err) {
-//       console.error("❌ APPLY SERVICE ERROR:", err);
-//       res.status(500).json({ error: err.message });
-//     }
-//   }
-// );
-
-
 
 ////////////////   my service application histroy
 
@@ -917,15 +639,23 @@ app.get("/getGigs/:city", async (req, res) => {
   res.json(gigs);
 });
 
+
 app.get("/getService/:city", async (req, res) => {
-  const city = req.params.city;
-  const services = await Service.find({
-    $or: [
-      { location: new RegExp(city, "i") },
-      { district: new RegExp(city, "i") },
-    ],
-  });
-  res.json(services);
+  try {
+    const city = req.params.city;
+
+    const services = await Service.find({
+      $or: [
+        { location: new RegExp(city, "i") },
+        { district: new RegExp(city, "i") },
+      ],
+    }).populate("postedBy", "username email"); // ✅ FIX ADDED
+
+    res.json(services);
+  } catch (err) {
+    console.error("Service Fetch Error:", err);
+    res.status(500).json({ error: "Failed to fetch services" });
+  }
 });
 
 // ================= NEAR ME =================
@@ -942,81 +672,6 @@ app.get("/services-near-me", isLoggedIn, async (req, res) => {
   res.json(services);
 });
 
-// ================= APPLICATIONS =================   for gig
-// app.post(
-//   "/applyGig/:gigId",
-//   isLoggedIn,
-//   upload.array("pictures", 5),
-//   async (req, res) => {
-//     const application = new Application({
-//       gig: req.params.gigId,
-//       applicant: req.user._id,
-//       ...req.body,
-//       pictures: req.files.map((f) => f.path),
-//     });
-
-//     await application.save();
-//     res.json({ success: true });
-//   }
-// );
-
-// app.post(
-//   "/applyGig/:gigId",
-//   isLoggedIn,
-//   upload.array("pictures", 5),
-//   async (req, res) => {
-//     try {
-//       // ================= EXISTING LOGIC (DO NOT CHANGE) =================
-//       const application = new Application({
-//         gig: req.params.gigId,
-//         applicant: req.user._id,
-//         ...req.body,
-//         pictures: (req.files || []).map((f) => f.path),
-//       });
-
-//       await application.save();
-
-//       // ================= STEP 3: NOTIFICATION + EMAIL =================
-//       try {
-//         const gig = await Gig.findById(req.params.gigId);
-
-//         if (gig) {
-//           // ✅ IMPORTANT: UserModel (NOT User)
-//           const owner = await UserModel.findById(gig.postedBy);
-
-//           if (owner) {
-//             // 🔔 Notification
-//             await Notification.create({
-//               user: owner._id,
-//               title: "New Application",
-//               message: `${req.user.username} applied to your gig`,
-//               type: "APPLY",
-//               link: `/gig/${gig._id}/applicants`,
-//             });
-
-//             // 📧 Email
-//             await sendEmail({
-//               to: owner.email,
-//               subject: "New Application Received",
-//               html: `
-//                 <h2>New Application</h2>
-//                 <p><b>${req.user.username}</b> has applied to your gig.</p>
-//               `,
-//             });
-//           }
-//         }
-//       } catch (err) {
-//         console.error("STEP 3 notification/email error:", err.message);
-//       }
-//       // ================= END STEP 3 =================
-
-//       res.json({ success: true });
-//     } catch (err) {
-//       console.error("❌ APPLY GIG ERROR:", err);
-//       res.status(500).json({ error: "Failed to apply gig" });
-//     }
-//   }
-// );
 
 
 ///// apply on gig
@@ -1084,91 +739,6 @@ app.post(
   }
 );
 
-
-// app.post(
-//   "/applyService/:serviceId",
-//   isLoggedIn,
-//   upload.array("pictures", 5),
-//   async (req, res) => {
-//     try {
-//       const application = new ServiceApplication({
-//         service: req.params.serviceId,
-//         applicant: req.user._id,
-//         name: req.body.name,
-//         message: req.body.message,
-//         contact: req.body.contact,
-//         charges: req.body.charges,
-//         pictures: (req.files || []).map((f) => f.path),
-//       });
-
-//       await application.save();
-//       res.json({ success: true });
-//     } catch (err) {
-//       console.error("❌ APPLY SERVICE ERROR:", err);
-//       res.status(500).json({ error: err.message });
-//     }
-//   }
-// );
-
-// app.post(
-//   "/applyService/:serviceId",
-//   isLoggedIn,
-//   upload.array("pictures", 5),
-//   async (req, res) => {
-//     try {
-//       console.log("🔥 APPLY SERVICE ROUTE HIT");
-
-//       const application = await ServiceApplication.create({
-//         service: req.params.serviceId,
-//         applicant: req.user._id,
-//         name: req.body.name,
-//         message: req.body.message,
-//         contact: req.body.contact,
-//         charges: req.body.charges,
-//         pictures: (req.files || []).map((f) => f.path),
-//       });
-
-//       console.log("✅ Service application saved");
-
-//       // 1️⃣ Fetch service
-//       const service = await Service.findById(req.params.serviceId);
-//       if (!service) return res.json({ success: true });
-
-//       // 2️⃣ Fetch owner
-//       const owner = await UserModel.findById(service.postedBy);
-//       if (!owner) return res.json({ success: true });
-
-//       // 3️⃣ Notification
-//       await Notification.create({
-//         user: owner._id,
-//         title: "New Service Application",
-//         message: `${req.user.username} applied to your service`,
-//         type: "APPLY",
-//         link: `/service/${service._id}/applicants`,
-//       });
-
-//       console.log("🔔 Service notification created");
-
-//       // 4️⃣ Email
-//       await sendEmail({
-//         to: owner.email,
-//         subject: "New Service Application",
-//         html: `
-//           <h3>New Service Application</h3>
-//           <p><b>${req.user.username}</b> applied to your service.</p>
-//         `,
-//       });
-
-//       console.log("📧 Service email sent");
-
-//       res.json({ success: true });
-
-//     } catch (err) {
-//       console.error("❌ APPLY SERVICE ERROR:", err);
-//       res.status(500).json({ error: err.message });
-//     }
-//   }
-// );
 
 
 app.post(
@@ -1733,6 +1303,28 @@ app.post("/notifications/mark-read", isLoggedIn, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to mark read" });
+  }
+});
+
+
+app.get("/getGigsByCategory/:category", async (req, res) => {
+  try {
+    const { category } = req.params;
+
+    console.log("Fetching category:", category);
+
+    const gigs = await Gig.find({
+      category: new RegExp(`^${category}$`, "i"), // ✅ case-insensitive exact match
+    })
+      .populate("postedBy", "username")
+      .sort({ createdAt: -1 });
+
+    res.json(gigs);
+  } catch (err) {
+    console.error("Category Fetch Error:", err);
+    res.status(500).json({
+      error: "Failed to fetch gigs by category",
+    });
   }
 });
 

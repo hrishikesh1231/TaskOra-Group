@@ -22,19 +22,33 @@ const categories = [
 const PopularCategories = () => {
   const navigate = useNavigate();
   const sectionRef = useRef(null);
+  const trackRef = useRef(null);
+
   const [index, setIndex] = useState(0);
+  const [cardWidth, setCardWidth] = useState(260);
 
   const visibleCards = 3;
   const maxIndex = categories.length - visibleCards;
 
-  const next = () => setIndex((prev) => (prev < maxIndex ? prev + 1 : prev));
-  const prev = () => setIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  useEffect(() => {
+    if (trackRef.current) {
+      const card = trackRef.current.querySelector(".category-card");
+      if (card) {
+        setCardWidth(card.offsetWidth + 20); // width + gap
+      }
+    }
+  }, []);
+
+  const next = () =>
+    setIndex((prev) => (prev < maxIndex ? prev + 1 : prev));
+
+  const prev = () =>
+    setIndex((prev) => (prev > 0 ? prev - 1 : prev));
 
   const handleClick = (category) => {
     navigate(`/gigs/category/${encodeURIComponent(category)}`);
   };
 
-  /* ================= RE-ANIMATE EVERY TIME ================= */
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -44,7 +58,7 @@ const PopularCategories = () => {
         if (entry.isIntersecting) {
           section.classList.add("show");
         } else {
-          section.classList.remove("show"); // reset animation
+          section.classList.remove("show");
         }
       },
       { threshold: 0.3 }
@@ -66,7 +80,10 @@ const PopularCategories = () => {
         <div className="categories-window">
           <div
             className="categories-track"
-            style={{ transform: `translateX(-${index * 260}px)` }}
+            ref={trackRef}
+            style={{
+              transform: `translateX(-${index * cardWidth}px)`,
+            }}
           >
             {categories.map((cat) => (
               <div

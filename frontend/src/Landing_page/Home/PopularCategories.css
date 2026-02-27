@@ -152,3 +152,64 @@
     font-size: 1.1rem;
   }
 }
+
+
+.categories-section {
+  padding: 50px 5vw;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: 0.6s ease;
+}
+
+.categories-section.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.categories-slider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.categories-window {
+  overflow: hidden;
+  width: 820px; /* 3 cards */
+}
+
+.categories-track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.35s ease;
+}
+
+.category-card {
+  min-width: 240px;
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  text-align: center;
+  transition: 0.25s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+}
+
+.category-icon {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.cat-btn {
+  border: none;
+  background: #0f172a;
+  color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+}

@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -80,7 +79,7 @@ const Navbar = () => {
       await axios.post(
         `/api/notifications/${n._id}/read`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
       setNotifOpen(false);
       if (n.link) navigate(n.link);
@@ -92,7 +91,7 @@ const Navbar = () => {
       await axios.post(
         "/api/notifications/read-all",
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
     } catch {}
   };
@@ -119,7 +118,6 @@ const Navbar = () => {
       style={{ height: "4.4rem" }}
     >
       <div className="container-fluid d-flex justify-content-between align-items-center px-4">
-
         {/* ================= LEFT ================= */}
         <div className="d-flex align-items-center gap-4">
           <Link className="navbar-brand" to="/">
@@ -144,57 +142,63 @@ const Navbar = () => {
             )}
           </Link>
 
-          <Link className="nav-link" to="/about">About</Link>
-          <Link className="nav-link" to="/how-it-works">How it works</Link>
-          <Link className="nav-link" to="/help">Help</Link>
-          <Link className="nav-link" to="/contact">Contact</Link>
+          <Link className="nav-link" to="/about">
+            About
+          </Link>
+          <Link className="nav-link" to="/how-it-works">
+            How it works
+          </Link>
+          <Link className="nav-link" to="/help">
+            Help
+          </Link>
+          <Link className="nav-link" to="/contact">
+            Contact
+          </Link>
         </div>
 
         {/* ================= RIGHT ================= */}
         <div className="d-flex align-items-center gap-3">
+          {user && (
+            <div className="position-relative">
+              <FaBell
+                className="cursor-pointer"
+                onClick={() => setNotifOpen(!notifOpen)}
+              />
 
-  {user && (
-    <div className="position-relative">
-      <FaBell
-        className="cursor-pointer"
-        onClick={() => setNotifOpen(!notifOpen)}
-      />
+              {unreadCount > 0 && (
+                <span className="notif-badge">{unreadCount}</span>
+              )}
 
-      {unreadCount > 0 && (
-        <span className="notif-badge">{unreadCount}</span>
-      )}
+              {notifOpen && (
+                <div className="notif-dropdown">
+                  <h6>Notifications</h6>
 
-      {notifOpen && (
-        <div className="notif-dropdown">
-          <h6>Notifications</h6>
+                  {notifications.length === 0 ? (
+                    <p className="text-muted small">No notifications</p>
+                  ) : (
+                    <>
+                      {notifications.map((n) => (
+                        <div
+                          key={n._id}
+                          className={`notif-item ${!n.isRead ? "unread" : ""}`}
+                          onClick={() => handleNotificationClick(n)}
+                        >
+                          <strong>{n.title}</strong>
+                          <p>{n.message}</p>
+                        </div>
+                      ))}
+                    </>
+                  )}
 
-          {notifications.length === 0 ? (
-            <p className="text-muted small">No notifications</p>
-          ) : (
-            <>
-              {notifications.map((n) => (
-                <div
-                  key={n._id}
-                  className={`notif-item ${!n.isRead ? "unread" : ""}`}
-                  onClick={() => handleNotificationClick(n)}
-                >
-                  <strong>{n.title}</strong>
-                  <p>{n.message}</p>
+                  {notifications.length > 0 && (
+                    <button className="mark-all" onClick={markAllAsRead}>
+                      Mark all as read
+                    </button>
+                  )}
                 </div>
-              ))}
-            </>
+              )}
+            </div>
           )}
-
-          {notifications.length > 0 && (
-            <button className="mark-all" onClick={markAllAsRead}>
-              Mark all as read
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )}
-      
 
           {/* 🪙 COIN DROPDOWN */}
           {user && (
@@ -256,6 +260,9 @@ const Navbar = () => {
                   </Link>
                   <Link className="dropdown-item" to="/my-services">
                     Service Post History
+                  </Link>
+                  <Link className="dropdown-item" to="/my-contracts">
+                    My Contracts
                   </Link>
                   <Link className="dropdown-item" to="/update-profile">
                     Update Profile

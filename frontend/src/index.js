@@ -1,4 +1,3 @@
-
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
@@ -34,9 +33,11 @@ import OtpVerify from "./pages/OtpVerify";
 import EditServiceForm from "./Landing_page/ServiceSection/EditServiceForm";
 import ServiceApplicantsList from "./Landing_page/ServiceSection/ServiceApplicantsList";
 import { TokenProvider } from "./context/TokenContext";
-
-
-
+import About from "./Landing_page/About/About";
+import Contact from "./Landing_page/About/Contact";
+import Help from "./Landing_page/About/Help";
+import HowItWorks from "./Landing_page/About/HowItWorks";
+import MyContracts from "./pages/MyContracts";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -50,65 +51,76 @@ root.render(
     <ScrollToTop />
     <CityProvider>
       <AuthProvider>
-         <TokenProvider>
-        <Navbar />
+        <TokenProvider>
+          <Navbar />
 
-        <ToastContainer position="top-center" autoClose={3000} />
-        <Toaster position="top-center" reverseOrder={false} />
+          <ToastContainer position="top-center" autoClose={3000} />
+          <Toaster position="top-center" reverseOrder={false} />
 
-        <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
 
-          {/* ✅ GIGS (NEW ARCHITECTURE) */}
-          <Route path="/gigs" element={<GigSection />} />
-          <Route path="/gigs/:city" element={<Navigate to="/gigs" replace />} />
+            {/* ✅ GIGS (NEW ARCHITECTURE) */}
+            <Route path="/gigs" element={<GigSection />} />
+            <Route
+              path="/gigs/:city"
+              element={<Navigate to="/gigs" replace />}
+            />
 
-          {/* ✅ SERVICES (MATCH GIGS) */}
-          <Route path="/services" element={<Service />} />
-          <Route
-            path="/services/:city"
-            element={<Navigate to="/services" replace />}
-          />
+            {/* ✅ SERVICES (MATCH GIGS) */}
+            <Route path="/services" element={<Service />} />
+            <Route
+              path="/services/:city"
+              element={<Navigate to="/services" replace />}
+            />
 
-          <Route path="/postGig" element={<PostGigForm />} />
-          <Route path="/postService" element={<PostServiceForm />} />
-          <Route path="/signUp" element={<SignUp />} />
-          <Route path="/login" element={<SignIn />} />
+            <Route path="/postGig" element={<PostGigForm />} />
+            <Route path="/postService" element={<PostServiceForm />} />
+            <Route path="/signUp" element={<SignUp />} />
+            <Route path="/login" element={<SignIn />} />
 
-          {/* Apply Routes */}
-          <Route path="/applyGig/:gigId" element={<ApplyGigForm />} />
-          <Route path="/applications" element={<ApplicationHistory />} />
+            {/* Apply Routes */}
+            <Route path="/applyGig/:gigId" element={<ApplyGigForm />} />
+            <Route path="/applications" element={<ApplicationHistory />} />
 
-          <Route path="/my-gigs" element={<MyGigsHistory />} />
-          <Route path="/edit-gig/:id" element={<EditGigForm />} />
-          <Route path="/gig/:id/applicants" element={<ApplicantsList />} />
+            <Route path="/my-gigs" element={<MyGigsHistory />} />
+            <Route path="/edit-gig/:id" element={<EditGigForm />} />
+            <Route path="/gig/:id/applicants" element={<ApplicantsList />} />
 
-          {/* Services */}
-          {/* <Route
+            {/* Services */}
+            {/* <Route
             path="/applyService/:serviceId"
             element={<ApplyServiceFrom />}
           /> */}
-          <Route path="/applyService/:id" element={<ApplyServiceForm />} />
+            <Route path="/applyService/:id" element={<ApplyServiceForm />} />
 
-          <Route
-            path="/service-applications"
-            element={<ServiceApplicationHistory />}
-          />
-          <Route path="/my-services" element={<MyServicesHistory />} />
-          <Route path="/edit-service/:id" element={<EditServiceForm />} />
-          <Route
-            path="/service/:id/applicants"
-            element={<ServiceApplicantsList />}
-          />
+            <Route
+              path="/service-applications"
+              element={<ServiceApplicationHistory />}
+            />
+            <Route path="/my-services" element={<MyServicesHistory />} />
+            <Route path="/edit-service/:id" element={<EditServiceForm />} />
+            <Route
+              path="/service/:id/applicants"
+              element={<ServiceApplicantsList />}
+            />
 
-          <Route path="/update-profile" element={<EditProfile />} />
-          <Route path="/gigs/category/:category" element={<CategoryGigs />} />
+            <Route path="/update-profile" element={<EditProfile />} />
+            <Route path="/gigs/category/:category" element={<CategoryGigs />} />
 
-          {/* OTP */}
-          <Route path="/verify-otp" element={<OtpVerify />} />
-        </Routes>
+            {/* OTP */}
+            <Route path="/verify-otp" element={<OtpVerify />} />
 
-        <Footer />
+            {/* extra */}
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+
+            <Route path="/my-contracts" element={<MyContracts />} />
+          </Routes>
+
+          <Footer />
         </TokenProvider>
       </AuthProvider>
     </CityProvider>
