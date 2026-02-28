@@ -113,6 +113,302 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// // ================= SEND OTP =================
+// app.post("/send-otp", async (req, res) => {
+//   try {
+//     const { email } = req.body || {};
+//     if (!email) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Email required" });
+//     }
+
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+//     console.log("📩 SENDING OTP:", otp, "TO:", email);
+
+//     await Otp.deleteMany({ email });
+
+//     await Otp.create({
+//       email,
+//       otp,
+//       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+//     });
+
+//     await transporter.sendMail({
+//       from: `"TaskOra" <${process.env.EMAIL_USER}>`,
+//       to: email,
+//       subject: "Your OTP Code",
+//       text: `Your OTP is ${otp}. Valid for 5 minutes.`,
+//     });
+
+//     res.json({ success: true, message: "OTP sent" });
+//   } catch (err) {
+//     console.error("❌ SEND OTP ERROR:", err);
+//     res.status(500).json({ success: false });
+//   }
+// });
+
+
+
+// app.post("/verify-otp", async (req, res) => {
+//   try {
+//     const { name, email, password, otp, state, district } = req.body || {};
+
+//     if (!name || !email || !password || !otp || !state || !district) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields required",
+//       });
+//     }
+
+//     // ✅ Check if email already registered
+//     const existingEmail = await UserModel.findOne({ email });
+//     if (existingEmail) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email already registered",
+//       });
+//     }
+
+//     const otpRecord = await Otp.findOne({ email });
+
+//     if (!otpRecord) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP not found",
+//       });
+//     }
+
+//     if (otpRecord.expiresAt < new Date()) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP expired",
+//       });
+//     }
+
+//     if (String(otpRecord.otp) !== String(otp)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid OTP",
+//       });
+//     }
+
+//     // ✅ Clean username
+//     const username = name.trim().toLowerCase();
+
+//     // ✅ Check if username already exists
+//     const existingUser = await UserModel.findOne({ username });
+//     if (existingUser) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Username already taken",
+//       });
+//     }
+
+//     // ✅ Create new user
+//     const newUser = new UserModel({
+//       username,
+//       email,
+//       state,
+//       district,
+//     });
+
+//     await UserModel.register(newUser, password);
+
+//     // ✅ Welcome bonus
+//     await createWelcomeBonus(newUser._id);
+
+//     // ✅ Delete OTP after successful registration
+//     await Otp.deleteOne({ email });
+
+//     res.json({
+//       success: true,
+//       message: "🎉 Account created successfully!",
+//       username,
+//       tokens: 100,
+//     });
+
+//   } catch (err) {
+//     console.error("❌ VERIFY OTP ERROR:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Something went wrong",
+//     });
+//   }
+// });
+
+// app.post("/login", (req, res, next) => {
+//   passport.authenticate("local", (err, user) => {
+//     if (err) return next(err);
+//     if (!user)
+//       return res.status(401).json({ msg: "Invalid username or password" });
+
+//     req.login(user, (err) => {
+//       if (err) return next(err);
+//       res.json({
+//         user: {
+//           username: user.username,
+//           email: user.email,
+//           state: user.state,
+//           district: user.district,
+//           tokens: user.tokens,
+//         },
+//       });
+//     });
+//   })(req, res, next);
+// });
+
+// app.get("/current-user", (req, res) => {
+//   if (!req.isAuthenticated()) {
+//     return res.status(401).json({ success: false });
+//   }
+
+//   res.json({
+//     success: true,
+//     user: {
+//       _id: req.user._id,
+//       username: req.user.username,
+//       email: req.user.email,
+//       state: req.user.state,
+//       district: req.user.district,
+//       tokens: req.user.tokens,
+//     },
+//   });
+// });
+
+// // ================= LOGOUT =================
+// app.get("/logout", (req, res) => {
+//   req.logout(() => {
+//     req.session.destroy();
+//     res.clearCookie("connect.sid");
+//     res.json({ success: true });
+//   });
+// });
+
+
+// // ======================================
+// // 🔹 FORGOT PASSWORD
+// // ======================================
+
+// // ======================================
+// // 🔹 FORGOT PASSWORD
+// // ======================================
+// // ======================================
+// // 🔹 FORGOT PASSWORD
+// // ======================================
+// app.post("/forgot-password", async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email required",
+//       });
+//     }
+
+//     const normalizedEmail = email.trim().toLowerCase();
+
+//     const user = await UserModel.findOne({ email: normalizedEmail });
+
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+
+//     const resetToken = crypto.randomBytes(32).toString("hex");
+
+//     user.resetPasswordToken = crypto
+//       .createHash("sha256")
+//       .update(resetToken)
+//       .digest("hex");
+
+//     user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+//     await user.save();
+
+//     const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+//     // ✅ SEND EMAIL
+//     await transporter.sendMail({
+//       from: `"TaskOra Support" <${process.env.EMAIL_USER}>`,
+//       to: normalizedEmail,
+//       subject: "Password Reset Request",
+//       html: `
+//         <h2>Password Reset</h2>
+//         <p>You requested to reset your password.</p>
+//         <p>Click the link below to reset:</p>
+//         <a href="${resetUrl}">${resetUrl}</a>
+//         <p>This link expires in 15 minutes.</p>
+//         <p>If you did not request this, ignore this email.</p>
+//       `,
+//     });
+
+//     res.json({
+//       success: true,
+//       message: "Reset link sent to your email",
+//     });
+
+//   } catch (err) {
+//     console.error("FORGOT PASSWORD ERROR:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//     });
+//   }
+// });
+// // ======================================
+// // 🔹 RESET PASSWORD
+// // ======================================
+
+// // ======================================
+// // 🔹 RESET PASSWORD
+// // ======================================
+
+// app.post("/reset-password/:token", async (req, res) => {
+//   try {
+//     const { password } = req.body;
+
+//     const hashedToken = crypto
+//       .createHash("sha256")
+//       .update(req.params.token)
+//       .digest("hex");
+
+//     const user = await UserModel.findOne({
+//       resetPasswordToken: hashedToken,
+//       resetPasswordExpire: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       return res.status(400).json({
+//         message: "Invalid or expired token",
+//       });
+//     }
+
+//     // 🔥 Use built-in changePassword instead (better method)
+//     await user.setPassword(password);
+
+//     // Clear reset fields
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpire = undefined;
+
+//     await user.save();
+
+//     res.json({ message: "Password reset successful" });
+
+//   } catch (err) {
+//     console.error("RESET PASSWORD ERROR:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+
+
+
+
 
 
 
@@ -311,9 +607,6 @@ app.post("/addService", isLoggedIn, async (req, res) => {
     });
   }
 });
-
-
-
 ///////
 console.log("🔥 REGISTERING GIG ROUTES");
 
@@ -480,6 +773,31 @@ app.get("/my-service-applications", isLoggedIn, async (req, res) => {
   }
 });
 
+// ================= SEARCH (OPTION B) =================
+// app.get("/getGigs/:city", async (req, res) => {
+//   const city = req.params.city;
+//   const gigs = await Gig.find({
+//     $or: [
+//       { location: new RegExp(city, "i") },
+//       { district: new RegExp(city, "i") },
+//     ],
+//   }).populate("postedBy", "username email");
+//   res.json(gigs);
+// });
+
+// app.get("/getGigs/:city", async (req, res) => {
+//   const city = req.params.city;
+
+//   const gigs = await Gig.find({
+//     isActive: true, // ✅ THIS IS THE REAL FIELD YOU USE
+//     $or: [
+//       { location: new RegExp(city, "i") },
+//       { district: new RegExp(city, "i") },
+//     ],
+//   }).populate("postedBy", "username email");
+
+//   res.json(gigs);
+// });
 
 app.get("/getGigs/:city", async (req, res) => {
   const city = req.params.city;
@@ -516,6 +834,14 @@ app.get("/getService/:city", async (req, res) => {
   }
 });
 
+// ================= NEAR ME =================
+// app.get("/gigs-near-me", isLoggedIn, async (req, res) => {
+//   const gigs = await Gig.find({ district: req.user.district }).populate(
+//     "postedBy",
+//     "username email"
+//   );
+//   res.json(gigs);
+// });
 
 app.get("/gigs-near-me", isLoggedIn, async (req, res) => {
   const gigs = await Gig.find({
@@ -531,8 +857,70 @@ app.get("/services-near-me", isLoggedIn, async (req, res) => {
   res.json(services);
 });
 
+///// apply on gig
+// app.post(
+//   "/applyGig/:gigId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     try {
+//       // ================= EXISTING LOGIC (DO NOT CHANGE) =================
+//       const application = new Application({
+//         gig: req.params.gigId,
+//         applicant: req.user._id,
+//         ...req.body,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
 
+//       await application.save();
 
+//       /**
+//        * 🔥 TOKEN DEDUCTION (SAFE POINT)
+//        */
+//       await deductTokens({
+//         userId: req.user._id,
+//         amount: 2, // 🔧 applying to gig cost
+//         reason: "Apply Gig",
+//       });
+
+//       // ================= STEP 3: NOTIFICATION + EMAIL =================
+//       try {
+//         const gig = await Gig.findById(req.params.gigId);
+
+//         if (gig) {
+//           const owner = await UserModel.findById(gig.postedBy);
+
+//           if (owner) {
+//             await Notification.create({
+//               user: owner._id,
+//               title: "New Application",
+//               message: `${req.user.username} applied to your gig`,
+//               type: "APPLY",
+//               link: `/gig/${gig._id}/applicants`,
+//             });
+
+//             await sendEmail({
+//               to: owner.email,
+//               subject: "New Application Received",
+//               html: `
+//                 <h2>New Application</h2>
+//                 <p><b>${req.user.username}</b> has applied to your gig.</p>
+//               `,
+//             });
+//           }
+//         }
+//       } catch (err) {
+//         console.error("STEP 3 notification/email error:", err.message);
+//       }
+//       // ================= END STEP 3 =================
+
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ APPLY GIG ERROR:", err);
+//       res.status(500).json({ error: "Failed to apply gig" });
+//     }
+//   },
+// );
 
 app.post(
   "/applyGig/:gigId",
@@ -542,35 +930,6 @@ app.post(
     let application;
 
     try {
-
-      // 🔥 ADD THIS BLOCK (ONLY ADDITION)
-      const gig = await Gig.findById(req.params.gigId);
-
-      if (!gig) {
-        return res.status(404).json({ error: "Gig not found" });
-      }
-
-      // ❌ Prevent owner from applying
-      if (gig.postedBy.toString() === req.user._id.toString()) {
-        return res.status(400).json({
-          error: "You cannot apply to your own gig",
-        });
-      }
-
-      // ❌ Prevent duplicate apply (optional but safe)
-      const existingApplication = await Application.findOne({
-        gig: req.params.gigId,
-        applicant: req.user._id,
-      });
-
-      if (existingApplication) {
-        return res.status(400).json({
-          error: "You have already applied to this gig",
-        });
-      }
-      // 🔥 END OF ADDITION
-
-
       // ================= EXISTING LOGIC (NOT CHANGED) =================
       application = new Application({
         gig: req.params.gigId,
@@ -586,9 +945,10 @@ app.post(
         userId: req.user._id,
         amount: 2,
         reason: "Apply Gig",
-        gig: req.params.gigId
+         gig: req.params.gigId
       });
 
+      
       await TokenTransaction.findOneAndUpdate(
         {
           user: req.user._id,
@@ -604,35 +964,39 @@ app.post(
 
       // ================= STEP 3: NOTIFICATION + EMAIL =================
       try {
-        const owner = await UserModel.findById(gig.postedBy);
+        const gig = await Gig.findById(req.params.gigId);
 
-        if (owner) {
-          await Notification.create({
-            user: owner._id,
-            title: "New Application",
-            message: `${req.user.username} applied to your gig`,
-            type: "APPLY",
-            link: `/gig/${gig._id}/applicants`,
-          });
+        if (gig) {
+          const owner = await UserModel.findById(gig.postedBy);
 
-          await sendEmail({
-            to: owner.email,
-            subject: "New Application Received",
-            html: `
-              <h2>New Application</h2>
-              <p><b>${req.user.username}</b> has applied to your gig.</p>
-            `,
-          });
+          if (owner) {
+            await Notification.create({
+              user: owner._id,
+              title: "New Application",
+              message: `${req.user.username} applied to your gig`,
+              type: "APPLY",
+              link: `/gig/${gig._id}/applicants`,
+            });
+
+            await sendEmail({
+              to: owner.email,
+              subject: "New Application Received",
+              html: `
+                <h2>New Application</h2>
+                <p><b>${req.user.username}</b> has applied to your gig.</p>
+              `,
+            });
+          }
         }
       } catch (err) {
         console.error("STEP 3 notification/email error:", err.message);
       }
 
       res.json({ success: true });
-
     } catch (err) {
       console.error("❌ APPLY GIG ERROR:", err.message);
 
+      // 🔥 IMPORTANT: CLEANUP IF TOKEN FAILED
       if (application && application._id) {
         await Application.findByIdAndDelete(application._id);
       }
@@ -712,12 +1076,12 @@ app.post(
   },
 );
 
-// app.get("/my-applications", isLoggedIn, async (req, res) => {
-//   const apps = await Application.find({
-//     applicant: req.user._id,
-//   }).populate("gig");
-//   res.json(apps);
-// });
+app.get("/my-applications", isLoggedIn, async (req, res) => {
+  const apps = await Application.find({
+    applicant: req.user._id,
+  }).populate("gig");
+  res.json(apps);
+});
 
 app.get("/count/gigs/:city", async (req, res) => {
   try {
@@ -879,7 +1243,40 @@ app.delete("/service/:id", isLoggedIn, async (req, res) => {
   }
 });
 
+// ================= VIEW GIG APPLICANTS (OWNER ONLY) =================
+// app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
+//   try {
+//     // 1️⃣ Verify gig exists
+//     const gig = await Gig.findById(req.params.id);
 
+//     if (!gig) {
+//       return res.status(404).json({ error: "Gig not found" });
+//     }
+
+//     // 2️⃣ Owner-only access
+//     if (gig.postedBy.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({
+//         error: "Not authorized to view applicants",
+//       });
+//     }
+
+//     // 3️⃣ Fetch applications for this gig
+//     const applications = await Application.find({ gig: gig._id })
+//       .populate("applicant", "username email") // safe public info
+//       .sort({ createdAt: -1 });
+
+//     // 4️⃣ Response
+//     res.status(200).json({
+//       count: applications.length,
+//       applications,
+//     });
+//   } catch (err) {
+//     console.error("❌ Error fetching applicants:", err);
+//     res.status(500).json({
+//       error: "Failed to fetch applicants",
+//     });
+//   }
+// });
 
 app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
   try {
@@ -992,106 +1389,35 @@ app.post(
   },
 );
 
-
-
-
-
-
 ///////////////
 
-// app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
-//   try {
-//     // 1️⃣ Verify service exists
-//     const service = await Service.findById(req.params.id);
-
-//     if (!service) {
-//       return res.status(404).json({ error: "Service not found" });
-//     }
-
-//     // 2️⃣ Owner-only access
-//     if (service.postedBy.toString() !== req.user._id.toString()) {
-//       return res.status(403).json({
-//         error: "Not authorized to view applicants",
-//       });
-//     }
-
-//     // 🔥 CHECK IF SOMEONE IS SELECTED
-//     const selectedApp = await ServiceApplication.findOne({
-//       service: service._id,
-//       status: "selected",
-//     });
-
-//     let applications;
-
-//     if (selectedApp) {
-//       // ✅ If selected exists → return only that one
-//       applications = await ServiceApplication.find({
-//         service: service._id,
-//         status: "selected",
-//       })
-//         .populate("applicant", "username email")
-//         .sort({ createdAt: -1 });
-//     } else {
-//       // ✅ Otherwise return all
-//       applications = await ServiceApplication.find({
-//         service: service._id,
-//       })
-//         .populate("applicant", "username email")
-//         .sort({ createdAt: -1 });
-//     }
-
-//     res.status(200).json({
-//       count: applications.length,
-//       applications,
-//     });
-//   } catch (err) {
-//     console.error("❌ Error fetching service applicants:", err);
-//     res.status(500).json({
-//       error: "Failed to fetch applicants",
-//     });
-//   }
-// });
-
-
-
-
-
+// ================= VIEW SERVICE APPLICANTS (OWNER ONLY) =================
 app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   try {
+    // 1️⃣ Verify service exists
     const service = await Service.findById(req.params.id);
 
     if (!service) {
-      return res.status(404).json({ error: "Service not found" });
+      return res.status(404).json({
+        error: "Service not found",
+      });
     }
 
+    // 2️⃣ Owner-only access
     if (service.postedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         error: "Not authorized to view applicants",
       });
     }
 
-    const selectedApp = await ServiceApplication.findOne({
+    // 3️⃣ Fetch applications for this service
+    const applications = await ServiceApplication.find({
       service: service._id,
-      status: "selected",
-    });
+    })
+      .populate("applicant", "username email")
+      .sort({ createdAt: -1 });
 
-    let applications;
-
-    if (selectedApp) {
-      applications = await ServiceApplication.find({
-        service: service._id,
-        status: "selected",
-      })
-        .populate("applicant", "username email state district tokens")
-        .sort({ createdAt: -1 });
-    } else {
-      applications = await ServiceApplication.find({
-        service: service._id,
-      })
-        .populate("applicant", "username email state district tokens")
-        .sort({ createdAt: -1 });
-    }
-
+    // 4️⃣ Response
     res.status(200).json({
       count: applications.length,
       applications,
@@ -1104,215 +1430,67 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   }
 });
 
+////////////////// email +noti
 
-
-
-
-
-
-
-
-
-
-
-
-
-// app.post(
-//   "/service-application/:applicationId/select",
-//   isLoggedIn,
-//   async (req, res) => {
-//     try {
-//       const application = await ServiceApplication.findById(
-//         req.params.applicationId
-//       );
-
-//       if (!application) {
-//         return res.status(404).json({ error: "Application not found" });
-//       }
-
-//       // 🔒 Only service owner can select
-//       const service = await Service.findById(application.service);
-
-//       if (!service || service.postedBy.toString() !== req.user._id.toString()) {
-//         return res.status(403).json({ error: "Not authorized" });
-//       }
-
-//       // 🔥 Prevent selecting again if already assigned
-//       const existingContract = await Contract.findOne({
-//         service: service._id,
-//       });
-
-//       if (existingContract) {
-//         return res.status(400).json({
-//           error: "Service already assigned",
-//         });
-//       }
-
-//       // ✅ EXISTING LOGIC (status update)
-//       application.status = "selected";
-//       await application.save();
-
-//       // 🔥 NEW: CREATE CONTRACT
-//       const contract = new Contract({
-//         service: service._id,
-//         recruiter: req.user._id,
-//         applicant: application.applicant,
-//         status: "pending",
-//       });
-
-//       await contract.save();
-
-//       // 🔥 NEW: Auto close service
-//       service.isOpen = false;
-//       await service.save();
-
-//       // ================= STEP 4: NOTIFICATION + EMAIL =================
-//       try {
-//         const applicant = await UserModel.findById(application.applicant);
-
-//         if (applicant) {
-//           await Notification.create({
-//             user: applicant._id,
-//             title: "Service Application Selected 🎉",
-//             message: "You have been selected for a service",
-//             type: "CONFIRM",
-//             link: "/my-contracts",
-//           });
-
-//           await sendEmail({
-//             to: applicant.email,
-//             subject: "You have been selected 🎉",
-//             html: `
-//               <h2>Congratulations!</h2>
-//               <p>You have been selected for the service.</p>
-//             `,
-//           });
-//         }
-//       } catch (err) {
-//         console.error("STEP 4 SERVICE notify error:", err.message);
-//       }
-
-//       res.json({ success: true });
-
-//     } catch (err) {
-//       console.error("❌ SELECT SERVICE APPLICANT ERROR:", err);
-//       res.status(500).json({ error: "Server error" });
-//     }
-//   }
-// );
-
-
-
+// ================= SELECT SERVICE APPLICANT =================
 app.post(
   "/service-application/:applicationId/select",
   isLoggedIn,
   async (req, res) => {
     try {
       const application = await ServiceApplication.findById(
-        req.params.applicationId
+        req.params.applicationId,
       );
 
       if (!application) {
         return res.status(404).json({ error: "Application not found" });
       }
 
+      // 🔒 Only service owner can select
       const service = await Service.findById(application.service);
-
-      if (!service) {
-        return res.status(404).json({ error: "Service not found" });
-      }
-
-      // 🔒 Owner only
-      if (service.postedBy.toString() !== req.user._id.toString()) {
+      if (!service || service.postedBy.toString() !== req.user._id.toString()) {
         return res.status(403).json({ error: "Not authorized" });
       }
 
-      // ❌ Prevent duplicate contract
-      const existingContract = await Contract.findOne({
-        service: service._id,
-      });
-
-      if (existingContract) {
-        return res.status(400).json({
-          error: "Service already assigned",
-        });
-      }
-
-      // ✅ Mark selected
+      // ✅ EXISTING LOGIC
       application.status = "selected";
       await application.save();
 
-      // ✅ Create contract (same structure as Gig)
-      const contract = new Contract({
-        service: service._id,
-        recruiter: req.user._id,
-        applicant: application.applicant,
-        status: "pending",
-      });
+      // ================= STEP 4: NOTIFICATION + EMAIL =================
+      try {
+        const applicant = await UserModel.findById(application.applicant);
 
-      await contract.save();
+        if (applicant) {
+          await Notification.create({
+            user: applicant._id,
+            title: "Application Selected 🎉",
+            message: "You have been selected for a service",
+            type: "CONFIRM",
+            link: "/my-applications",
+          });
 
-      // ✅ Close service
-      service.isActive = false;  // (use isOpen if that's your field)
-      await service.save();
-
-      // 🔔 Notification + Email
-      const applicant = await UserModel.findById(application.applicant);
-
-      if (applicant) {
-        await Notification.create({
-          user: applicant._id,
-          title: "Service Application Selected 🎉",
-          message: "You have been selected for a service",
-          type: "CONFIRM",
-          link: "/my-contracts",
-        });
-
-        await sendEmail({
-          to: applicant.email,
-          subject: "You have been selected 🎉",
-          html: `
-            <h2>Congratulations!</h2>
-            <p>You have been selected for the service.</p>
-          `,
-        });
+          await sendEmail({
+            to: applicant.email,
+            subject: "Service Application Selected 🎉",
+            html: `
+              <h2>Congratulations!</h2>
+              <p>You have been selected for the service.</p>
+            `,
+          });
+        }
+      } catch (err) {
+        console.error("STEP 4 SERVICE notify error:", err.message);
       }
 
       res.json({ success: true });
-
     } catch (err) {
       console.error("❌ SELECT SERVICE APPLICANT ERROR:", err);
       res.status(500).json({ error: "Server error" });
     }
-  }
+  },
 );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+///////////
 
 // ================= GET CURRENT USER =================
 app.get("/me", isLoggedIn, (req, res) => {

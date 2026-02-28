@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+
+import API from "../api";   // adjust path if needed
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -8,11 +9,11 @@ const ForgotPassword = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("/forgot-password", { email });
-      alert(res.data.message);
-    } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
-    }
+  const res = await API.post("/auth/forgot-password", { email });
+  alert(res.data.message);
+} catch (err) {
+  alert(err.response?.data?.message || "Something went wrong ❌");
+}
   };
 
   return (

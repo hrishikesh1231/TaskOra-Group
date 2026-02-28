@@ -38,6 +38,7 @@ import Contact from "./Landing_page/About/Contact";
 import Help from "./Landing_page/About/Help";
 import HowItWorks from "./Landing_page/About/HowItWorks";
 import MyContracts from "./pages/MyContracts";
+import MyServiceContracts from "./pages/MyServiceContracts";
 import TokenHistory from "./pages/TokenHistory";
 import BuyTokens from "./pages/BuyTokens";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -122,6 +123,7 @@ root.render(
             <Route path="/how-it-works" element={<HowItWorks />} />
 
             <Route path="/my-contracts" element={<MyContracts />} />
+            <Route path="/my-service-contracts" element={<MyServiceContracts />} />
 
             <Route path="/buy-tokens" element={<BuyTokens />} />
             <Route path="/token-history" element={<TokenHistory />} />

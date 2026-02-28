@@ -102,8 +102,6 @@
 // };
 
 
-
-
 import {
   createContext,
   useState,
@@ -111,7 +109,7 @@ import {
   useContext,
   useRef,
 } from "react";
-import axios from "axios";
+import API from "../api"; // ✅ use API instance
 import { CityContext } from "./CityContext";
 
 export const AuthContext = createContext();
@@ -122,12 +120,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUserState] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔑 prevents auth race condition
   const justLoggedInRef = useRef(false);
 
   useEffect(() => {
     const fetchUser = async () => {
-      // 🚫 Skip check right after login
       if (justLoggedInRef.current) {
         justLoggedInRef.current = false;
         setLoading(false);
@@ -135,7 +131,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await axios.get("/current-user");
+        // ✅ FIXED
+        const res = await API.get("/auth/current-user");
         const loggedUser = res.data.user;
 
         setUserState(loggedUser);
@@ -154,7 +151,6 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [setCity]);
 
-  // ✅ THIS is what SignIn must use
   const loginUser = (userData) => {
     justLoggedInRef.current = true;
     setUserState(userData);
@@ -164,10 +160,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🔄 ADDITION: refresh user after profile update
   const refreshUser = async () => {
     try {
-      const res = await axios.get("/current-user");
+      // ✅ FIXED
+      const res = await API.get("/auth/current-user");
       const updatedUser = res.data.user;
 
       setUserState(updatedUser);
@@ -182,7 +178,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.get("/logout");
+      // ✅ FIXED
+      await API.get("/auth/logout");
     } catch {}
 
     setUserState(null);
@@ -195,8 +192,8 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        setUser: loginUser, // 🔥 IMPORTANT (unchanged)
-        refreshUser,        // ✅ NEW (used by EditProfile)
+        setUser: loginUser,
+        refreshUser,
         logout,
         loading,
       }}

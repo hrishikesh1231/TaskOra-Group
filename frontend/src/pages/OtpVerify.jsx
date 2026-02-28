@@ -1,20 +1,24 @@
+
+
+
 // import React, { useEffect, useState } from "react";
-// import axios from "axios";
+// import API from "../api"; // adjust path if needed
 // import { useLocation, useNavigate } from "react-router-dom";
 // import { toast } from "react-toastify";
+// import Confetti from "react-confetti";
+// import "./otp.css";
 
 // const OtpVerify = () => {
 //   const navigate = useNavigate();
 //   const location = useLocation();
 
-//   // Get data safely
 //   const signupData = location.state;
 
 //   const [otp, setOtp] = useState("");
 //   const [timer, setTimer] = useState(60);
 //   const [loading, setLoading] = useState(false);
+//   const [celebrate, setCelebrate] = useState(false);
 
-//   // Redirect if data missing
 //   useEffect(() => {
 //     if (!signupData) {
 //       toast.error("Signup session expired. Please signup again.");
@@ -22,7 +26,6 @@
 //     }
 //   }, [signupData, navigate]);
 
-//   // Countdown
 //   useEffect(() => {
 //     if (timer === 0) return;
 //     const interval = setInterval(() => {
@@ -34,25 +37,20 @@
 //   const verifyOtp = async () => {
 //     if (!otp) return toast.error("Enter OTP");
 
-//     if (!signupData) {
-//       return toast.error("Signup data missing.");
-//     }
-
 //     const { name, email, password, state, district } = signupData;
 
 //     try {
 //       setLoading(true);
 
-//       console.log("Sending:", {
-//         name,
-//         email,
-//         password,
-//         otp,
-//         state,
-//         district,
-//       });
-
-//       await axios.post("http://localhost:3002/verify-otp", {
+//       // await axios.post("http://localhost:3002/verify-otp", {
+//       //   name,
+//       //   email,
+//       //   password,
+//       //   otp: otp.toString(),
+//       //   state,
+//       //   district,
+//       // });
+//       await API.post("/auth/verify-otp", {
 //         name,
 //         email,
 //         password,
@@ -61,38 +59,58 @@
 //         district,
 //       });
 
-//       toast.success("Account created 🎉");
-//       navigate("/login");
+//       // 🎉 Trigger celebration
+//       setCelebrate(true);
 
+//       // Stop animation after 4 seconds
+//       setTimeout(() => {
+//         setCelebrate(false);
+//         navigate("/login");
+//       }, 4000);
 //     } catch (err) {
-//       console.log("Error:", err.response?.data);
-//       toast.error(
-//         err.response?.data?.message || "OTP verification failed"
-//       );
+//       toast.error(err.response?.data?.message || "OTP verification failed");
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
 
-//   const resendOtp = async () => {
-//     if (!signupData?.email) return;
-
-//     try {
-//       await axios.post("http://localhost:3002/send-otp", {
-//         email: signupData.email,
-//       });
-//       setTimer(60);
-//       toast.success("OTP resent");
-//     } catch (err) {
-//       toast.error(
-//         err.response?.data?.message ||
-//           "Please wait before resending"
-//       );
-//     }
-//   };
-
 //   return (
 //     <div className="signup-container">
+//       {celebrate && (
+//         <>
+//           <Confetti numberOfPieces={300} />
+//           <div className="celebration-overlay">
+//             <div className="celebration-message">
+//               🚀 You're officially a Taskorian!
+//               <br />
+//               <span>100 bonus tokens unlocked! 💰</span>
+//             </div>
+
+//             {/* Floating Coins */}
+//             <div className="coin coin1">🪙</div>
+//             <div className="coin coin2">🪙</div>
+//             <div className="coin coin3">🪙</div>
+//             <div className="coin coin4">🪙</div>
+//             <div className="coin coin5">🪙</div>
+//             <div className="coin coin1">🪙</div>
+//             <div className="coin coin2">🪙</div>
+//             <div className="coin coin3">🪙</div>
+//             <div className="coin coin4">🪙</div>
+//             <div className="coin coin5">🪙</div>
+//             <div className="coin coin1">🪙</div>
+//             <div className="coin coin2">🪙</div>
+//             <div className="coin coin3">🪙</div>
+//             <div className="coin coin4">🪙</div>
+//             <div className="coin coin5">🪙</div>
+//             <div className="coin coin1">🪙</div>
+//             <div className="coin coin2">🪙</div>
+//             <div className="coin coin3">🪙</div>
+//             <div className="coin coin4">🪙</div>
+//             <div className="coin coin5">🪙</div>
+//           </div>
+//         </>
+//       )}
+
 //       <div className="signup-form">
 //         <h2>Verify OTP</h2>
 
@@ -114,7 +132,9 @@
 //         {timer > 0 ? (
 //           <p>Resend OTP in {timer}s</p>
 //         ) : (
-//           <button onClick={resendOtp}>Resend OTP</button>
+//           <button type="button" onClick={resendOtp}>
+//             Resend OTP
+//           </button>
 //         )}
 //       </div>
 //     </div>
@@ -126,7 +146,7 @@
 
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Confetti from "react-confetti";
@@ -135,7 +155,6 @@ import "./otp.css";
 const OtpVerify = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const signupData = location.state;
 
   const [otp, setOtp] = useState("");
@@ -158,6 +177,7 @@ const OtpVerify = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
+  // ================= VERIFY OTP =================
   const verifyOtp = async () => {
     if (!otp) return toast.error("Enter OTP");
 
@@ -166,7 +186,7 @@ const OtpVerify = () => {
     try {
       setLoading(true);
 
-      await axios.post("http://localhost:3002/verify-otp", {
+      await API.post("/auth/verify-otp", {
         name,
         email,
         password,
@@ -178,7 +198,6 @@ const OtpVerify = () => {
       // 🎉 Trigger celebration
       setCelebrate(true);
 
-      // Stop animation after 4 seconds
       setTimeout(() => {
         setCelebrate(false);
         navigate("/login");
@@ -190,6 +209,23 @@ const OtpVerify = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ================= RESEND OTP =================
+  const resendOtp = async () => {
+    if (!signupData) return;
+
+    const { email } = signupData;
+
+    try {
+      await API.post("/auth/send-otp", { email });
+
+      toast.success("New OTP sent 📩");
+
+      setTimer(60); // restart timer
+    } catch (err) {
+      toast.error("Failed to resend OTP ❌");
     }
   };
 
@@ -206,12 +242,7 @@ const OtpVerify = () => {
               <span>100 bonus tokens unlocked! 💰</span>
             </div>
 
-            {/* Floating Coins */}
-            <div className="coin coin1">🪙</div>
-            <div className="coin coin2">🪙</div>
-            <div className="coin coin3">🪙</div>
-            <div className="coin coin4">🪙</div>
-            <div className="coin coin5">🪙</div>
+            {/* Floating Coins (unchanged) */}
             <div className="coin coin1">🪙</div>
             <div className="coin coin2">🪙</div>
             <div className="coin coin3">🪙</div>
@@ -252,7 +283,9 @@ const OtpVerify = () => {
         {timer > 0 ? (
           <p>Resend OTP in {timer}s</p>
         ) : (
-          <button>Resend OTP</button>
+          <button type="button" onClick={resendOtp}>
+            Resend OTP
+          </button>
         )}
       </div>
     </div>

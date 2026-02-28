@@ -7,7 +7,13 @@ const contractSchema = new Schema(
     gig: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Gig",
-      required: true
+      required: null
+    },
+     // 🔹 NEW: Service contract support
+    service: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+      default: null
     },
 
     recruiter: {

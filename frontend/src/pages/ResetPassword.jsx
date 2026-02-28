@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../api";   // adjust path if needed
 import { useParams, useNavigate } from "react-router-dom";
 
 const ResetPassword = () => {
@@ -11,12 +11,13 @@ const ResetPassword = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post(`/reset-password/${token}`, { password });
-      alert(res.data.message);
-      navigate("/login");
-    } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
-    }
+  const res = await API.post(`/auth/reset-password/${token}`, { password });
+
+  alert(res.data.message);
+  navigate("/login");
+} catch (err) {
+  alert(err.response?.data?.message || "Something went wrong ❌");
+}
   };
 
   return (

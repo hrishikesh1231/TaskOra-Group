@@ -264,6 +264,9 @@ const Navbar = () => {
                   <Link className="dropdown-item" to="/my-contracts">
                     My Contracts
                   </Link>
+                  <Link className="dropdown-item" to="/my-service-contracts">
+                    My Service Contracts
+                  </Link>
                   <Link className="dropdown-item" to="/update-profile">
                     Update Profile
                   </Link>

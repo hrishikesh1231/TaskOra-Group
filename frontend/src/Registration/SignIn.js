@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import "./Login.css";
-import axios from "axios";
+import API from "../api";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,7 +31,8 @@ const SignIn = () => {
       // 🔑 IMPORTANT:
       // - Use relative URL
       // - Trust login response
-      const res = await axios.post("/login", formData);
+      // const res = await axios.post("/login", formData);
+      const res = await API.post("/auth/login", formData);
 
       // ✅ Set user directly from login response
       setUser(res.data.user);
