@@ -38,6 +38,8 @@ import Contact from "./Landing_page/About/Contact";
 import Help from "./Landing_page/About/Help";
 import HowItWorks from "./Landing_page/About/HowItWorks";
 import MyContracts from "./pages/MyContracts";
+import TokenHistory from "./pages/TokenHistory";
+import BuyTokens from "./pages/BuyTokens";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -118,6 +120,9 @@ root.render(
             <Route path="/how-it-works" element={<HowItWorks />} />
 
             <Route path="/my-contracts" element={<MyContracts />} />
+
+            <Route path="/buy-tokens" element={<BuyTokens />} />
+            <Route path="/token-history" element={<TokenHistory />} />
           </Routes>
 
           <Footer />

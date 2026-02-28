@@ -15,6 +15,7 @@ const sendEmail = require("./utils/sendEmail");
 const notificationRoutes = require("./routes/notificationRoutes");
 const { deductTokens } = require("./utils/tokenManager");
 const tokenRoutes = require("./routes/tokenRoutes");
+const { createWelcomeBonus } = require("./controllers/tokenController");
 
 // ================= MODELS =================
 
@@ -27,6 +28,7 @@ const { UserModel } = require("./models/UserModel");
 const { Application } = require("./models/ApplicationModel");
 // const { ServiceApplication } = require("./models/ServiceApplicationModel");
 const ServiceApplication = require("./models/ServiceApplicationModel");
+const TokenTransaction = require("./models/TokenTransaction");
 
 const Otp = require("./models/OtpModel");
 
@@ -143,6 +145,65 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
+// ///////////
+// app.post("/verify-otp", async (req, res) => {
+//   try {
+//     const { name, email, password, otp, state, district } = req.body || {};
+
+//     if (!name || !email || !password || !otp || !state || !district) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields required",
+//       });
+//     }
+
+//     const otpRecord = await Otp.findOne({ email });
+
+//     if (!otpRecord) {
+//       return res.status(400).json({ success: false, message: "OTP not found" });
+//     }
+
+//     if (otpRecord.expiresAt < new Date()) {
+//       return res.status(400).json({ success: false, message: "OTP expired" });
+//     }
+
+//     if (String(otpRecord.otp) !== String(otp)) {
+//       return res.status(400).json({ success: false, message: "Invalid OTP" });
+//     }
+
+//     // ✅ CLEAN USERNAME (NO RANDOM NUMBER)
+//     const username = name.trim().toLowerCase();
+
+//     // ✅ CHECK IF USERNAME EXISTS
+//     const existingUser = await UserModel.findOne({ username });
+//     if (existingUser) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Username already taken",
+//       });
+//     }
+
+//     const newUser = new UserModel({
+//       username,
+//       email,
+//       state,
+//       district,
+//     });
+
+//     await UserModel.register(newUser, password);
+//     await Otp.deleteOne({ email });
+
+//     res.json({
+//       success: true,
+//       message: "OTP verified & account created",
+//       username,
+//     });
+//   } catch (err) {
+//     console.error("❌ VERIFY OTP ERROR:", err);
+//     res.status(500).json({ success: false });
+//   }
+// });
+
 app.post("/verify-otp", async (req, res) => {
   try {
     const { name, email, password, otp, state, district } = req.body || {};
@@ -157,21 +218,30 @@ app.post("/verify-otp", async (req, res) => {
     const otpRecord = await Otp.findOne({ email });
 
     if (!otpRecord) {
-      return res.status(400).json({ success: false, message: "OTP not found" });
+      return res.status(400).json({
+        success: false,
+        message: "OTP not found",
+      });
     }
 
     if (otpRecord.expiresAt < new Date()) {
-      return res.status(400).json({ success: false, message: "OTP expired" });
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
     }
 
     if (String(otpRecord.otp) !== String(otp)) {
-      return res.status(400).json({ success: false, message: "Invalid OTP" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
     }
 
-    // ✅ CLEAN USERNAME (NO RANDOM NUMBER)
+    // ✅ Clean username
     const username = name.trim().toLowerCase();
 
-    // ✅ CHECK IF USERNAME EXISTS
+    // ✅ Check if username exists
     const existingUser = await UserModel.findOne({ username });
     if (existingUser) {
       return res.status(400).json({
@@ -187,17 +257,29 @@ app.post("/verify-otp", async (req, res) => {
       district,
     });
 
+    // ✅ Register user
     await UserModel.register(newUser, password);
+
+    // ✅ Give Welcome Bonus (100 Tokens)
+    const bonusResponse = await createWelcomeBonus(newUser._id);
+
+    // ✅ Delete OTP
     await Otp.deleteOne({ email });
 
+    // ✅ Final Response
     res.json({
       success: true,
-      message: "OTP verified & account created",
+      message: "🎉 Account created successfully!",
       username,
+      welcomeMessage: bonusResponse.message,
+      tokens: 100,
     });
   } catch (err) {
     console.error("❌ VERIFY OTP ERROR:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
   }
 });
 
@@ -314,6 +396,7 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
       userId: req.user._id,
       amount: 5, // 🔧 you control this
       reason: "Post Gig",
+      gig: newGig._id,
     });
 
     return res.status(201).json({
@@ -624,7 +707,6 @@ app.get("/my-service-applications", isLoggedIn, async (req, res) => {
 //   res.json(gigs);
 // });
 
-
 app.get("/getGigs/:city", async (req, res) => {
   const city = req.params.city;
   console.log("🔍 Searching gigs for:", city);
@@ -641,13 +723,6 @@ app.get("/getGigs/:city", async (req, res) => {
 
   res.json(gigs);
 });
-
-
-
-
-
-
-
 
 app.get("/getService/:city", async (req, res) => {
   try {
@@ -778,7 +853,22 @@ app.post(
         userId: req.user._id,
         amount: 2,
         reason: "Apply Gig",
+         gig: req.params.gigId
       });
+
+      
+      await TokenTransaction.findOneAndUpdate(
+        {
+          user: req.user._id,
+          reason: "Apply Gig",
+        },
+        {
+          $set: { gig: req.params.gigId },
+        },
+        { sort: { createdAt: -1 } },
+      );
+
+      ////////////////////////////
 
       // ================= STEP 3: NOTIFICATION + EMAIL =================
       try {
@@ -811,9 +901,7 @@ app.post(
       }
 
       res.json({ success: true });
-
     } catch (err) {
-
       console.error("❌ APPLY GIG ERROR:", err.message);
 
       // 🔥 IMPORTANT: CLEANUP IF TOKEN FAILED
@@ -825,7 +913,7 @@ app.post(
         error: err.message || "Insufficient tokens to apply",
       });
     }
-  }
+  },
 );
 
 app.post(
@@ -1130,7 +1218,6 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
       })
         .populate("applicant", "username email")
         .sort({ createdAt: -1 });
-
     } else {
       // ✅ Otherwise return all (your original logic)
       applications = await Application.find({ gig: gig._id })
@@ -1142,7 +1229,6 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
       count: applications.length,
       applications,
     });
-
   } catch (err) {
     console.error("❌ Error fetching applicants:", err);
     res.status(500).json({
@@ -1377,7 +1463,6 @@ app.put(
 // ================= EXTRA ROUTES =================
 app.use("/api", locationRoutes);
 
-
 app.get("/debug-users", async (req, res) => {
   try {
     const users = await UserModel.find({}).select(
@@ -1445,17 +1530,13 @@ app.get("/getGigsByCategory/:category", async (req, res) => {
   }
 });
 
-
 app.get("/admin/reactivate-everything", async (req, res) => {
   try {
-    const gigResult = await Gig.updateMany(
-      {},
-      { $set: { isActive: true } }
-    );
+    const gigResult = await Gig.updateMany({}, { $set: { isActive: true } });
 
     const serviceResult = await Service.updateMany(
       {},
-      { $set: { isActive: true } }
+      { $set: { isActive: true } },
     );
 
     res.json({

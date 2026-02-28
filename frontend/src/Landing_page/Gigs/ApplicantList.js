@@ -1,3 +1,4 @@
+
 // import React, { useEffect, useState } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
 // import axios from "axios";
@@ -55,11 +56,9 @@
 //     }
 
 //     const payload = {
-//       applicationId: app._id, // ✅ REQUIRED BY BACKEND
-//       type: "gig",            // ✅ REQUIRED BY BACKEND
+//       applicationId: app._id,
+//       type: "gig",
 //     };
-
-//     console.log("SELECT PAYLOAD:", payload);
 
 //     try {
 //       await axios.post(
@@ -70,10 +69,12 @@
 
 //       toast.success("Applicant selected 🎉");
 
-//       // update UI (optional but nice)
+//       // Update UI locally
 //       setApplications((prev) =>
 //         prev.map((a) =>
-//           a._id === app._id ? { ...a, status: "selected" } : a
+//           a._id === app._id
+//             ? { ...a, status: "selected" }
+//             : { ...a }
 //         )
 //       );
 
@@ -91,6 +92,11 @@
 //       </div>
 //     );
 //   }
+
+//   // 🔥 Detect if someone already selected
+//   const alreadySelected = applications.some(
+//     (a) => a.status === "selected"
+//   );
 
 //   // ================= UI =================
 //   return (
@@ -143,16 +149,21 @@
 //                     </span>
 //                   </div>
 
-//                   {/* SELECT BUTTON */}
-//                   <button
-//                     className="select-btn"
-//                     disabled={app.status === "selected"}
-//                     onClick={() => handleSelect(app)}
-//                   >
-//                     {app.status === "selected" ? "Selected" : "Select"}
-//                   </button>
+//                   {/* ================= SELECT BUTTON ================= */}
+//                   {app.status === "selected" ? (
+//                     <button className="select-btn" disabled>
+//                       Selected
+//                     </button>
+//                   ) : !alreadySelected ? (
+//                     <button
+//                       className="select-btn"
+//                       onClick={() => handleSelect(app)}
+//                     >
+//                       Select
+//                     </button>
+//                   ) : null}
 
-//                   {/* SHOW MORE */}
+//                   {/* ================= SHOW MORE ================= */}
 //                   {app.pictures?.length > 0 && (
 //                     <div className="show-more-container">
 //                       <button
@@ -189,7 +200,7 @@
 //         </div>
 //       )}
 
-//       {/* IMAGE MODAL */}
+//       {/* ================= IMAGE MODAL ================= */}
 //       {selectedImage && (
 //         <div className="image-modal" onClick={closeImage}>
 //           <span className="close-btn">&times;</span>
@@ -205,7 +216,6 @@
 
 
 
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -213,7 +223,7 @@ import { toast } from "react-toastify";
 import "./ApplicantList.css";
 
 const ApplicantsList = () => {
-  const { id } = useParams(); // gigId
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -276,7 +286,7 @@ const ApplicantsList = () => {
 
       toast.success("Applicant selected 🎉");
 
-      // Update UI locally
+      // Update UI locally (logic unchanged)
       setApplications((prev) =>
         prev.map((a) =>
           a._id === app._id
@@ -291,7 +301,6 @@ const ApplicantsList = () => {
     }
   };
 
-  // ================= LOADING =================
   if (loading) {
     return (
       <div className="applicants-page">
@@ -300,12 +309,10 @@ const ApplicantsList = () => {
     );
   }
 
-  // 🔥 Detect if someone already selected
   const alreadySelected = applications.some(
     (a) => a.status === "selected"
   );
 
-  // ================= UI =================
   return (
     <div className="applicants-page">
       <div className="top-row">
@@ -338,28 +345,59 @@ const ApplicantsList = () => {
                 </div>
 
                 <div className="app-main">
+
+                  {/* HEADER */}
                   <div className="app-header">
-                    <strong>{applicantName}</strong>
+                    <div>
+                      <strong className="applicant-name">
+                        {applicantName}
+                      </strong>
+                      <p className="app-email">
+                        {app.applicant?.email || "No email available"}
+                      </p>
+                    </div>
+
                     <span className="applied-date">
                       {new Date(app.createdAt).toLocaleString("en-IN")}
                     </span>
                   </div>
 
-                  <p className="app-message">{app.message}</p>
-
-                  <div className="app-meta">
-                    <span>
-                      <strong>Contact:</strong> {app.contact}
-                    </span>
-                    <span>
-                      <strong>Charges:</strong> {app.charges}
-                    </span>
+                  {/* LOCATION */}
+                  <div className="app-location">
+                    <p>
+                      <strong>State:</strong>{" "}
+                      {app.applicant?.state || "N/A"}
+                    </p>
+                    <p>
+                      <strong>District:</strong>{" "}
+                      {app.applicant?.district || "N/A"}
+                    </p>
                   </div>
 
-                  {/* ================= SELECT BUTTON ================= */}
+                  {/* MESSAGE */}
+                  <div className="app-message-box">
+                    <strong>Message:</strong>
+                    <p>{app.message}</p>
+                  </div>
+
+                  {/* META INFO */}
+                  <div className="app-meta">
+                    <p>
+                      <strong>Contact:</strong> {app.contact}
+                    </p>
+                    <p>
+                      <strong>Charges:</strong> ₹ {app.charges}
+                    </p>
+                    <p>
+                      <strong>Applicant Tokens:</strong>{" "}
+                      {app.applicant?.tokens ?? "N/A"}
+                    </p>
+                  </div>
+
+                  {/* SELECT BUTTON */}
                   {app.status === "selected" ? (
-                    <button className="select-btn" disabled>
-                      Selected
+                    <button className="select-btn selected-btn" disabled>
+                      ✅ Selected
                     </button>
                   ) : !alreadySelected ? (
                     <button
@@ -370,7 +408,7 @@ const ApplicantsList = () => {
                     </button>
                   ) : null}
 
-                  {/* ================= SHOW MORE ================= */}
+                  {/* SHOW MORE IMAGES */}
                   {app.pictures?.length > 0 && (
                     <div className="show-more-container">
                       <button
@@ -407,7 +445,6 @@ const ApplicantsList = () => {
         </div>
       )}
 
-      {/* ================= IMAGE MODAL ================= */}
       {selectedImage && (
         <div className="image-modal" onClick={closeImage}>
           <span className="close-btn">&times;</span>

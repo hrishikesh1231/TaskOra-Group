@@ -7,68 +7,75 @@
 .contracts-title {
   text-align: center;
   margin-bottom: 30px;
-  font-size: 28px;
-  font-weight: bold;
 }
 
 .contract-card {
   background: #ffffff;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: 0.3s ease;
 }
 
 .contract-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
 }
 
-.contract-info h3 {
-  margin: 0 0 10px;
+.contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.contract-title {
+  margin: 0;
+}
+
+.gig-details p,
+.recruiter-info p {
+  margin: 6px 0;
+  font-size: 14px;
 }
 
 .status {
-  font-weight: 600;
-}
-
-.status.pending {
-  color: #888;
-}
-
-.status.waiting {
-  color: #ff9800;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-transform: capitalize;
 }
 
 .status.confirmed {
-  color: #4caf50;
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status.waiting {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status.pending {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .confirm-btn {
-  padding: 8px 16px;
-  background-color: #1976d2;
+  background: #007bff;
   color: white;
-  border: none;
+  padding: 8px 16px;
   border-radius: 6px;
+  border: none;
   cursor: pointer;
-  transition: 0.3s ease;
+  transition: 0.2s ease;
 }
 
 .confirm-btn:hover {
-  background-color: #125ea5;
+  background: #0056b3;
 }
 
 .completed-text {
-  color: #4caf50;
   font-weight: bold;
-}
-
-.loading,
-.no-contracts {
-  text-align: center;
-  font-size: 18px;
-  color: #777;
+  color: green;
 }

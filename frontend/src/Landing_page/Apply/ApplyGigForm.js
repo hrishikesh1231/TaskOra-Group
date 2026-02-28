@@ -123,6 +123,9 @@ const ApplyGigForm = () => {
 
     } catch (err) {
       console.error("❌ Error applying:", err);
+      
+  console.log("BACKEND ERROR:", err.response?.data);
+
       const msg = err.response?.data?.error || "❌ Failed to apply";
       toast.error(msg, { autoClose: 3000 });
     } finally {

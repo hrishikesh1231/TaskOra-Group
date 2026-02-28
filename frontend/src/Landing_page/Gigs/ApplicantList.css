@@ -136,3 +136,36 @@
   font-size: 13px;
   color: #555;
 }
+.applicant-name {
+  font-size: 18px;
+}
+
+.app-email {
+  font-size: 13px;
+  color: #666;
+  margin: 2px 0 0 0;
+}
+
+.app-location {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  margin: 8px 0;
+  color: #444;
+}
+
+.app-message-box {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.app-meta p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.selected-btn {
+  background-color: #28a745 !important;
+}

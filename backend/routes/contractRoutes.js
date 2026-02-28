@@ -630,8 +630,6 @@
 
 // module.exports = router;
 
-
-
 const express = require("express");
 const router = express.Router();
 
@@ -645,284 +643,7 @@ const { UserModel } = require("../models/UserModel");
 
 const Notification = require("../models/Notification");
 const Contract = require("../models/ContractModel");
-
-
-// // ======================================================
-// // 1️⃣ SELECT APPLICANT (OWNER SIDE)
-// // ======================================================
-// router.post("/contracts/select", isLoggedIn, async (req, res) => {
-//   try {
-//     const { applicationId, type } = req.body;
-
-//     if (!applicationId || !type) {
-//       return res.status(400).json({ error: "Missing data" });
-//     }
-
-//     let application, ownerPost, postId;
-
-//     // ================= FIND APPLICATION =================
-//     if (type === "gig") {
-//       application = await Application.findById(applicationId);
-//       if (!application)
-//         return res.status(404).json({ error: "Application not found" });
-
-//       ownerPost = await Gig.findById(application.gig);
-//       postId = application.gig;
-
-//     } else if (type === "service") {
-//       application = await ServiceApplication.findById(applicationId);
-//       if (!application)
-//         return res.status(404).json({ error: "Application not found" });
-
-//       ownerPost = await Service.findById(application.service);
-//       postId = application.service;
-
-//     } else {
-//       return res.status(400).json({ error: "Invalid type" });
-//     }
-
-//     // ================= OWNER CHECK =================
-//     if (
-//       !ownerPost ||
-//       ownerPost.postedBy.toString() !== req.user._id.toString()
-//     ) {
-//       return res.status(403).json({ error: "Not authorized" });
-//     }
-
-//     // ================= MARK SELECTED =================
-//     application.status = "selected";
-//     await application.save();
-
-//     // ================= HANDLE OTHER APPLICANTS =================
-//     if (type === "gig") {
-
-//       const otherApps = await Application.find({
-//         gig: postId,
-//         _id: { $ne: application._id },
-//       });
-
-//       for (const otherApp of otherApps) {
-//         await Notification.create({
-//           user: otherApp.applicant,
-//           title: "Application Update",
-//           message: "You were not selected for this task.",
-//           type: "APPLY",
-//           link: "/my-applications",
-//         });
-
-//         // remove from rejected user history
-//         await Application.findByIdAndDelete(otherApp._id);
-//       }
-
-//       // ✅ Close gig (hide from marketplace)
-//       await Gig.findByIdAndUpdate(postId, { isActive: false });
-
-//     } else {
-
-//       const otherApps = await ServiceApplication.find({
-//         service: postId,
-//         _id: { $ne: application._id },
-//       });
-
-//       for (const otherApp of otherApps) {
-//         await Notification.create({
-//           user: otherApp.applicant,
-//           title: "Application Update",
-//           message: "You were not selected for this service.",
-//           type: "APPLY",
-//           link: "/my-applications",
-//         });
-
-//         await ServiceApplication.findByIdAndDelete(otherApp._id);
-//       }
-
-//       // ✅ Close service correctly
-//       await Service.findByIdAndUpdate(postId, { isActive: false });
-//     }
-
-//     // ================= CREATE CONTRACT =================
-//     const existingContract = await Contract.findOne({
-//       recruiter: req.user._id,
-//       applicant: application.applicant,
-//       gig: type === "gig" ? postId : undefined,
-//     });
-
-//     if (!existingContract) {
-//       await Contract.create({
-//         gig: type === "gig" ? postId : undefined,
-//         recruiter: req.user._id,
-//         applicant: application.applicant,
-//         recruiterConfirmed: true,
-//         status: "recruiter_confirmed",
-//       });
-//     }
-
-//     // ================= NOTIFY SELECTED USER =================
-//     await Notification.create({
-//       user: application.applicant,
-//       title: "Application Selected 🎉",
-//       message: `You have been selected for a ${type}`,
-//       type: "CONFIRM",
-//       link: "/my-contracts",
-//     });
-
-//     res.json({ success: true });
-
-//   } catch (err) {
-//     console.error("❌ CONTRACT SELECT ERROR:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
-// router.post("/contracts/select", isLoggedIn, async (req, res) => {
-//   try {
-//     const { applicationId, type } = req.body;
-
-//     if (!applicationId || !type) {
-//       return res.status(400).json({ error: "Missing data" });
-//     }
-
-//     let application, ownerPost, postId;
-
-//     // ================= FIND APPLICATION =================
-//     if (type === "gig") {
-//       application = await Application.findById(applicationId);
-//       if (!application)
-//         return res.status(404).json({ error: "Application not found" });
-
-//       ownerPost = await Gig.findById(application.gig);
-//       postId = application.gig;
-
-//     } else if (type === "service") {
-//       application = await ServiceApplication.findById(applicationId);
-//       if (!application)
-//         return res.status(404).json({ error: "Application not found" });
-
-//       ownerPost = await Service.findById(application.service);
-//       postId = application.service;
-
-//     } else {
-//       return res.status(400).json({ error: "Invalid type" });
-//     }
-
-//     // ================= OWNER CHECK =================
-//     if (
-//       !ownerPost ||
-//       ownerPost.postedBy.toString() !== req.user._id.toString()
-//     ) {
-//       return res.status(403).json({ error: "Not authorized" });
-//     }
-
-//     // ================= PREVENT MULTIPLE SELECTION =================
-//     let alreadySelected;
-
-//     if (type === "gig") {
-//       alreadySelected = await Application.findOne({
-//         gig: postId,
-//         status: "selected",
-//       });
-//     } else {
-//       alreadySelected = await ServiceApplication.findOne({
-//         service: postId,
-//         status: "selected",
-//       });
-//     }
-
-//     if (alreadySelected) {
-//       return res.status(400).json({
-//         error: "A candidate has already been selected for this post",
-//       });
-//     }
-
-//     // ================= SELECT THIS ONE =================
-//     application.status = "selected";
-//     await application.save();
-
-//     // ================= REJECT OTHERS =================
-//     if (type === "gig") {
-
-//       await Application.updateMany(
-//         { gig: postId, _id: { $ne: application._id } },
-//         { $set: { status: "rejected" } }
-//       );
-
-//       // Optional: notify rejected users
-//       const rejectedApps = await Application.find({
-//         gig: postId,
-//         status: "rejected",
-//       });
-
-//       for (const app of rejectedApps) {
-//         await Notification.create({
-//           user: app.applicant,
-//           title: "Application Update",
-//           message: "You were not selected for this task.",
-//           type: "APPLY",
-//           link: "/my-applications",
-//         });
-//       }
-
-//       await Gig.findByIdAndUpdate(postId, { isActive: false });
-
-//     } else {
-
-//       await ServiceApplication.updateMany(
-//         { service: postId, _id: { $ne: application._id } },
-//         { $set: { status: "rejected" } }
-//       );
-
-//       const rejectedApps = await ServiceApplication.find({
-//         service: postId,
-//         status: "rejected",
-//       });
-
-//       for (const app of rejectedApps) {
-//         await Notification.create({
-//           user: app.applicant,
-//           title: "Application Update",
-//           message: "You were not selected for this service.",
-//           type: "APPLY",
-//           link: "/my-applications",
-//         });
-//       }
-
-//       await Service.findByIdAndUpdate(postId, { isActive: false });
-//     }
-
-//     // ================= CREATE CONTRACT =================
-//     const existingContract = await Contract.findOne({
-//       recruiter: req.user._id,
-//       applicant: application.applicant,
-//       gig: type === "gig" ? postId : undefined,
-//     });
-
-//     if (!existingContract) {
-//       await Contract.create({
-//         gig: type === "gig" ? postId : undefined,
-//         recruiter: req.user._id,
-//         applicant: application.applicant,
-//         recruiterConfirmed: true,
-//         status: "recruiter_confirmed",
-//       });
-//     }
-
-//     // ================= NOTIFY SELECTED =================
-//     await Notification.create({
-//       user: application.applicant,
-//       title: "Application Selected 🎉",
-//       message: `You have been selected for a ${type}`,
-//       type: "CONFIRM",
-//       link: "/my-contracts",
-//     });
-
-//     res.json({ success: true });
-
-//   } catch (err) {
-//     console.error("❌ CONTRACT SELECT ERROR:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
+const TokenTransaction = require("../models/TokenTransaction");
 
 // ======================================================
 // 1️⃣ SELECT APPLICANT (OWNER SIDE)
@@ -945,7 +666,6 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
 
       ownerPost = await Gig.findById(application.gig);
       postId = application.gig;
-
     } else if (type === "service") {
       application = await ServiceApplication.findById(applicationId);
       if (!application)
@@ -953,7 +673,6 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
 
       ownerPost = await Service.findById(application.service);
       postId = application.service;
-
     } else {
       return res.status(400).json({ error: "Invalid type" });
     }
@@ -970,7 +689,10 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
     const alreadySelected =
       type === "gig"
         ? await Application.findOne({ gig: postId, status: "selected" })
-        : await ServiceApplication.findOne({ service: postId, status: "selected" });
+        : await ServiceApplication.findOne({
+            service: postId,
+            status: "selected",
+          });
 
     if (alreadySelected) {
       return res.status(400).json({
@@ -1000,14 +722,12 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
 
     // ================= REJECT & NOTIFY OTHERS =================
     if (type === "gig") {
-
       const otherApps = await Application.find({
         gig: postId,
         _id: { $ne: application._id },
       });
 
       for (const app of otherApps) {
-
         app.status = "rejected";
         await app.save();
 
@@ -1022,16 +742,13 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
 
       // Hide gig from marketplace
       await Gig.findByIdAndUpdate(postId, { isActive: false });
-
     } else {
-
       const otherApps = await ServiceApplication.find({
         service: postId,
         _id: { $ne: application._id },
       });
 
       for (const app of otherApps) {
-
         app.status = "rejected";
         await app.save();
 
@@ -1074,7 +791,6 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
     });
 
     res.json({ success: true });
-
   } catch (err) {
     console.error("❌ CONTRACT SELECT ERROR:", err);
     res.status(500).json({ error: "Server error" });
@@ -1088,8 +804,7 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
 
-    if (!contract)
-      return res.status(404).json({ error: "Contract not found" });
+    if (!contract) return res.status(404).json({ error: "Contract not found" });
 
     if (contract.applicant.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Not authorized" });
@@ -1122,6 +837,26 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
         await recruiter.save();
         await applicant.save();
 
+        // 👇👇👇 ADD THIS PART ONLY (DON'T TOUCH ABOVE CODE)
+
+        await TokenTransaction.create({
+          user: recruiter._id,
+          type: "debit",
+          amount: recruiterDeduction,
+          reason: "Contract Confirmation",
+          balanceAfter: recruiter.tokens,
+          gig: contract.gig, // keeps gig reference
+        });
+
+        await TokenTransaction.create({
+          user: applicant._id,
+          type: "debit",
+          amount: applicantDeduction,
+          reason: "Contract Confirmation",
+          balanceAfter: applicant.tokens,
+          gig: contract.gig,
+        });
+
         contract.tokensDeducted = true;
       }
     }
@@ -1138,13 +873,11 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
     });
 
     res.json({ success: true });
-
   } catch (err) {
     console.error("❌ CONFIRM ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 // ======================================================
 // 3️⃣ APPLICANT VIEW MY CONTRACTS
@@ -1158,12 +891,10 @@ router.get("/contracts/my", isLoggedIn, async (req, res) => {
       .populate("recruiter", "name email");
 
     res.json(contracts);
-
   } catch (err) {
     console.error("❌ FETCH CONTRACT ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 module.exports = router;
