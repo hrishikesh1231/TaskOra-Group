@@ -40,6 +40,8 @@ import HowItWorks from "./Landing_page/About/HowItWorks";
 import MyContracts from "./pages/MyContracts";
 import TokenHistory from "./pages/TokenHistory";
 import BuyTokens from "./pages/BuyTokens";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -123,6 +125,9 @@ root.render(
 
             <Route path="/buy-tokens" element={<BuyTokens />} />
             <Route path="/token-history" element={<TokenHistory />} />
+
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Routes>
 
           <Footer />

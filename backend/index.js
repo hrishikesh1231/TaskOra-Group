@@ -1,3 +1,151 @@
+
+// ///////////
+// app.post("/verify-otp", async (req, res) => {
+//   try {
+//     const { name, email, password, otp, state, district } = req.body || {};
+
+//     if (!name || !email || !password || !otp || !state || !district) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields required",
+//       });
+//     }
+
+//     const otpRecord = await Otp.findOne({ email });
+
+//     if (!otpRecord) {
+//       return res.status(400).json({ success: false, message: "OTP not found" });
+//     }
+
+//     if (otpRecord.expiresAt < new Date()) {
+//       return res.status(400).json({ success: false, message: "OTP expired" });
+//     }
+
+//     if (String(otpRecord.otp) !== String(otp)) {
+//       return res.status(400).json({ success: false, message: "Invalid OTP" });
+//     }
+
+//     // ✅ CLEAN USERNAME (NO RANDOM NUMBER)
+//     const username = name.trim().toLowerCase();
+
+//     // ✅ CHECK IF USERNAME EXISTS
+//     const existingUser = await UserModel.findOne({ username });
+//     if (existingUser) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Username already taken",
+//       });
+//     }
+
+//     const newUser = new UserModel({
+//       username,
+//       email,
+//       state,
+//       district,
+//     });
+
+//     await UserModel.register(newUser, password);
+//     await Otp.deleteOne({ email });
+
+//     res.json({
+//       success: true,
+//       message: "OTP verified & account created",
+//       username,
+//     });
+//   } catch (err) {
+//     console.error("❌ VERIFY OTP ERROR:", err);
+//     res.status(500).json({ success: false });
+//   }
+// });
+
+// app.post("/verify-otp", async (req, res) => {
+//   try {
+//     const { name, email, password, otp, state, district } = req.body || {};
+
+//     if (!name || !email || !password || !otp || !state || !district) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields required",
+//       });
+//     }
+
+//     const otpRecord = await Otp.findOne({ email });
+
+//     if (!otpRecord) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP not found",
+//       });
+//     }
+
+//     if (otpRecord.expiresAt < new Date()) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP expired",
+//       });
+//     }
+
+//     if (String(otpRecord.otp) !== String(otp)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid OTP",
+//       });
+//     }
+
+//     // ✅ Clean username
+//     const username = name.trim().toLowerCase();
+
+//     // ✅ Check if username exists
+//     const existingUser = await UserModel.findOne({ username });
+//     if (existingUser) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Username already taken",
+//       });
+//     }
+
+//     const newUser = new UserModel({
+//       username,
+//       email,
+//       state,
+//       district,
+//     });
+
+//     // ✅ Register user
+//     await UserModel.register(newUser, password);
+
+//     // ✅ Give Welcome Bonus (100 Tokens)
+//     const bonusResponse = await createWelcomeBonus(newUser._id);
+
+//     // ✅ Delete OTP
+//     await Otp.deleteOne({ email });
+
+//     // ✅ Final Response
+//     res.json({
+//       success: true,
+//       message: "🎉 Account created successfully!",
+//       username,
+//       welcomeMessage: bonusResponse.message,
+//       tokens: 100,
+//     });
+//   } catch (err) {
+//     console.error("❌ VERIFY OTP ERROR:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Something went wrong",
+//     });
+//   }
+// });
+
+
+
+
+
+
+
+
+
+
 require("dotenv").config();
 
 // ================= IMPORTS =================
@@ -16,6 +164,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const { deductTokens } = require("./utils/tokenManager");
 const tokenRoutes = require("./routes/tokenRoutes");
 const { createWelcomeBonus } = require("./controllers/tokenController");
+const crypto = require("crypto");
 
 // ================= MODELS =================
 
@@ -145,64 +294,7 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
-// ///////////
-// app.post("/verify-otp", async (req, res) => {
-//   try {
-//     const { name, email, password, otp, state, district } = req.body || {};
 
-//     if (!name || !email || !password || !otp || !state || !district) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "All fields required",
-//       });
-//     }
-
-//     const otpRecord = await Otp.findOne({ email });
-
-//     if (!otpRecord) {
-//       return res.status(400).json({ success: false, message: "OTP not found" });
-//     }
-
-//     if (otpRecord.expiresAt < new Date()) {
-//       return res.status(400).json({ success: false, message: "OTP expired" });
-//     }
-
-//     if (String(otpRecord.otp) !== String(otp)) {
-//       return res.status(400).json({ success: false, message: "Invalid OTP" });
-//     }
-
-//     // ✅ CLEAN USERNAME (NO RANDOM NUMBER)
-//     const username = name.trim().toLowerCase();
-
-//     // ✅ CHECK IF USERNAME EXISTS
-//     const existingUser = await UserModel.findOne({ username });
-//     if (existingUser) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Username already taken",
-//       });
-//     }
-
-//     const newUser = new UserModel({
-//       username,
-//       email,
-//       state,
-//       district,
-//     });
-
-//     await UserModel.register(newUser, password);
-//     await Otp.deleteOne({ email });
-
-//     res.json({
-//       success: true,
-//       message: "OTP verified & account created",
-//       username,
-//     });
-//   } catch (err) {
-//     console.error("❌ VERIFY OTP ERROR:", err);
-//     res.status(500).json({ success: false });
-//   }
-// });
 
 app.post("/verify-otp", async (req, res) => {
   try {
@@ -212,6 +304,15 @@ app.post("/verify-otp", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "All fields required",
+      });
+    }
+
+    // ✅ Check if email already registered
+    const existingEmail = await UserModel.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
       });
     }
 
@@ -241,7 +342,7 @@ app.post("/verify-otp", async (req, res) => {
     // ✅ Clean username
     const username = name.trim().toLowerCase();
 
-    // ✅ Check if username exists
+    // ✅ Check if username already exists
     const existingUser = await UserModel.findOne({ username });
     if (existingUser) {
       return res.status(400).json({
@@ -250,6 +351,7 @@ app.post("/verify-otp", async (req, res) => {
       });
     }
 
+    // ✅ Create new user
     const newUser = new UserModel({
       username,
       email,
@@ -257,23 +359,21 @@ app.post("/verify-otp", async (req, res) => {
       district,
     });
 
-    // ✅ Register user
     await UserModel.register(newUser, password);
 
-    // ✅ Give Welcome Bonus (100 Tokens)
-    const bonusResponse = await createWelcomeBonus(newUser._id);
+    // ✅ Welcome bonus
+    await createWelcomeBonus(newUser._id);
 
-    // ✅ Delete OTP
+    // ✅ Delete OTP after successful registration
     await Otp.deleteOne({ email });
 
-    // ✅ Final Response
     res.json({
       success: true,
       message: "🎉 Account created successfully!",
       username,
-      welcomeMessage: bonusResponse.message,
       tokens: 100,
     });
+
   } catch (err) {
     console.error("❌ VERIFY OTP ERROR:", err);
     res.status(500).json({
@@ -330,6 +430,140 @@ app.get("/logout", (req, res) => {
     res.json({ success: true });
   });
 });
+
+
+// ======================================
+// 🔹 FORGOT PASSWORD
+// ======================================
+
+// ======================================
+// 🔹 FORGOT PASSWORD
+// ======================================
+// ======================================
+// 🔹 FORGOT PASSWORD
+// ======================================
+app.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email required",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const user = await UserModel.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+    // ✅ SEND EMAIL
+    await transporter.sendMail({
+      from: `"TaskOra Support" <${process.env.EMAIL_USER}>`,
+      to: normalizedEmail,
+      subject: "Password Reset Request",
+      html: `
+        <h2>Password Reset</h2>
+        <p>You requested to reset your password.</p>
+        <p>Click the link below to reset:</p>
+        <a href="${resetUrl}">${resetUrl}</a>
+        <p>This link expires in 15 minutes.</p>
+        <p>If you did not request this, ignore this email.</p>
+      `,
+    });
+
+    res.json({
+      success: true,
+      message: "Reset link sent to your email",
+    });
+
+  } catch (err) {
+    console.error("FORGOT PASSWORD ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+// ======================================
+// 🔹 RESET PASSWORD
+// ======================================
+
+// ======================================
+// 🔹 RESET PASSWORD
+// ======================================
+
+app.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await UserModel.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid or expired token",
+      });
+    }
+
+    // 🔥 Use built-in changePassword instead (better method)
+    await user.setPassword(password);
+
+    // Clear reset fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+
+  } catch (err) {
+    console.error("RESET PASSWORD ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ================= ADD GIG (BASELINE + AI) =================
 app.post("/addGig", isLoggedIn, async (req, res) => {
@@ -1548,6 +1782,40 @@ app.get("/admin/reactivate-everything", async (req, res) => {
     console.error("Reactivate error:", err);
     res.status(500).json({ error: "Failed" });
   }
+});
+
+
+// ======================================
+// 🔹 GET ALL USERS (TEMP DEBUG ROUTE)
+// ======================================
+app.get("/all-users", async (req, res) => {
+  try {
+    const users = await UserModel.find({}, "username email state district tokens");
+
+    res.json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (err) {
+    console.error("FETCH USERS ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
+app.post("/debug-auth", async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await UserModel.findOne({ username });
+
+  if (!user) return res.json("User not found");
+
+  const result = await user.authenticate(password);
+
+  res.json(result);
 });
 
 // ================= START =================

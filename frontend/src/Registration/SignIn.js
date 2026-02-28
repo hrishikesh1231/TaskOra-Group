@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from "react";
 import "./Login.css";
 import axios from "axios";
@@ -47,7 +46,7 @@ const SignIn = () => {
     } catch (err) {
       toast.error(
         err.response?.data?.msg || "Invalid username or password ❌",
-        { autoClose: 2000 }
+        { autoClose: 2000 },
       );
     } finally {
       setLoading(false);
@@ -83,7 +82,10 @@ const SignIn = () => {
           {loading ? "Logging In..." : "Log In"}
         </button>
 
-        <a href="/signUp">Sign Up</a>
+        <a href="/signUp">Sign Up</a> <br></br>
+        <a href="/forgot-password" className="forgot-link">
+          Forgot Password?
+        </a>
       </form>
 
       <ToastContainer position="top-center" autoClose={3000} />
