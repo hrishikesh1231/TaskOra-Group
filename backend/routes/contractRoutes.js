@@ -1176,6 +1176,27 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 // ======================================================
 // 3️⃣ VIEW MY CONTRACTS (GIG + SERVICE)
 // ======================================================
+// router.get("/contracts/my", isLoggedIn, async (req, res) => {
+//   try {
+//     const contracts = await Contract.find({
+//       applicant: req.user._id,
+//     })
+//       .populate("gig")
+//       .populate("service")
+//       .populate("recruiter", "name email");
+
+//     res.json(contracts);
+
+//   } catch (err) {
+//     console.error("❌ FETCH CONTRACT ERROR:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+
+
+
+
 router.get("/contracts/my", isLoggedIn, async (req, res) => {
   try {
     const contracts = await Contract.find({
@@ -1185,6 +1206,46 @@ router.get("/contracts/my", isLoggedIn, async (req, res) => {
       .populate("service")
       .populate("recruiter", "name email");
 
+    // 🔥 CHECK EXPIRY FOR GIG CONTRACTS
+    for (let contract of contracts) {
+
+      if (
+        contract.gig && // only gigs
+        contract.status === "recruiter_confirmed" &&
+        contract.expiresAt &&
+        contract.expiresAt < new Date()
+      ) {
+        // ✅ Expire contract
+        contract.status = "expired";
+        await contract.save();
+
+        // ✅ Reopen gig
+        await Gig.findByIdAndUpdate(contract.gig._id, {
+          isClosed: false,
+        });
+
+        // ✅ Reset application
+        await Application.findOneAndUpdate(
+          {
+            gig: contract.gig._id,
+            applicant: contract.applicant,
+          },
+          {
+            status: "rejected",
+          }
+        );
+
+        // ✅ Notify recruiter
+        await Notification.create({
+          user: contract.recruiter._id,
+          title: "Contract Expired ⏳",
+          message: "Applicant did not confirm within 12 hours.",
+          type: "CONTRACT",
+          link: `/gig/${contract.gig._id}/applicants`,
+        });
+      }
+    }
+
     res.json(contracts);
 
   } catch (err) {
@@ -1192,5 +1253,139 @@ router.get("/contracts/my", isLoggedIn, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.post(
+  "/contracts/:id/reject",
+  isLoggedIn,
+  async (req, res) => {
+    try {
+      const contract = await Contract.findById(req.params.id);
+
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+
+      // Only applicant can reject
+      if (contract.applicant.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ error: "Not allowed" });
+      }
+
+      if (contract.status === "both_confirmed") {
+        return res.status(400).json({ error: "Contract already confirmed" });
+      }
+
+      // ✅ Update contract status
+      contract.status = "rejected";
+      await contract.save();
+
+      // ✅ Reopen gig
+      await Gig.findByIdAndUpdate(contract.gig, {
+        isClosed: false,
+      });
+
+      // 🔥 VERY IMPORTANT FIX
+      // Reset application status so owner can select others
+      await Application.findOneAndUpdate(
+        {
+          gig: contract.gig,
+          applicant: contract.applicant,
+        },
+        {
+          status: "rejected",
+        }
+      );
+
+      // ✅ Notify owner
+      await Notification.create({
+        user: contract.recruiter,
+        title: "Contract Rejected",
+        message: `${req.user.username} rejected your contract`,
+        type: "CONTRACT",
+        link: `/gig/${contract.gig}/applicants`,
+      });
+
+      res.json({ success: true });
+
+    } catch (err) {
+      console.error("Reject contract error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+
+router.post(
+  "/service-contracts/:id/reject",
+  isLoggedIn,
+  async (req, res) => {
+    try {
+      const contract = await ServiceContract.findById(req.params.id);
+
+      if (!contract) {
+        return res.status(404).json({ error: "Contract not found" });
+      }
+
+      if (contract.applicant.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ error: "Not allowed" });
+      }
+
+      if (contract.status === "both_confirmed") {
+        return res.status(400).json({ error: "Already confirmed" });
+      }
+
+      // ✅ Update contract
+      contract.status = "rejected";
+      await contract.save();
+
+      // ✅ Reopen service
+      await Service.findByIdAndUpdate(contract.service, {
+        isClosed: false,
+      });
+
+      // 🔥 RESET APPLICATION STATUS (IMPORTANT)
+      await ServiceApplication.findOneAndUpdate(
+        {
+          service: contract.service,
+          applicant: contract.applicant,
+        },
+        {
+          status: "rejected",
+        }
+      );
+
+      // ✅ Notify owner
+      await Notification.create({
+        user: contract.recruiter,
+        title: "Service Contract Rejected",
+        message: `${req.user.username} rejected your service contract`,
+        type: "CONTRACT",
+        link: `/service/${contract.service}/applicants`,
+      });
+
+      res.json({ success: true });
+
+    } catch (err) {
+      console.error("Service reject error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
 
 module.exports = router;

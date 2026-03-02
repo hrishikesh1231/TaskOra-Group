@@ -6,3 +6,33 @@ body{
 .Toastify__toast-container {
   z-index: 9999 !important;
 }
+/* =====================================
+   GLOBAL LAYOUT FIX
+===================================== */
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  padding-bottom: 40px;
+}
+/* ================= TOAST FIX – FINAL ================= */
+
+.Toastify__toast-container {
+  z-index: 99999 !important;
+  position: fixed !important;
+  top: 80px !important;   /* push below navbar */
+}
+
+.Toastify__toast {
+  z-index: 99999 !important;
+}

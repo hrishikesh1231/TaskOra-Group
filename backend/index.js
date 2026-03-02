@@ -21,6 +21,7 @@ const tokenRoutes = require("./routes/tokenRoutes");
 const { createWelcomeBonus } = require("./controllers/tokenController");
 const crypto = require("crypto");
 
+
 // ================= MODELS =================
 
 // ✅ VERY IMPORTANT — register all models
@@ -534,6 +535,117 @@ app.get("/services-near-me", isLoggedIn, async (req, res) => {
 
 
 
+// app.post(
+//   "/applyGig/:gigId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     let application;
+
+//     try {
+
+//       // 🔥 ADD THIS BLOCK (ONLY ADDITION)
+//       const gig = await Gig.findById(req.params.gigId);
+
+//       if (!gig) {
+//         return res.status(404).json({ error: "Gig not found" });
+//       }
+
+//       // ❌ Prevent owner from applying
+//       if (gig.postedBy.toString() === req.user._id.toString()) {
+//         return res.status(400).json({
+//           error: "You cannot apply to your own gig",
+//         });
+//       }
+
+//       // ❌ Prevent duplicate apply (optional but safe)
+//       const existingApplication = await Application.findOne({
+//         gig: req.params.gigId,
+//         applicant: req.user._id,
+//       });
+
+//       if (existingApplication) {
+//         return res.status(400).json({
+//           error: "You have already applied to this gig",
+//         });
+//       }
+//       // 🔥 END OF ADDITION
+
+
+//       // ================= EXISTING LOGIC (NOT CHANGED) =================
+//       application = new Application({
+//         gig: req.params.gigId,
+//         applicant: req.user._id,
+//         ...req.body,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
+
+//       await application.save();
+
+//       // ================= TOKEN DEDUCTION =================
+//       await deductTokens({
+//         userId: req.user._id,
+//         amount: 2,
+//         reason: "Apply Gig",
+//         gig: req.params.gigId
+//       });
+
+//       await TokenTransaction.findOneAndUpdate(
+//         {
+//           user: req.user._id,
+//           reason: "Apply Gig",
+//         },
+//         {
+//           $set: { gig: req.params.gigId },
+//         },
+//         { sort: { createdAt: -1 } },
+//       );
+
+//       ////////////////////////////
+
+//       // ================= STEP 3: NOTIFICATION + EMAIL =================
+//       try {
+//         const owner = await UserModel.findById(gig.postedBy);
+
+//         if (owner) {
+//           await Notification.create({
+//             user: owner._id,
+//             title: "New Application",
+//             message: `${req.user.username} applied to your gig`,
+//             type: "APPLY",
+//             link: `/gig/${gig._id}/applicants`,
+//           });
+
+//           await sendEmail({
+//             to: owner.email,
+//             subject: "New Application Received",
+//             html: `
+//               <h2>New Application</h2>
+//               <p><b>${req.user.username}</b> has applied to your gig.</p>
+//             `,
+//           });
+//         }
+//       } catch (err) {
+//         console.error("STEP 3 notification/email error:", err.message);
+//       }
+
+//       res.json({ success: true });
+
+//     } catch (err) {
+//       console.error("❌ APPLY GIG ERROR:", err.message);
+
+//       if (application && application._id) {
+//         await Application.findByIdAndDelete(application._id);
+//       }
+
+//       return res.status(400).json({
+//         error: err.message || "Insufficient tokens to apply",
+//       });
+//     }
+//   },
+// );
+
+
 app.post(
   "/applyGig/:gigId",
   isLoggedIn,
@@ -542,22 +654,21 @@ app.post(
     let application;
 
     try {
-
-      // 🔥 ADD THIS BLOCK (ONLY ADDITION)
+      // ================= FETCH GIG =================
       const gig = await Gig.findById(req.params.gigId);
 
       if (!gig) {
         return res.status(404).json({ error: "Gig not found" });
       }
 
-      // ❌ Prevent owner from applying
+      // ================= OWNER CANNOT APPLY =================
       if (gig.postedBy.toString() === req.user._id.toString()) {
         return res.status(400).json({
           error: "You cannot apply to your own gig",
         });
       }
 
-      // ❌ Prevent duplicate apply (optional but safe)
+      // ================= PREVENT DUPLICATE APPLY =================
       const existingApplication = await Application.findOne({
         gig: req.params.gigId,
         applicant: req.user._id,
@@ -568,10 +679,8 @@ app.post(
           error: "You have already applied to this gig",
         });
       }
-      // 🔥 END OF ADDITION
 
-
-      // ================= EXISTING LOGIC (NOT CHANGED) =================
+      // ================= CREATE APPLICATION =================
       application = new Application({
         gig: req.params.gigId,
         applicant: req.user._id,
@@ -586,7 +695,7 @@ app.post(
         userId: req.user._id,
         amount: 2,
         reason: "Apply Gig",
-        gig: req.params.gigId
+        gig: req.params.gigId,
       });
 
       await TokenTransaction.findOneAndUpdate(
@@ -597,38 +706,39 @@ app.post(
         {
           $set: { gig: req.params.gigId },
         },
-        { sort: { createdAt: -1 } },
+        { sort: { createdAt: -1 } }
       );
 
-      ////////////////////////////
-
-      // ================= STEP 3: NOTIFICATION + EMAIL =================
-      try {
-        const owner = await UserModel.findById(gig.postedBy);
-
-        if (owner) {
-          await Notification.create({
-            user: owner._id,
-            title: "New Application",
-            message: `${req.user.username} applied to your gig`,
-            type: "APPLY",
-            link: `/gig/${gig._id}/applicants`,
-          });
-
-          await sendEmail({
-            to: owner.email,
-            subject: "New Application Received",
-            html: `
-              <h2>New Application</h2>
-              <p><b>${req.user.username}</b> has applied to your gig.</p>
-            `,
-          });
-        }
-      } catch (err) {
-        console.error("STEP 3 notification/email error:", err.message);
-      }
-
+      // ================= SEND RESPONSE FAST =================
       res.json({ success: true });
+
+      // ================= BACKGROUND NOTIFICATION + EMAIL =================
+      (async () => {
+        try {
+          const owner = await UserModel.findById(gig.postedBy);
+
+          if (owner) {
+            await Notification.create({
+              user: owner._id,
+              title: "New Application",
+              message: `${req.user.username} applied to your gig`,
+              type: "APPLY",
+              link: `/gig/${gig._id}/applicants`,
+            });
+
+            await sendEmail({
+              to: owner.email,
+              subject: "New Application Received",
+              html: `
+                <h2>New Application</h2>
+                <p><b>${req.user.username}</b> has applied to your gig.</p>
+              `,
+            });
+          }
+        } catch (err) {
+          console.error("Notification/Email error:", err.message);
+        }
+      })();
 
     } catch (err) {
       console.error("❌ APPLY GIG ERROR:", err.message);
@@ -641,18 +751,117 @@ app.post(
         error: err.message || "Insufficient tokens to apply",
       });
     }
-  },
+  }
 );
+
+
+// app.post(
+//   "/applyService/:serviceId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     try {
+//       console.log("🔥 APPLY SERVICE ROUTE HIT");
+
+//       const application = await ServiceApplication.create({
+//         service: req.params.serviceId,
+//         applicant: req.user._id,
+//         name: req.body.name,
+//         message: req.body.message,
+//         contact: req.body.contact,
+//         charges: req.body.charges,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
+
+//       console.log("✅ Service application saved");
+
+//       /**
+//        * 🔥 TOKEN DEDUCTION (SAFE POINT)
+//        */
+//       await deductTokens({
+//         userId: req.user._id,
+//         amount: 1, // 🔧 apply service cost
+//         reason: "Apply Service",
+//       });
+
+//       // 1️⃣ Fetch service
+//       const service = await Service.findById(req.params.serviceId);
+//       if (!service) return res.json({ success: true });
+
+//       // 2️⃣ Fetch owner
+//       const owner = await UserModel.findById(service.postedBy);
+//       if (!owner) return res.json({ success: true });
+
+//       // 3️⃣ Notification
+//       await Notification.create({
+//         user: owner._id,
+//         title: "New Service Application",
+//         message: `${req.user.username} applied to your service`,
+//         type: "APPLY",
+//         link: `/service/${service._id}/applicants`,
+//       });
+
+//       console.log("🔔 Service notification created");
+
+//       // 4️⃣ Email
+//       await sendEmail({
+//         to: owner.email,
+//         subject: "New Service Application",
+//         html: `
+//           <h3>New Service Application</h3>
+//           <p><b>${req.user.username}</b> applied to your service.</p>
+//         `,
+//       });
+
+//       console.log("📧 Service email sent");
+
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ APPLY SERVICE ERROR:", err);
+//       res.status(500).json({ error: err.message });
+//     }
+//   },
+// );
+
+
 
 app.post(
   "/applyService/:serviceId",
   isLoggedIn,
   upload.array("pictures", 5),
   async (req, res) => {
+    let application;
+
     try {
       console.log("🔥 APPLY SERVICE ROUTE HIT");
 
-      const application = await ServiceApplication.create({
+      // ================= FETCH SERVICE =================
+      const service = await Service.findById(req.params.serviceId);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+
+      // ================= OWNER CANNOT APPLY =================
+      if (service.postedBy.toString() === req.user._id.toString()) {
+        return res.status(400).json({
+          error: "You cannot apply to your own service",
+        });
+      }
+
+      // ================= PREVENT DUPLICATE APPLY =================
+      const existingApplication = await ServiceApplication.findOne({
+        service: req.params.serviceId,
+        applicant: req.user._id,
+      });
+
+      if (existingApplication) {
+        return res.status(400).json({
+          error: "You have already applied to this service",
+        });
+      }
+
+      // ================= CREATE APPLICATION =================
+      application = await ServiceApplication.create({
         service: req.params.serviceId,
         applicant: req.user._id,
         name: req.body.name,
@@ -664,52 +873,60 @@ app.post(
 
       console.log("✅ Service application saved");
 
-      /**
-       * 🔥 TOKEN DEDUCTION (SAFE POINT)
-       */
+      // ================= TOKEN DEDUCTION =================
       await deductTokens({
         userId: req.user._id,
-        amount: 1, // 🔧 apply service cost
+        amount: 1,
         reason: "Apply Service",
       });
 
-      // 1️⃣ Fetch service
-      const service = await Service.findById(req.params.serviceId);
-      if (!service) return res.json({ success: true });
-
-      // 2️⃣ Fetch owner
-      const owner = await UserModel.findById(service.postedBy);
-      if (!owner) return res.json({ success: true });
-
-      // 3️⃣ Notification
-      await Notification.create({
-        user: owner._id,
-        title: "New Service Application",
-        message: `${req.user.username} applied to your service`,
-        type: "APPLY",
-        link: `/service/${service._id}/applicants`,
-      });
-
-      console.log("🔔 Service notification created");
-
-      // 4️⃣ Email
-      await sendEmail({
-        to: owner.email,
-        subject: "New Service Application",
-        html: `
-          <h3>New Service Application</h3>
-          <p><b>${req.user.username}</b> applied to your service.</p>
-        `,
-      });
-
-      console.log("📧 Service email sent");
-
+      // ================= SEND RESPONSE FAST =================
       res.json({ success: true });
+
+      // ================= BACKGROUND WORK =================
+      (async () => {
+        try {
+          const owner = await UserModel.findById(service.postedBy);
+          if (!owner) return;
+
+          await Notification.create({
+            user: owner._id,
+            title: "New Service Application",
+            message: `${req.user.username} applied to your service`,
+            type: "APPLY",
+            link: `/service/${service._id}/applicants`,
+          });
+
+          console.log("🔔 Service notification created");
+
+          await sendEmail({
+            to: owner.email,
+            subject: "New Service Application",
+            html: `
+              <h3>New Service Application</h3>
+              <p><b>${req.user.username}</b> applied to your service.</p>
+            `,
+          });
+
+          console.log("📧 Service email sent");
+
+        } catch (err) {
+          console.error("Background service error:", err.message);
+        }
+      })();
+
     } catch (err) {
-      console.error("❌ APPLY SERVICE ERROR:", err);
-      res.status(500).json({ error: err.message });
+      console.error("❌ APPLY SERVICE ERROR:", err.message);
+
+      if (application && application._id) {
+        await ServiceApplication.findByIdAndDelete(application._id);
+      }
+
+      return res.status(400).json({
+        error: err.message || "Insufficient tokens to apply",
+      });
     }
-  },
+  }
 );
 
 // app.get("/my-applications", isLoggedIn, async (req, res) => {
@@ -719,47 +936,147 @@ app.post(
 //   res.json(apps);
 // });
 
+// app.get("/count/gigs/:city", async (req, res) => {
+//   try {
+//     const city = req.params.city;
+
+//     const count = await Gig.countDocuments({
+//       $or: [
+//         { location: { $regex: new RegExp(city, "i") } },
+//         { district: { $regex: new RegExp(city, "i") } },
+//       ],
+//     });
+
+//     res.json({ count });
+//   } catch (err) {
+//     console.error("Gig count error:", err);
+//     res.status(500).json({ count: 0 });
+//   }
+// });
+
+
+
+// // ================= GIG COUNT BY CITY =================
+// app.get("/count/gigs/:city", async (req, res) => {
+//   try {
+//     const city = req.params.city?.trim();
+
+//     console.log("🔍 Counting gigs for:", city);
+
+//     if (!city) {
+//       return res.json({ count: 0 });
+//     }
+
+//     const count = await Gig.countDocuments({
+//       $or: [
+//         { location: { $regex: new RegExp(city, "i") } },
+//         { district: { $regex: new RegExp(city, "i") } },
+//       ],
+
+//       // 🔥 only add this if your search route also has it
+//       // isClosed: false,
+//     });
+
+//     console.log("📦 Visible gigs count:", count);
+
+//     res.json({ count });
+//   } catch (err) {
+//     console.error("Gig count error:", err);
+//     res.status(500).json({ count: 0 });
+//   }
+// });
+
+
+// ================= GIG COUNT BY CITY =================
 app.get("/count/gigs/:city", async (req, res) => {
   try {
-    const city = req.params.city;
+    const city = req.params.city?.trim();
+
+    console.log("🔍 Counting gigs for:", city);
+
+    if (!city) {
+      return res.json({ count: 0 });
+    }
 
     const count = await Gig.countDocuments({
+      isActive: true,   // ✅ MUST match search route
       $or: [
-        { location: { $regex: new RegExp(city, "i") } },
-        { district: { $regex: new RegExp(city, "i") } },
+        { location: new RegExp(city, "i") },
+        { district: new RegExp(city, "i") },
       ],
     });
 
+    console.log("📦 Navbar gig count:", count);
+
     res.json({ count });
+
   } catch (err) {
     console.error("Gig count error:", err);
     res.status(500).json({ count: 0 });
   }
 });
 
+
+
+
+
 // ================= SERVICE COUNT BY DISTRICT =================
 app.get("/count/services/:district", async (req, res) => {
   try {
-    const { district } = req.params;
+    const district = req.params.district?.trim();
+
+    console.log("🔍 Counting services for:", district);
+
+    if (!district) {
+      return res.json({ count: 0 });
+    }
+
     const count = await Service.countDocuments({
-      district: { $regex: new RegExp(`^${district}$`, "i") },
+      isActive: true,   // ✅ MUST match your search route
+      $or: [
+        { location: new RegExp(district, "i") },
+        { district: new RegExp(district, "i") },
+      ],
     });
+
+    console.log("📦 Navbar service count:", count);
+
     res.json({ count });
+
   } catch (err) {
+    console.error("Service count error:", err);
     res.status(500).json({ count: 0 });
   }
 });
+
+
+
+
+
+
+
+// // ================= SERVICE COUNT BY DISTRICT =================
+// app.get("/count/services/:district", async (req, res) => {
+//   try {
+//     const { district } = req.params;
+//     const count = await Service.countDocuments({
+//       district: { $regex: new RegExp(`^${district}$`, "i") },
+//     });
+//     res.json({ count });
+//   } catch (err) {
+//     res.status(500).json({ count: 0 });
+//   }
+// });
 //
 
-app.get("/debug-users", async (req, res) => {
-  const users = await UserModel.find({});
-  res.json(
-    users.map((u) => ({
-      username: u.username,
-      email: u.email,
-    })),
-  );
-});
+
+
+
+
+
+
+
+
 
 // ================= MY GIGS =================
 app.get("/my-gigs", isLoggedIn, async (req, res) => {
@@ -935,6 +1252,63 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
 ///////////////////// email
 
 // ================= SELECT GIG APPLICANT =================
+// app.post(
+//   "/gig-application/:applicationId/select",
+//   isLoggedIn,
+//   async (req, res) => {
+//     try {
+//       const application = await Application.findById(req.params.applicationId);
+
+//       if (!application) {
+//         return res.status(404).json({ error: "Application not found" });
+//       }
+
+//       // 🔒 Only gig owner can select
+//       const gig = await Gig.findById(application.gig);
+//       if (!gig || gig.postedBy.toString() !== req.user._id.toString()) {
+//         return res.status(403).json({ error: "Not authorized" });
+//       }
+
+//       // ✅ EXISTING LOGIC (status update)
+//       application.status = "selected";
+//       await application.save();
+
+//       // ================= STEP 4: NOTIFICATION + EMAIL =================
+//       try {
+//         const applicant = await UserModel.findById(application.applicant);
+
+//         if (applicant) {
+//           // 🔔 Notification
+//           await Notification.create({
+//             user: applicant._id,
+//             title: "Application Selected 🎉",
+//             message: "You have been selected for a gig",
+//             type: "CONFIRM",
+//             link: "/my-applications",
+//           });
+
+//           // 📧 Email
+//           await sendEmail({
+//             to: applicant.email,
+//             subject: "You have been selected 🎉",
+//             html: `
+//               <h2>Congratulations!</h2>
+//               <p>You have been selected for the gig.</p>
+//             `,
+//           });
+//         }
+//       } catch (err) {
+//         console.error("STEP 4 GIG notify error:", err.message);
+//       }
+
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ SELECT GIG APPLICANT ERROR:", err);
+//       res.status(500).json({ error: "Server error" });
+//     }
+//   },
+// );
+
 app.post(
   "/gig-application/:applicationId/select",
   isLoggedIn,
@@ -946,37 +1320,63 @@ app.post(
         return res.status(404).json({ error: "Application not found" });
       }
 
-      // 🔒 Only gig owner can select
       const gig = await Gig.findById(application.gig);
+
       if (!gig || gig.postedBy.toString() !== req.user._id.toString()) {
         return res.status(403).json({ error: "Not authorized" });
       }
 
-      // ✅ EXISTING LOGIC (status update)
+      // 🔥 Prevent double selection if active contract exists
+      const activeContract = await Contract.findOne({
+        gig: gig._id,
+        status: { 
+          $in: ["pending", "recruiter_confirmed", "applicant_confirmed"] 
+        }
+      });
+
+      if (activeContract) {
+        return res.status(400).json({
+          error: "A contract is already active for this gig",
+        });
+      }
+
+      // ✅ Mark application selected
       application.status = "selected";
       await application.save();
 
-      // ================= STEP 4: NOTIFICATION + EMAIL =================
+      // ✅ Close gig
+      gig.isClosed = true;
+      await gig.save();
+
+      // ✅ Create contract with 12 hour expiry (GIG ONLY)
+      const contract = await Contract.create({
+        gig: gig._id,
+        recruiter: gig.postedBy,
+        applicant: application.applicant,
+        status: "recruiter_confirmed",
+        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000), // 🔥 12 HOURS
+      });
+
+      // ================= NOTIFICATION + EMAIL =================
       try {
         const applicant = await UserModel.findById(application.applicant);
 
         if (applicant) {
-          // 🔔 Notification
           await Notification.create({
             user: applicant._id,
             title: "Application Selected 🎉",
-            message: "You have been selected for a gig",
+            message: "You have been selected for a gig. Confirm within 12 hours.",
             type: "CONFIRM",
-            link: "/my-applications",
+            link: "/my-contracts",
           });
 
-          // 📧 Email
           await sendEmail({
             to: applicant.email,
             subject: "You have been selected 🎉",
             html: `
               <h2>Congratulations!</h2>
               <p>You have been selected for the gig.</p>
+              <p>Please confirm within 12 hours.</p>
             `,
           });
         }
@@ -985,14 +1385,13 @@ app.post(
       }
 
       res.json({ success: true });
+
     } catch (err) {
       console.error("❌ SELECT GIG APPLICANT ERROR:", err);
       res.status(500).json({ error: "Server error" });
     }
-  },
+  }
 );
-
-
 
 
 

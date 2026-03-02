@@ -1,41 +1,40 @@
-
 const mongoose = require("mongoose");
-const { Schema } = require('mongoose');
+const { Schema } = require("mongoose");
 
 const contractSchema = new Schema(
   {
     gig: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Gig",
-      required: null
+      required: null,
     },
-     // 🔹 NEW: Service contract support
+    // 🔹 NEW: Service contract support
     service: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Service",
-      default: null
+      default: null,
     },
 
     recruiter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
-      required: true
+      required: true,
     },
 
     applicant: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
-      required: true
+      required: true,
     },
 
     recruiterConfirmed: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     applicantConfirmed: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     status: {
@@ -44,17 +43,20 @@ const contractSchema = new Schema(
         "pending",
         "recruiter_confirmed",
         "applicant_confirmed",
-        "both_confirmed"
+        "both_confirmed",
+        "rejected",
+        "expired", // ✅ NEW
+        "cancelled",
       ],
-      default: "pending"
+      default: "pending",
     },
 
     tokensDeducted: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = { contractSchema };

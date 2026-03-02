@@ -13,7 +13,7 @@ import PostServiceForm from "./Landing_page/Posts/PostServiceForm";
 import SignUp from "./Registration/SignUp";
 import SignIn from "./Registration/SignIn";
 import { ToastContainer } from "react-toastify";
-import { Toaster } from "react-hot-toast";
+
 import "react-toastify/dist/ReactToastify.css";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -43,6 +43,8 @@ import TokenHistory from "./pages/TokenHistory";
 import BuyTokens from "./pages/BuyTokens";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import NotificationsPage from "./pages/NotificationsPage";
+import { NotificationProvider } from "./context/NotificationContext";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -54,13 +56,16 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter>
     <ScrollToTop />
+    <NotificationProvider>
+
     <CityProvider>
       <AuthProvider>
         <TokenProvider>
+           <div className="app-wrapper">
           <Navbar />
 
           <ToastContainer position="top-center" autoClose={3000} />
-          <Toaster position="top-center" reverseOrder={false} />
+          <main className="page-content">
 
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -130,11 +135,16 @@ root.render(
 
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
-          </Routes>
+             <Route path="/notifications" element={<NotificationsPage />} />
 
+
+          </Routes>
+</main>
           <Footer />
+          </div>
         </TokenProvider>
       </AuthProvider>
     </CityProvider>
+    </NotificationProvider>
   </BrowserRouter>,
 );

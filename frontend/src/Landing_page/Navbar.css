@@ -1,75 +1,55 @@
-/* ================================
-   Navbar.css – TASKORA FINAL
-   Responsive + Notification Ready
-================================ */
+/* =========================================
+   TASKORA NAVBAR – COMPLETE STABLE VERSION
+========================================= */
 
-/* ================================
-   BASE NAVBAR
-================================ */
+/* ================= BASE NAVBAR ================= */
 
 .navbar {
-  background: linear-gradient(
-    135deg,
-    #80bdf3,
-    #e0f2ff,
-    #82b3f3
-  );
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(13, 110, 253, 0.25);
-  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.18);
-  transition: all 0.3s ease;
+  position: relative;
+  z-index: 3000;
 
+  background: linear-gradient(135deg, #80bdf3, #e0f2ff, #82b3f3);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(13, 110, 253, 0.2);
+  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.15);
+  transition: all 0.3s ease;
 }
 
 .container-fluid {
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
+  padding-left: 1.8rem !important;
+  padding-right: 1.8rem !important;
 }
 
-/* ================================
-   BRAND
-================================ */
+/* ================= BRAND ================= */
 
 .navbar-brand {
-  padding: 4px 10px;
-  border-radius: 8px;
-  transition: background 0.3s ease;
-}
-
-.navbar-brand:hover {
-  background: rgba(13, 110, 253, 0.1);
-}
-
-.navbar-brand img {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d4ed8 !important;
   transition: transform 0.3s ease;
 }
 
-.navbar-brand img:hover {
-  transform: scale(1.1);
+.navbar-brand:hover {
+  transform: scale(1.05);
 }
 
-/* ================================
-   NAV LINKS
-================================ */
-
-.navbar-nav {
-  gap: 1.5rem;
-}
+/* ================= NAV LINKS ================= */
 
 .nav-link {
   font-weight: 500;
   color: #0f172a !important;
-  position: relative;
-  transition: color 0.3s ease;
   font-size: 0.95rem;
+  position: relative;
+  transition: all 0.3s ease;
+  padding: 6px 8px;
   white-space: nowrap;
-  padding: 6px 10px;
 }
 
 .nav-link:hover {
   color: #0d6efd !important;
 }
 
+/* Underline animation */
 .nav-link::after {
   content: "";
   position: absolute;
@@ -85,99 +65,89 @@
   width: 100%;
 }
 
-/* ================================
-   NOTIFICATION BELL
-================================ */
+/* ================= BADGES ================= */
 
-.notification-bell {
-  position: relative;
-  font-size: 1.3rem;
-  cursor: pointer;
-  color: #0f172a;
-  transition: transform 0.2s ease;
+.nav-link-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.notification-bell:hover {
-  transform: scale(1.15);
+.nav-text {
+  display: flex;
+  align-items: center;
 }
 
-.notification-badge {
-  position: absolute;
-  top: -6px;
-  right: -10px;
-  background: #dc2626;
+/* Gigs badge */
+.nav-count-badge {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #fff;
   font-size: 11px;
   font-weight: 600;
-  border-radius: 50%;
-  padding: 2px 6px;
-  line-height: 1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
-/* ================================
-   TOKEN / COIN
-================================ */
-
-.coin {
-  color: #e11d48;
-  font-weight: 600;
-}
-
-/* ================================
-   USERNAME GRADIENT
-================================ */
-
-.fw-bold.text-primary {
-  font-size: 1rem;
-  background: linear-gradient(90deg, #0d6efd, #38bdf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* ================================
-   BUTTONS
-================================ */
-
-.btn {
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-outline-primary:hover {
-  background: #0d6efd;
-  color: #fff !important;
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.35);
-}
-
-.btn-danger {
-  background: linear-gradient(135deg, #ff416c, #ff4b2b);
-  border: none;
-}
-
-.btn-danger:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-/* ================================
-   PROFILE DROPDOWN
-================================ */
-
-.profile-dropdown {
+  padding: 2px 8px;
+  border-radius: 999px;
+  min-width: 20px;
+  height: 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  position: relative;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+  transition: transform 0.2s ease;
+}
+
+/* Services badge */
+.nav-count-badge.service {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+.nav-link-with-badge:hover .nav-count-badge {
+  transform: scale(1.1);
+}
+
+/* ================= NOTIFICATION ================= */
+
+.cursor-pointer {
   cursor: pointer;
 }
 
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #dc2626;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-weight: 600;
+}
+
+/* ================= COIN ================= */
+
+.fw-bold.text-warning {
+  background: #fef3c7;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #fde68a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fw-bold.text-warning:hover {
+  background: #fde68a;
+  transform: translateY(-1px);
+}
+
+/* ================= PROFILE ================= */
+
 .profile-circle {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #0d6efd, #38bdf8);
-  color: #fff;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,33 +156,34 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* ================================
-   DROPDOWN MENU
-================================ */
+/* ================= DROPDOWN (FIXED SAFE VERSION) ================= */
 
 .dropdown-menu {
-  position: absolute;
-  top: 110%;
-  right: 0;
-  background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid rgba(13, 110, 253, 0.15);
-  box-shadow: 0 8px 22px rgba(13, 110, 253, 0.25);
-  min-width: 220px;
+  position: fixed !important;  /* 🔥 prevents clipping forever */
+  top: 70px;                   /* adjust if navbar height changes */
+  right: 40px;
+
+  background: white;
+  border-radius: 12px;
   padding: 8px 0;
-  z-index: 1100;
+  min-width: 230px;
+
+  border: none;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
+
+  z-index: 99999;
 }
 
+/* ================= DROPDOWN ITEMS ================= */
+
 .dropdown-item {
-  padding: 10px 16px;
-  font-weight: 500;
-  color: #0f172a;
+  padding: 8px 16px;
+  font-size: 14px;
   transition: background 0.2s ease;
 }
 
 .dropdown-item:hover {
-  background: #e3f2fd;
-  color: #0d6efd;
+  background: #f1f5f9;
 }
 
 .dropdown-divider {
@@ -221,364 +192,81 @@
   margin: 6px 0;
 }
 
-/* ================================
-   TABLET
-================================ */
+/* ================= BUTTONS ================= */
+
+.btn-outline-primary:hover {
+  background: #0d6efd;
+  color: white !important;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  border: none;
+}
+
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 992px) {
-  .navbar-nav {
-    gap: 1rem;
-  }
-
   .nav-link {
     font-size: 0.9rem;
   }
+
+  .nav-count-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    height: 16px;
+  }
 }
 
-/* ================================
-   MOBILE
-================================ */
-
 @media (max-width: 768px) {
+
   .navbar {
-    background: linear-gradient(180deg, #e3f2fd, #ffffff);
-    backdrop-filter: none;
+    height: auto !important;
     padding: 0.6rem 0;
   }
 
-  .navbar .d-flex.align-items-center {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .navbar-nav {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 6px;
-  }
-
-  .coin {
-    display: none;
-  }
-
-  .notification-bell {
-    font-size: 1.2rem;
-  }
-
-  .dropdown-menu {
-    right: 50%;
-    transform: translateX(50%);
-  }
-}
-
-/* ================================
-   SMALL MOBILE
-================================ */
-
-@media (max-width: 480px) {
-  .navbar-brand img {
-    height: 32px;
-  }
-
-  .profile-circle {
-    width: 34px;
-    height: 34px;
+  .nav-link {
     font-size: 0.85rem;
   }
 
+  .nav-count-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    height: 15px;
+  }
+
+  .profile-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .dropdown-menu {
+    right: 20px;
+    top: 65px;
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+
   .nav-link {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
+  }
+
+  .nav-count-badge {
+    font-size: 8px;
+    height: 14px;
+  }
+
+  .profile-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
   }
 
   .dropdown-menu {
     min-width: 180px;
-  }
-}
-
-.notif-wrapper {
-  position: relative;
-}
-
-.notif-bell {
-  font-size: 18px;
-  cursor: pointer;
-  color: #333;
-}
-
-.notif-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: red;
-  color: white;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 50%;
-}
-
-.notif-dropdown {
-  position: absolute;
-  right: 0;
-  top: 35px;
-  width: 300px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.15);
-  padding: 10px;
-  z-index: 2000;
-}
-
-.notif-item {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-}
-
-.notif-item.unread {
-  background: #f0f7ff;
-}
-
-.notif-item.read {
-  opacity: 0.7;
-}
-
-.mark-all {
-  width: 100%;
-  margin-top: 6px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 6px;
-  border-radius: 6px;
-}
-
-
-/* =========================================
-   🔔 NOTIFICATION – RESPONSIVE FIX
-========================================= */
-
-/* Desktop default (keep your design) */
-.notif-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.notif-bell {
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #0f172a;
-}
-
-/* ===============================
-   TABLET & MOBILE
-================================ */
-
-@media (max-width: 768px) {
-
-  /* keep bell clickable */
-  .notif-wrapper {
-    position: relative;
-  }
-
-  /* 🔔 dropdown becomes centered */
-  .notif-dropdown {
-    position: fixed;
-    right: 50%;
-    top: 4.5rem;
-    transform: translateX(50%);
-    width: 92%;
-    max-width: 420px;
-    max-height: 70vh;
-    overflow-y: auto;
-    border-radius: 14px;
-    z-index: 3000;
-  }
-
-  .notif-item {
-    padding: 12px;
-  }
-
-  .notif-item p {
-    font-size: 0.9rem;
-  }
-
-  .mark-all {
-    padding: 10px;
-    font-size: 0.9rem;
-  }
-}
-
-/* ===============================
-   SMALL MOBILE
-================================ */
-
-@media (max-width: 480px) {
-
-  .notif-dropdown {
-    width: 95%;
-    top: 4.2rem;
-  }
-
-  .notif-bell {
-    font-size: 1.1rem;
-  }
-
-  .notif-badge {
-    font-size: 10px;
-    padding: 2px 5px;
-  }
-
-  .notif-item strong {
-    font-size: 0.9rem;
-  }
-
-  .notif-item p {
-    font-size: 0.85rem;
-  }
-}
-
-
-/* ================= BADGES ================= */
-.badge {
-  font-size: 0.75rem;
-  padding: 4px 7px;
-  border-radius: 10px;
-}
-
-/* ================= NOTIFICATION ================= */
-.notif-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: red;
-  color: white;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 50%;
-}
-
-.notif-dropdown {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  width: 280px;
-  background: white;
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-}
-
-.notif-item {
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.notif-item:hover {
-  background: #f1f5f9;
-}
-
-.mark-all {
-  width: 100%;
-  margin-top: 8px;
-  background: none;
-  border: none;
-  color: #2563eb;
-  font-size: 13px;
-}
-
-.notif-dropdown {
-  position: absolute;
-  top: 35px;
-  right: 0;
-  width: 320px;
-
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  z-index: 999;
-
-  max-height: 350px;   /* 🔥 limits height */
-  overflow-y: auto;    /* 🔥 enables scrollbar */
-}
-
-.notif-dropdown::-webkit-scrollbar {
-  width: 6px;
-}
-
-.notif-dropdown::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 10px;
-}
-
-/* ================= PROFILE ================= */
-.profile-circle {
-  width: 36px;
-  height: 36px;
-  background: #2563eb;
-  color: white;
-  font-weight: bold;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ================= COIN ================= */
-.coin {
-  background: #fef3c7;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  border: 1px solid #fde68a;
-}
-
-.coin:hover {
-  background: #fde68a;
-}
-
-/* ================= DROPDOWNS ================= */
-.dropdown-menu {
-  border-radius: 12px;
-  padding: 8px 0;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border: none;
-  min-width: 220px;
-}
-
-.dropdown-item {
-  font-size: 14px;
-  padding: 8px 16px;
-}
-
-.dropdown-item:hover {
-  background: #f1f5f9;
-}
-
-/* ================= CURSOR ================= */
-.cursor-pointer {
-  cursor: pointer;
-}
-
-/* ================= MOBILE ================= */
-@media (max-width: 768px) {
-  .navbar {
-    height: auto !important;
-  }
-
-  .nav-link {
-    font-size: 14px;
-  }
-
-  .coin {
-    font-size: 13px;
-    padding: 4px 10px;
+    right: 15px;
   }
 }

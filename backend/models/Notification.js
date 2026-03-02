@@ -11,7 +11,7 @@ const notificationSchema = new mongoose.Schema(
     message: String,
     type: {
       type: String,
-      enum: ["APPLY", "CONFIRM"],
+      enum: ["APPLY", "CONFIRM","CONTRACT"],
     },
     link: String,
     isRead: {

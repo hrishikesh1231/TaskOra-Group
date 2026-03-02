@@ -13,8 +13,8 @@ const initialState = {
   message: "",
   contact: "",
   charges: "",
-  pictures: [],   // File objects
-  previews: [],   // Object URLs for previews
+  pictures: [], // File objects
+  previews: [], // Object URLs for previews
 };
 
 const ApplyGigForm = () => {
@@ -38,11 +38,17 @@ const ApplyGigForm = () => {
     if (name === "pictures") {
       const newFiles = Array.from(files || []);
       setFormData((prev) => {
-        const combinedFiles = [...prev.pictures, ...newFiles].slice(0, MAX_PHOTOS);
+        const combinedFiles = [...prev.pictures, ...newFiles].slice(
+          0,
+          MAX_PHOTOS,
+        );
 
         // create previews for new files
         const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
-        const combinedPreviews = [...prev.previews, ...newPreviews].slice(0, MAX_PHOTOS);
+        const combinedPreviews = [...prev.previews, ...newPreviews].slice(
+          0,
+          MAX_PHOTOS,
+        );
 
         if (prev.pictures.length + newFiles.length > MAX_PHOTOS) {
           toast.warn(`⚠️ You can upload a maximum of ${MAX_PHOTOS} photos.`, {
@@ -120,14 +126,26 @@ const ApplyGigForm = () => {
 
       // Clear inputs & previews immediately
       resetForm(false);
-
     } catch (err) {
       console.error("❌ Error applying:", err);
-      
-  console.log("BACKEND ERROR:", err.response?.data);
 
-      const msg = err.response?.data?.error || "❌ Failed to apply";
-      toast.error(msg, { autoClose: 3000 });
+      let backendMessage = "Failed to apply";
+
+      if (err.response && err.response.data) {
+        if (typeof err.response.data === "string") {
+          backendMessage = err.response.data;
+        } else if (err.response.data.error) {
+          backendMessage = err.response.data.error;
+        } else if (err.response.data.message) {
+          backendMessage = err.response.data.message;
+        }
+      }
+
+      console.log("BACKEND ERROR:", backendMessage);
+
+      toast.error(`❌ ${backendMessage}`, {
+        autoClose: 3000,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -171,7 +189,11 @@ const ApplyGigForm = () => {
             {formData.previews.length > 0 &&
               formData.previews.map((url, idx) => (
                 <div key={idx} className="preview-wrapper">
-                  <img src={url} alt={`preview-${idx}`} className="preview-img" />
+                  <img
+                    src={url}
+                    alt={`preview-${idx}`}
+                    className="preview-img"
+                  />
                   <button
                     type="button"
                     className="remove-btn"
