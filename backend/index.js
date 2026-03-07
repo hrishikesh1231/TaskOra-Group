@@ -16,6 +16,7 @@ const nodemailer = require("nodemailer");
 const Notification = require("./models/Notification");
 const sendEmail = require("./utils/sendEmail");
 const notificationRoutes = require("./routes/notificationRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 const { deductTokens } = require("./utils/tokenManager");
 const tokenRoutes = require("./routes/tokenRoutes");
 const { createWelcomeBonus } = require("./controllers/tokenController");
@@ -44,6 +45,7 @@ const { upload } = require("./utils/Cloudinary");
 // ================= ROUTES =================
 const locationRoutes = require("./routes/locationRoutes");
 const contractRoutes = require("./routes/contractRoutes");
+const ReviewModel = require("./models/ReviewModel");
 
 const app = express();
 
@@ -56,6 +58,8 @@ const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
 // ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
 
 app.use(
   cors({
@@ -95,6 +99,9 @@ app.use(passport.session());
 /// notification
 
 app.use("/api", notificationRoutes);
+
+//review
+app.use("/api/reviews", reviewRoutes);
 
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
@@ -486,7 +493,7 @@ app.get("/getGigs/:city", async (req, res) => {
   console.log("🔍 Searching gigs for:", city);
 
   const gigs = await Gig.find({
-    isActive: true,
+    // isActive: true,
     $or: [
       { location: new RegExp(city, "i") },
       { district: new RegExp(city, "i") },
@@ -542,22 +549,21 @@ app.post(
     let application;
 
     try {
-
-      // 🔥 ADD THIS BLOCK (ONLY ADDITION)
+      // ================= STEP 1: FIND GIG =================
       const gig = await Gig.findById(req.params.gigId);
 
       if (!gig) {
         return res.status(404).json({ error: "Gig not found" });
       }
 
-      // ❌ Prevent owner from applying
+      // ❌ Prevent owner applying to own gig
       if (gig.postedBy.toString() === req.user._id.toString()) {
         return res.status(400).json({
           error: "You cannot apply to your own gig",
         });
       }
 
-      // ❌ Prevent duplicate apply (optional but safe)
+      // ❌ Prevent duplicate apply
       const existingApplication = await Application.findOne({
         gig: req.params.gigId,
         applicant: req.user._id,
@@ -568,10 +574,8 @@ app.post(
           error: "You have already applied to this gig",
         });
       }
-      // 🔥 END OF ADDITION
 
-
-      // ================= EXISTING LOGIC (NOT CHANGED) =================
+      // ================= STEP 2: CREATE APPLICATION =================
       application = new Application({
         gig: req.params.gigId,
         applicant: req.user._id,
@@ -581,12 +585,12 @@ app.post(
 
       await application.save();
 
-      // ================= TOKEN DEDUCTION =================
+      // ================= STEP 3: TOKEN DEDUCTION =================
       await deductTokens({
         userId: req.user._id,
         amount: 2,
         reason: "Apply Gig",
-        gig: req.params.gigId
+        gig: req.params.gigId,
       });
 
       await TokenTransaction.findOneAndUpdate(
@@ -597,42 +601,46 @@ app.post(
         {
           $set: { gig: req.params.gigId },
         },
-        { sort: { createdAt: -1 } },
+        { sort: { createdAt: -1 } }
       );
 
-      ////////////////////////////
-
-      // ================= STEP 3: NOTIFICATION + EMAIL =================
+      // ================= STEP 4: NOTIFICATION + EMAIL =================
       try {
         const owner = await UserModel.findById(gig.postedBy);
 
         if (owner) {
+          // 🔔 Create notification
           await Notification.create({
             user: owner._id,
             title: "New Application",
-            message: `${req.user.username} applied to your gig`,
+            message: `${req.user.username} applied to your gig "${gig.title}"`,
             type: "APPLY",
             link: `/gig/${gig._id}/applicants`,
           });
 
+          // 📧 Send email
           await sendEmail({
             to: owner.email,
-            subject: "New Application Received",
+            subject: "New Application Received - Taskora",
             html: `
-              <h2>New Application</h2>
-              <p><b>${req.user.username}</b> has applied to your gig.</p>
+              <h2>New Application Received</h2>
+              <p><b>${req.user.username}</b> has applied to your gig:</p>
+              <p><b>${gig.title}</b></p>
+              <p>Login to Taskora to review the applicant.</p>
             `,
           });
         }
-      } catch (err) {
-        console.error("STEP 3 notification/email error:", err.message);
+      } catch (notifErr) {
+        console.error("Notification/Email Error:", notifErr.message);
       }
 
-      res.json({ success: true });
+      // ================= SUCCESS =================
+      return res.json({ success: true });
 
     } catch (err) {
       console.error("❌ APPLY GIG ERROR:", err.message);
 
+      // 🧹 Rollback application if token deduction fails
       if (application && application._id) {
         await Application.findByIdAndDelete(application._id);
       }
@@ -641,7 +649,7 @@ app.post(
         error: err.message || "Insufficient tokens to apply",
       });
     }
-  },
+  }
 );
 
 app.post(
@@ -911,12 +919,12 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
         gig: gig._id,
         status: "selected",
       })
-        .populate("applicant", "username email")
+        .populate("applicant", "username email state district")
         .sort({ createdAt: -1 });
     } else {
       // ✅ Otherwise return all (your original logic)
       applications = await Application.find({ gig: gig._id })
-        .populate("applicant", "username email")
+        .populate("applicant", "username email state district")
         .sort({ createdAt: -1 });
     }
 
@@ -1498,8 +1506,46 @@ app.post("/debug-auth", async (req, res) => {
   res.json(result);
 });
 
+
+//rating
+app.get("/users/:id/profile", async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // 1️⃣ Get user basic info
+    const user = await UserModel.findById(userId).select("username email state district createdAt");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 2️⃣ Get all reviews of this user
+    const reviews = await ReviewModel.find({ reviewedUser: userId })
+      .populate("reviewer", "username")
+      .sort({ createdAt: -1 });
+
+    // 3️⃣ Calculate average rating
+    const totalReviews = reviews.length;
+    const avgRating =
+      totalReviews > 0
+        ? (reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
+        : 0;
+
+    res.json({
+      user,
+      avgRating,
+      totalReviews,
+      reviews,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= START =================
 app.listen(PORT, async () => {
   await mongoose.connect(url);
   console.log("🚀 Server running & DB connected");
 });
+require("./utils/gigCleanup");

@@ -22,6 +22,14 @@ const UserSchema = new Schema(
     type: Number,
     default: 100
     },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
      resetPasswordToken: String,
     resetPasswordExpire: Date,
   },

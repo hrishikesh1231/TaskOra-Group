@@ -169,3 +169,64 @@
 .selected-btn {
   background-color: #28a745 !important;
 }
+.visit-profile-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 14px;
+  color: #2563eb;
+  font-weight: 500;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.visit-profile-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+.applicant-name-link {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  text-decoration: none;
+}
+
+.applicant-name-link:hover {
+  color: #2563eb;
+}
+
+.mini-rating {
+  font-size: 14px;
+  color: #f59e0b;
+  margin-top: 4px;
+}
+
+.mini-review-count {
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.visit-profile-btn {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  background: #2563eb;
+  padding: 6px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.visit-profile-btn:hover {
+  background: #1d4ed8;
+}
+
+.clickable-avatar {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.clickable-avatar:hover {
+  transform: scale(1.05);
+}

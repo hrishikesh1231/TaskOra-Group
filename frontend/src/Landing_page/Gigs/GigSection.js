@@ -1,208 +1,3 @@
-
-// // ///////////////////////////////////////////////////////
-
-
-// // import React, { useEffect, useState, useContext } from "react";
-// // import { Link } from "react-router-dom";
-// // import axios from "axios";
-// // import "./GigSection.css";
-
-// // import { AuthContext } from "../../context/AuthContext";
-// // import { CityContext } from "../../context/CityContext";
-
-// // const GigSection = () => {
-// //   const [gigsData, setGigsData] = useState([]);
-
-// //   const { city, cityVersion } = useContext(CityContext);
-// //   const { user } = useContext(AuthContext);
-
-// //   useEffect(() => {
-// //     if (!city) {
-// //       setGigsData([]);
-// //       return;
-// //     }
-
-// //     const fetchGigs = async () => {
-// //       try {
-// //         const res = await axios.get(
-// //           `/getGigs/${encodeURIComponent(city)}`
-// //         );
-// //         setGigsData(res.data);
-// //       } catch (err) {
-// //         console.error("Error fetching gigs:", err);
-// //         setGigsData([]);
-// //       }
-// //     };
-
-// //     fetchGigs();
-// //   }, [city, cityVersion]); // 🔥 KEY FIX
-
-// //   return (
-// //     <div className="gig-section">
-// //       {city ? (
-// //         gigsData.length > 0 ? (
-// //           <>
-// //             <h2>Gigs in {city}</h2>
-
-// //             {gigsData.map((gig) => (
-// //               <div key={gig._id} className="gig-card">
-// //                 <h3>{gig.title}</h3>
-// //                 <p>{gig.description}</p>
-
-// //                 <p><strong>Contact:</strong> {gig.contact}</p>
-
-// //                 <p>
-// //                   <strong>Event Date:</strong>{" "}
-// //                   {new Date(gig.date).toLocaleDateString("en-IN")}
-// //                 </p>
-
-// //                 <p>
-// //                   <strong>Posted By:</strong>{" "}
-// //                   <i>@{gig.postedBy?.username || "Unknown"}</i>
-// //                 </p>
-
-// //                 {user && gig.postedBy?._id !== user._id && (
-// //                   <Link to={`/applyGig/${gig._id}`}>
-// //                     <button className="apply-button">Apply Now</button>
-// //                   </Link>
-// //                 )}
-// //               </div>
-// //             ))}
-// //           </>
-// //         ) : (
-// //           <p className="no-gigs">No gigs found for {city}.</p>
-// //         )
-// //       ) : (
-// //         <p className="no-gigs">Please search a location.</p>
-// //       )}
-// //     </div>
-// //   );
-// // };
-
-// // export default GigSection;
-
-
-// import React, { useEffect, useState, useContext } from "react";
-// import { Link, useNavigate } from "react-router-dom";
-// import axios from "axios";
-// import "./GigSection.css";
-
-// import { AuthContext } from "../../context/AuthContext";
-// import { CityContext } from "../../context/CityContext";
-
-// const GigSection = () => {
-//   const [gigsData, setGigsData] = useState([]);
-//   const [showOwnerModal, setShowOwnerModal] = useState(false);
-
-//   const { city, cityVersion } = useContext(CityContext);
-//   const { user } = useContext(AuthContext);
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     if (!city) {
-//       setGigsData([]);
-//       return;
-//     }
-
-//     const fetchGigs = async () => {
-//       try {
-//         const res = await axios.get(
-//           `/getGigs/${encodeURIComponent(city)}`
-//         );
-//         setGigsData(res.data);
-//       } catch (err) {
-//         console.error("Error fetching gigs:", err);
-//         setGigsData([]);
-//       }
-//     };
-
-//     fetchGigs();
-//   }, [city, cityVersion]);
-
-//   const handleApplyClick = (gig) => {
-//     const isOwner =
-//       user &&
-//       gig.postedBy &&
-//       String(gig.postedBy._id) === String(user._id);
-
-//     if (isOwner) {
-//       setShowOwnerModal(true);
-//       return;
-//     }
-
-//     navigate(`/applyGig/${gig._id}`);
-//   };
-
-//   return (
-//     <div className="gig-section">
-//       {city ? (
-//         gigsData.length > 0 ? (
-//           <>
-//             <h2>Gigs in {city}</h2>
-
-//             {gigsData.map((gig) => (
-//               <div key={gig._id} className="gig-card">
-//                 <h3>{gig.title}</h3>
-//                 <p>{gig.description}</p>
-
-//                 <div className="gig-details">
-//                   <p>
-//                     <strong>🛠 Work Date:</strong>{" "}
-//                     {new Date(gig.date).toLocaleDateString("en-IN")}
-//                   </p>
-
-//                   <p>
-//                     <strong>👤 Posted By:</strong>{" "}
-//                     <i>@{gig.postedBy?.username || "User"}</i>
-//                   </p>
-
-//                   <p className="privacy-note">
-//                     🔒 Contact details will be shared after selection
-//                   </p>
-//                 </div>
-
-//                 {/* ✅ Apply button visible to ALL logged-in users */}
-//                 {user && (
-//                   <button
-//                     className="apply-button"
-//                     onClick={() => handleApplyClick(gig)}
-//                   >
-//                     Apply Now
-//                   </button>
-//                 )}
-//               </div>
-//             ))}
-//           </>
-//         ) : (
-//           <p className="no-gigs">No gigs found for {city}.</p>
-//         )
-//       ) : (
-//         <p className="no-gigs">Please search a location.</p>
-//       )}
-
-//       {/* 🚫 OWNER MODAL */}
-//       {showOwnerModal && (
-//         <div className="modal-overlay">
-//           <div className="modal-box">
-//             <h3>🚫 Action Not Allowed</h3>
-//             <p>You cannot apply to your own Gig.</p>
-
-//             <button
-//               className="agree-btn"
-//               onClick={() => setShowOwnerModal(false)}
-//             >
-//               OK
-//             </button>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default GigSection;
-
-
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -213,7 +8,6 @@ import { CityContext } from "../../context/CityContext";
 
 const GigSection = () => {
   const [gigsData, setGigsData] = useState([]);
-  const [showOwnerModal, setShowOwnerModal] = useState(false);
 
   const { city, cityVersion } = useContext(CityContext);
   const { user } = useContext(AuthContext);
@@ -230,7 +24,13 @@ const GigSection = () => {
         const res = await axios.get(
           `/getGigs/${encodeURIComponent(city)}`
         );
-        setGigsData(res.data);
+
+        // 🔥 SORT LATEST FIRST
+        const sortedGigs = res.data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        setGigsData(sortedGigs);
       } catch (err) {
         console.error("Error fetching gigs:", err);
         setGigsData([]);
@@ -241,16 +41,6 @@ const GigSection = () => {
   }, [city, cityVersion]);
 
   const handleApplyClick = (gig) => {
-    const isOwner =
-      user &&
-      gig.postedBy &&
-      String(gig.postedBy._id) === String(user._id);
-
-    if (isOwner) {
-      setShowOwnerModal(true);
-      return;
-    }
-
     navigate(`/applyGig/${gig._id}`);
   };
 
@@ -261,83 +51,73 @@ const GigSection = () => {
           <>
             <h2>Gigs in {city}</h2>
 
-            {gigsData.map((gig) => (
-              <div key={gig._id} className="gig-card">
-                
-                {/* ✅ TITLE */}
-                <h3 className="gig-title">{gig.title}</h3>
+            {gigsData.map((gig) => {
+              const isOwner =
+                user &&
+                gig.postedBy &&
+                String(gig.postedBy._id) === String(user._id);
 
-                {/* ✅ DESCRIPTION */}
-                <p className="gig-description">
-                  {gig.description}
-                </p>
+              return (
+                <div key={gig._id} className="gig-card">
 
-                <div className="gig-details">
-                  
-                  {/* ✅ WORK DATE */}
-                  <p>
-                    <strong>🛠 Work Start Date:</strong>{" "}
-                    {new Date(gig.date).toLocaleDateString("en-IN")}
+                  {/* TITLE */}
+                  <h3 className="gig-title">{gig.title}</h3>
+
+                  {/* DESCRIPTION */}
+                  <p className="gig-description">
+                    {gig.description}
                   </p>
 
-                  {/* ✅ POSTED DATE */}
-                  <p>
-                    <strong>🕒 Posted On:</strong>{" "}
-                    {new Date(gig.createdAt).toLocaleDateString("en-IN")}
-                  </p>
+                  <div className="gig-details">
 
-                  {/* ✅ DISTRICT */}
-                  <p>
-                    <strong>📍 District:</strong>{" "}
-                    {gig.district || city}
-                  </p>
+                    {/* WORK DATE */}
+                    <p>
+                      <strong>🛠 Work Start Date:</strong>{" "}
+                      {new Date(gig.date).toLocaleDateString("en-IN")}
+                    </p>
 
-                  {/* ✅ POSTED BY */}
-                  <p>
-                    <strong>👤 Posted By:</strong>{" "}
-                    <i>@{gig.postedBy?.username || "User"}</i>
-                  </p>
+                    {/* POSTED DATE */}
+                    <p>
+                      <strong>🕒 Posted On:</strong>{" "}
+                      {new Date(gig.createdAt).toLocaleDateString("en-IN")}
+                    </p>
 
-                  {/* 🔒 CONTACT INFO NOTE */}
-                  <p className="privacy-note">
-                    🔒 Contact number will be visible after applying
-                  </p>
+                    {/* DISTRICT */}
+                    <p>
+                      <strong>📍 District:</strong>{" "}
+                      {gig.district || city}
+                    </p>
+
+                    {/* POSTED BY */}
+                    <p>
+                      <strong>👤 Posted By:</strong>{" "}
+                      <i>@{gig.postedBy?.username || "User"}</i>
+                    </p>
+
+                    <p className="privacy-note">
+                      🔒 Contact number will be visible after applying
+                    </p>
+                  </div>
+
+                  {/* ✅ SHOW APPLY ONLY IF NOT OWNER */}
+                  {user && !isOwner && (
+                    <button
+                      className="apply-button"
+                      onClick={() => handleApplyClick(gig)}
+                    >
+                      Apply Now
+                    </button>
+                  )}
+
                 </div>
-
-                {/* ✅ APPLY BUTTON */}
-                {user && (
-                  <button
-                    className="apply-button"
-                    onClick={() => handleApplyClick(gig)}
-                  >
-                    Apply Now
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </>
         ) : (
           <p className="no-gigs">No gigs found for {city}.</p>
         )
       ) : (
         <p className="no-gigs">Please search a location.</p>
-      )}
-
-      {/* 🚫 OWNER MODAL */}
-      {showOwnerModal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>🚫 Action Not Allowed</h3>
-            <p>You cannot apply to your own Gig.</p>
-
-            <button
-              className="agree-btn"
-              onClick={() => setShowOwnerModal(false)}
-            >
-              OK
-            </button>
-          </div>
-        </div>
       )}
     </div>
   );

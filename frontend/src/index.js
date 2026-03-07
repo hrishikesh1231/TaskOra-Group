@@ -43,6 +43,7 @@ import TokenHistory from "./pages/TokenHistory";
 import BuyTokens from "./pages/BuyTokens";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import VisitProfile from "./pages/VisitProfile";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -130,6 +131,8 @@ root.render(
 
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+            <Route path="/profile/:userId" element={<VisitProfile/>} />
           </Routes>
 
           <Footer />

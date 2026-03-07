@@ -27,6 +27,11 @@ const contractSchema = new Schema(
       ref: "user",
       required: true
     },
+    
+    applicantContact: {
+      type: String,
+      required: true
+    },
 
     recruiterConfirmed: {
       type: Boolean,
@@ -41,12 +46,12 @@ const contractSchema = new Schema(
     status: {
       type: String,
       enum: [
-        "pending",
         "recruiter_confirmed",
         "applicant_confirmed",
-        "both_confirmed"
+        "both_confirmed",
+        "rejected"   // ✅ ADD THIS
       ],
-      default: "pending"
+      default: "recruiter_confirmed"
     },
 
     tokensDeducted: {

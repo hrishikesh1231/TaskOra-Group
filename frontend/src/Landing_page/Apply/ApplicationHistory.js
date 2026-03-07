@@ -1,24 +1,22 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./ApplicationHistory.css";
 
 const ApplicationHistory = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [myContracts, setMyContracts] = useState([]);
- 
+
+  const navigate = useNavigate(); // ✅ Proper navigation
+
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-// <<<<<<< HEAD
-        const res = await axios.get("http://localhost:3002/my-applications", {
-          withCredentials: true,
-        });
-// =======
-        // axios baseURL is already set globally
-        // const res = await axios.get("/my-applications");
-// >>>>>>> origin/feature/atharva
+        const res = await axios.get(
+          "http://localhost:3002/my-applications",
+          { withCredentials: true }
+        );
         setApplications(res.data);
       } catch (err) {
         console.error("❌ Error fetching applications:", err);
@@ -43,26 +41,22 @@ const ApplicationHistory = () => {
     fetchMyContracts();
   }, []);
 
+  // 🔍 Find contract for gig
+  const findContractForGig = (gigId) => {
+    return myContracts.find((c) => {
+      if (!c.gig) return false;
 
-const findContractForGig = (gigId) => {
-  return myContracts.find((c) => {
-    if (!c.gig) return false;
+      if (typeof c.gig === "object" && c.gig._id) {
+        return c.gig._id.toString() === gigId.toString();
+      }
 
-    // when populated
-    if (typeof c.gig === "object" && c.gig._id) {
-      return c.gig._id.toString() === gigId.toString();
-    }
+      return c.gig.toString() === gigId.toString();
+    });
+  };
 
-    // when not populated (only id string)
-    return c.gig.toString() === gigId.toString();
-  });
-};
-
-  
   if (loading) {
     return <p className="loading">⏳ Loading your applications...</p>;
   }
-// console.log("MY CONTRACTS 👉", myContracts;
 
   return (
     <div className="history-container">
@@ -96,7 +90,7 @@ const findContractForGig = (gigId) => {
               <strong>Your Charges:</strong> {app.charges || "—"}
             </p>
 
-            {/* ✅ Preview uploaded images */}
+            {/* Preview uploaded images */}
             {app.pictures && app.pictures.length > 0 && (
               <div className="preview-container">
                 {app.pictures.map((pic, idx) => (
@@ -120,61 +114,117 @@ const findContractForGig = (gigId) => {
                 minute: "2-digit",
                 hour12: true,
               })}
-              
             </p>
-            {/* ✅ Contract / selection status (only for gigs) */}
+
+            {/* ================= CONTRACT SECTION ================= */}
             {app.gig && (() => {
               const contract = findContractForGig(app.gig._id);
-
               if (!contract) return null;
 
               return (
-                
                 <div style={{ marginTop: "10px" }}>
                   <p>
                     <strong>Selection Status:</strong> {contract.status}
                   </p>
 
-                  {!contract.applicantConfirmed && (
-                    <button
-                      className="confirm-btn"
-                      onClick={async () => {
-                        try {
-                          const res = await axios.post(
-                            `http://localhost:3002/api/contracts/${contract._id}/confirm`,
-                            {},
-                            { withCredentials: true }
-                          );
+                  {/* If NOT confirmed */}
+                  {!contract.applicantConfirmed &&
+                    contract.status !== "rejected" && (
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        {/* CONFIRM */}
+                        <button
+                          className="confirm-btn"
+                          onClick={async () => {
+                            try {
+                              await axios.post(
+                                `http://localhost:3002/api/contracts/${contract._id}/confirm`,
+                                {},
+                                { withCredentials: true }
+                              );
 
-                          setMyContracts((prev) =>
-                            prev.map((c) =>
-                              c._id === contract._id ? res.data : c
-                            )
-                          );
+                              // refresh contracts
+                              const updated = await axios.get(
+                                "http://localhost:3002/api/contracts/my",
+                                { withCredentials: true }
+                              );
+                              setMyContracts(updated.data);
 
-                          alert("Confirmed successfully");
-                        } catch (err) {
-                          alert(err.response?.data?.message || "Confirm failed");
+                              alert("Confirmed successfully");
+                            } catch (err) {
+                              alert(
+                                err.response?.data?.error ||
+                                  "Confirm failed"
+                              );
+                            }
+                          }}
+                        >
+                          ✅ Confirm
+                        </button>
+
+                        {/* REJECT */}
+                        <button
+                          className="reject-btn"
+                          onClick={async () => {
+                            try {
+                              await axios.post(
+                                `http://localhost:3002/api/contracts/${contract._id}/reject`,
+                                {},
+                                { withCredentials: true }
+                              );
+
+                              const updated = await axios.get(
+                                "http://localhost:3002/api/contracts/my",
+                                { withCredentials: true }
+                              );
+                              setMyContracts(updated.data);
+
+                              alert("Rejected successfully");
+                            } catch (err) {
+                              alert(
+                                err.response?.data?.error ||
+                                  "Reject failed"
+                              );
+                            }
+                          }}
+                        >
+                          ❌ Reject
+                        </button>
+                      </div>
+                    )}
+
+                  {/* After Confirm */}
+                  {contract.applicantConfirmed && (
+                    <div style={{ marginTop: "8px" }}>
+                      <p style={{ color: "green" }}>
+                        You have confirmed ✔
+                      </p>
+
+                      <button
+                        className="visit-contract-btn"
+                        onClick={() =>
+                          navigate(`/my-contracts`)
                         }
-                      }}
-                    >
-                      Confirm
-                    </button>
+                      >
+                        🔍 View Contract
+                      </button>
+                    </div>
                   )}
 
-                  {contract.applicantConfirmed && (
-                    <p style={{ color: "green" }}>
-                      You have confirmed ✔
+                  {/* If Rejected */}
+                  {contract.status === "rejected" && (
+                    <p style={{ color: "red" }}>
+                      ❌ You rejected this contract
                     </p>
                   )}
                 </div>
               );
             })()}
-
           </div>
         ))
       ) : (
-        <p className="no-history">❌ You haven’t applied to any gigs yet.</p>
+        <p className="no-history">
+          ❌ You haven’t applied to any gigs yet.
+        </p>
       )}
     </div>
   );
