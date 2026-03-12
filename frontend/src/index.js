@@ -222,8 +222,14 @@ import TokenHistory from "./pages/TokenHistory";
 import BuyTokens from "./pages/BuyTokens";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+
 import NotificationsPage from "./pages/NotificationsPage";
 import { NotificationProvider } from "./context/NotificationContext";
+
+import VisitProfile from "./pages/VisitProfile";
+import { CountsProvider } from "./context/CountsContext";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -240,6 +246,7 @@ root.render(
     <CityProvider>
       <AuthProvider>
         <TokenProvider>
+           <CountsProvider>
            <div className="app-wrapper">
           <Navbar />
 
@@ -314,13 +321,20 @@ root.render(
 
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+
              <Route path="/notifications" element={<NotificationsPage />} />
+
+
+            <Route path="/profile/:userId" element={<VisitProfile/>} />
+          
+
 
 
           </Routes>
 </main>
           <Footer />
           </div>
+          </CountsProvider>
         </TokenProvider>
       </AuthProvider>
     </CityProvider>

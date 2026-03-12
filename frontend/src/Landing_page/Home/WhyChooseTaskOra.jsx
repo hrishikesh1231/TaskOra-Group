@@ -1,101 +1,128 @@
-import React, { useEffect, useRef, useState } from "react";
-import "./WhyChooseTaskOra.css";
-import { FaCheckCircle, FaUsers } from "react-icons/fa";
-import { FaStar } from "react-icons/fa6";
 
-const WhyChooseTaskOra = () => {
+import React, { useEffect, useRef } from "react";
+import "./WhyChooseTaskora.css";
+
+import { FaUsers, FaBolt, FaShieldAlt, FaMapMarkerAlt } from "react-icons/fa";
+
+import taskoraImg from "../../assets/taskora-feature.png";
+
+const WhyChooseTaskora = () => {
+
   const sectionRef = useRef(null);
 
-  const slides = [
-    {
-      icon: <FaCheckCircle className="why-icon blue" />,
-      title: "Easy Task Posting",
-      desc: "Post your gig or service in seconds and reach local users instantly.",
-    },
-    {
-      icon: <FaUsers className="why-icon green" />,
-      title: "Connect with Locals",
-      desc: "Build strong connections with nearby people ready to help or work.",
-    },
-    {
-      icon: <FaStar className="why-icon yellow" />,
-      title: "Trusted Ratings",
-      desc: "Choose reliable people using genuine ratings and community reviews.",
-    },
-  ];
-
-  const [index, setIndex] = useState(0);
-
-  const next = () => setIndex((index + 1) % slides.length);
-  const prev = () => setIndex((index - 1 + slides.length) % slides.length);
-
-  /* ========= FORCE RE-ANIMATION EVERY TIME ========= */
   useEffect(() => {
+
     const section = sectionRef.current;
-    if (!section) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+
         if (entry.isIntersecting) {
-          // 🔥 force animation restart
-          section.classList.remove("animate");
-          void section.offsetWidth; // force reflow
           section.classList.add("animate");
+        } else {
+          section.classList.remove("animate");
         }
+
       },
-      {
-        threshold: 0.25,
-        rootMargin: "0px 0px -120px 0px",
-      }
+      { threshold: 0.35 }
     );
 
-    observer.observe(section);
+    if(section){
+      observer.observe(section);
+    }
+
     return () => observer.disconnect();
+
   }, []);
 
+
   return (
+
     <section className="why-section" ref={sectionRef}>
-      <div className="why-container">
-        <h2 className="why-title">Why Choose TaskOra?</h2>
-        <p className="why-subtitle">
-          Connect with your local community and get things done efficiently
+
+      {/* HEADER */}
+
+      <div className="why-header">
+
+        <h2>
+          Why choose <span>Taskora</span>?
+        </h2>
+
+        <p>
+          Find trusted local helpers, post tasks instantly, and get things
+          done faster with your nearby community.
         </p>
 
-        <div className="why-slider">
-          <button className="slider-btn prev" onClick={prev}>
-            ❮
-          </button>
+      </div>
 
-          <div
-            className="why-track"
-            style={{ transform: `translateX(-${index * 100}%)` }}
-          >
-            {slides.map((slide, i) => (
-              <div className="why-card" key={i}>
-                {slide.icon}
-                <h3>{slide.title}</h3>
-                <p>{slide.desc}</p>
-              </div>
-            ))}
+
+      {/* GRID */}
+
+      <div className="why-grid">
+
+
+        {/* LEFT FEATURES */}
+
+        <div className="why-column">
+
+          <div className="why-item">
+            <FaBolt className="why-icon blue"/>
+            <h3>Instant Task Posting</h3>
+            <p>
+              Post your gig in seconds and connect with nearby people ready to help.
+            </p>
           </div>
 
-          <button className="slider-btn next" onClick={next}>
-            ❯
-          </button>
+          <div className="why-item">
+            <FaUsers className="why-icon green"/>
+            <h3>Local Community</h3>
+            <p>
+              Work with trusted people from your own neighbourhood.
+            </p>
+          </div>
+
         </div>
 
-        <div className="slider-dots">
-          {slides.map((_, i) => (
-            <span
-              key={i}
-              className={`slider-dot ${i === index ? "active" : ""}`}
-              onClick={() => setIndex(i)}
-            />
-          ))}
+
+        {/* CENTER IMAGE */}
+
+        <div className="why-image">
+
+          <img
+            src={taskoraImg}
+            alt="Taskora services"
+          />
+
         </div>
+
+
+        {/* RIGHT FEATURES */}
+
+        <div className="why-column">
+
+          <div className="why-item">
+            <FaShieldAlt className="why-icon purple"/>
+            <h3>Verified Users</h3>
+            <p>
+              Ratings and reviews help you choose reliable workers.
+            </p>
+          </div>
+
+          <div className="why-item">
+            <FaMapMarkerAlt className="why-icon orange"/>
+            <h3>Hyperlocal Matching</h3>
+            <p>
+              Get connected with people available near your location instantly.
+            </p>
+          </div>
+
+        </div>
+
       </div>
+
     </section>
+
   );
 };
 
-export default WhyChooseTaskOra;
+export default WhyChooseTaskora;

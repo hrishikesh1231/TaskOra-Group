@@ -717,6 +717,7 @@ const SignUp = () => {
 
     try {
       await API.post("/auth/send-otp", {
+        name: formData.name,
         email: formData.email,
       });
 
@@ -732,13 +733,13 @@ const SignUp = () => {
 
   return (
     <div className="signup-container">
-      <form className="signup-form" onSubmit={handleSubmit}>
+      <form className="signup-form" onSubmit={handleSubmit} autoComplete="off">
         <h2>Sign Up</h2>
 
         <input
           type="text"
           name="name"
-          placeholder="Full Name"
+          placeholder="Username"
           value={formData.name}
           onChange={handleChange}
           required
@@ -761,6 +762,7 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
+        
 
         {/* STATE DROPDOWN */}
         <select

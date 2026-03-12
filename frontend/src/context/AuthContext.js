@@ -1,4 +1,5 @@
 
+
 // import {
 //   createContext,
 //   useState,
@@ -6,7 +7,7 @@
 //   useContext,
 //   useRef,
 // } from "react";
-// import axios from "axios";
+// import API from "../api";
 // import { CityContext } from "./CityContext";
 
 // export const AuthContext = createContext();
@@ -17,12 +18,12 @@
 //   const [user, setUserState] = useState(null);
 //   const [loading, setLoading] = useState(true);
 
-//   // 🔑 prevents auth race condition
+//   // ⭐ Prevent auth race condition (your logic)
 //   const justLoggedInRef = useRef(false);
 
 //   useEffect(() => {
 //     const fetchUser = async () => {
-//       // 🚫 Skip check right after login
+//       // Skip API call right after login
 //       if (justLoggedInRef.current) {
 //         justLoggedInRef.current = false;
 //         setLoading(false);
@@ -30,108 +31,6 @@
 //       }
 
 //       try {
-//         const res = await axios.get("/current-user");
-//         const loggedUser = res.data.user;
-
-//         setUserState(loggedUser);
-
-//         if (loggedUser?.district) {
-//           setCity(loggedUser.district);
-//         }
-//       } catch {
-//         setUserState(null);
-//         setCity(null);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchUser();
-//   }, [setCity]);
-
-//   // ✅ THIS is what SignIn must use
-//   const loginUser = (userData) => {
-//     justLoggedInRef.current = true;
-//     setUserState(userData);
-
-//     if (userData?.district) {
-//       setCity(userData.district);
-//     }
-//   };
-
-//   // 🔄 ADDITION: refresh user after profile update
-//   const refreshUser = async () => {
-//     try {
-//       const res = await axios.get("/current-user");
-//       const updatedUser = res.data.user;
-
-//       setUserState(updatedUser);
-
-//       if (updatedUser?.district) {
-//         setCity(updatedUser.district);
-//       }
-//     } catch (err) {
-//       console.error("❌ Failed to refresh user", err);
-//     }
-//   };
-
-//   const logout = async () => {
-//     try {
-//       await axios.get("/logout");
-//     } catch {}
-
-//     setUserState(null);
-//     setCity(null);
-//     localStorage.clear();
-//     window.location.href = "/";
-//   };
-
-//   return (
-//     <AuthContext.Provider
-//       value={{
-//         user,
-//         setUser: loginUser, // 🔥 IMPORTANT (unchanged)
-//         refreshUser,        // ✅ NEW (used by EditProfile)
-//         logout,
-//         loading,
-//       }}
-//     >
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-
-// import {
-//   createContext,
-//   useState,
-//   useEffect,
-//   useContext,
-//   useRef,
-// } from "react";
-// import API from "../api"; // ✅ use API instance
-// import { CityContext } from "./CityContext";
-
-// export const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const { setCity } = useContext(CityContext);
-
-//   const [user, setUserState] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   const justLoggedInRef = useRef(false);
-
-//   useEffect(() => {
-//     const fetchUser = async () => {
-//       if (justLoggedInRef.current) {
-//         justLoggedInRef.current = false;
-//         setLoading(false);
-//         return;
-//       }
-
-//       try {
-//         // ✅ FIXED
 //         const res = await API.get("/auth/current-user");
 //         const loggedUser = res.data.user;
 
@@ -151,6 +50,7 @@
 //     fetchUser();
 //   }, [setCity]);
 
+//   // ⭐ Login (your logic)
 //   const loginUser = (userData) => {
 //     justLoggedInRef.current = true;
 //     setUserState(userData);
@@ -160,9 +60,9 @@
 //     }
 //   };
 
+//   // ⭐ Refresh user after profile update
 //   const refreshUser = async () => {
 //     try {
-//       // ✅ FIXED
 //       const res = await API.get("/auth/current-user");
 //       const updatedUser = res.data.user;
 
@@ -176,9 +76,9 @@
 //     }
 //   };
 
+//   // ⭐ Logout
 //   const logout = async () => {
 //     try {
-//       // ✅ FIXED
 //       await API.get("/auth/logout");
 //     } catch {}
 
@@ -205,14 +105,14 @@
 
 
 
-
 import {
   createContext,
   useState,
   useEffect,
   useContext,
+  useRef,
 } from "react";
-import API from "../api"; // ✅ use API instance
+import API from "../api";
 import { CityContext } from "./CityContext";
 
 export const AuthContext = createContext();
@@ -223,9 +123,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUserState] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Always verify current user on mount
+  // ⭐ Prevent auth race condition (your logic)
+  const justLoggedInRef = useRef(false);
+
   useEffect(() => {
     const fetchUser = async () => {
+      // Skip API call right after login
+      if (justLoggedInRef.current) {
+        justLoggedInRef.current = false;
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await API.get("/auth/current-user");
         const loggedUser = res.data.user;
@@ -246,8 +155,9 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [setCity]);
 
-  // ✅ Login
+  // ⭐ Login (your logic)
   const loginUser = (userData) => {
+    justLoggedInRef.current = true;
     setUserState(userData);
 
     if (userData?.district) {
@@ -255,7 +165,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Refresh user manually
+  // ⭐ Refresh user after profile update
   const refreshUser = async () => {
     try {
       const res = await API.get("/auth/current-user");
@@ -271,7 +181,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Logout
+  // ⭐ NEW: Update tokens without refreshing page
+  const updateTokens = (newTokens) => {
+    setUserState((prevUser) => {
+      if (!prevUser) return prevUser;
+
+      return {
+        ...prevUser,
+        tokens: newTokens,
+      };
+    });
+  };
+
+  // ⭐ Logout (your logic)
   const logout = async () => {
     try {
       await API.get("/auth/logout");
@@ -289,6 +211,7 @@ export const AuthProvider = ({ children }) => {
         user,
         setUser: loginUser,
         refreshUser,
+        updateTokens, // ⭐ added
         logout,
         loading,
       }}

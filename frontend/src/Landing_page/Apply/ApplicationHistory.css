@@ -80,7 +80,7 @@
   margin-top: 40px;
   color: #6b7280;
 }
-.confirm-btn{
+/* .confirm-btn{
   margin-top: 6px;
   padding: 6px 12px;
   border: none;
@@ -88,4 +88,53 @@
   background: #4f46e5;
   color: white;
   cursor: pointer;
+} */
+/* 🔍 View Contract Button */
+.visit-contract-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #4e73df, #224abe);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.visit-contract-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.visit-contract-btn:active {
+  transform: scale(0.98);
+}
+.confirm-btn {
+  padding: 8px 14px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.confirm-btn:hover {
+  background-color: #218838;
+}
+
+.reject-btn {
+  padding: 8px 14px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.reject-btn:hover {
+  background-color: #c82333;
 }

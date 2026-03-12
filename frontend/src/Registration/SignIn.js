@@ -56,7 +56,7 @@ const SignIn = () => {
 
   return (
     <div className="login-container">
-      <form className="login-form" onSubmit={handleLogin}>
+      <form className="login-form" onSubmit={handleLogin} autoComplete="off">
         <h2>Login</h2>
 
         <input
@@ -67,6 +67,7 @@ const SignIn = () => {
           onChange={handleChange}
           required
           disabled={loading}
+          autoComplete="off"
         />
 
         <input
@@ -77,13 +78,15 @@ const SignIn = () => {
           onChange={handleChange}
           required
           disabled={loading}
+          autoComplete="new-password"
         />
 
         <button type="submit" disabled={loading}>
           {loading ? "Logging In..." : "Log In"}
         </button>
 
-        <a href="/signUp">Sign Up</a> <br></br>
+        <a href="/signUp">Sign Up</a>
+        <br />
         <a href="/forgot-password" className="forgot-link">
           Forgot Password?
         </a>

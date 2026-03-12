@@ -13,17 +13,37 @@ const transporter = require("../utils/transporter"); // create this file if need
 // ================= SEND OTP =================
 exports.sendOtp = async (req, res) => {
   try {
-    const { email } = req.body || {};
+    const { email, name } = req.body || {};
 
-    if (!email) {
+    if (!email || !name) {
       return res.status(400).json({
         success: false,
-        message: "Email required",
+        message: "Email and Username required",
       });
     }
 
+    // 🔍 Check if username already exists
+    const existingUsername = await UserModel.findOne({ username: name });
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message: "Username already taken",
+        field: "name",
+      });
+    }
+    // 🔍 Check if email already exists
+    const existingEmail = await UserModel.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
+        field: "email",
+      });
+    }
+
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("🔐 GENERATED OTP:", otp);
+    console.log("Generated OTP:", otp);
 
     await Otp.deleteMany({ email });
 
@@ -46,6 +66,10 @@ exports.sendOtp = async (req, res) => {
     res.status(500).json({ success: false });
   }
 };
+
+
+
+
 
 // ================= VERIFY OTP =================
 exports.verifyOtp = async (req, res) => {

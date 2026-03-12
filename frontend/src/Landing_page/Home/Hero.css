@@ -47,9 +47,10 @@
 
 /* ================= HEADING ================= */
 .hero-container h1 {
-  font-size: 2.6rem;
+  font-size: 4.2rem;
   font-weight: 800;
   color: #1f2937;
+      margin-left: -29%;
 
   animation: textFloat 3.5s ease-in-out infinite;
   position: relative;
@@ -65,9 +66,9 @@
 /* ================= SUBTITLE ================= */
 .hero-container h5 {
   margin-top: 12px;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   color: #4b5563;
-
+  margin-left: -30%;
   animation: textFloat 3.5s ease-in-out infinite;
   animation-delay: 0.6s; /* slight delay = smooth effect */
 
@@ -94,4 +95,72 @@
   .hero-container h1 {
     font-size: 1.8rem;
   }
+}
+
+/* ================= LARGE SCREEN FIX ================= */
+@media (max-width: 1200px){
+
+  .hero-container h1{
+    margin-left:-15%;
+    font-size:3.2rem;
+  }
+
+  .hero-container h5{
+    margin-left:-15%;
+  }
+
+}
+
+
+/* ================= TABLET ================= */
+@media (max-width: 992px){
+
+  .hero-container{
+    text-align:center;
+  }
+
+  .hero-container h1{
+    margin-left:0;
+    font-size:2.6rem;
+  }
+
+  .hero-container h5{
+    margin-left:0;
+    font-size:1.05rem;
+  }
+
+}
+
+
+/* ================= MOBILE ================= */
+@media (max-width:768px){
+
+  .hero-container{
+    padding:50px 15px 30px;
+  }
+
+  .hero-container h1{
+    margin-left:0;
+    font-size:2rem;
+  }
+
+  .hero-container h5{
+    margin-left:0;
+    font-size:0.95rem;
+  }
+
+}
+
+
+/* ================= SMALL MOBILE ================= */
+@media (max-width:480px){
+
+  .hero-container h1{
+    font-size:1.7rem;
+  }
+
+  .hero-container h5{
+    font-size:0.9rem;
+  }
+
 }
