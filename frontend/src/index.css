@@ -3,6 +3,13 @@ body{
 }
 
 /* ================= TOAST FIX ================= */
-.Toastify__toast-container {
+.Toastify__toast-container.toast-container-override {
   z-index: 9999 !important;
+  margin-top: 75px !important;
+}
+
+/* Hot toast override */
+.hot-toast-override {
+  z-index: 9999 !important;
+  top: 75px !important;
 }

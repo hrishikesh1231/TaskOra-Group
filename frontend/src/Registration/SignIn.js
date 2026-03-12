@@ -25,6 +25,7 @@ const SignIn = () => {
     if (loading) return;
 
     setLoading(true);
+    toast.dismiss();
     toast.info("Logging in...", { autoClose: 1200 });
 
     try {
@@ -38,6 +39,7 @@ const SignIn = () => {
       setUser(res.data.user);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
+      toast.dismiss();
       toast.success(`Welcome ${res.data.user.username} 🎉`, {
         autoClose: 1500,
         onClose: () => navigate("/"),
@@ -45,6 +47,7 @@ const SignIn = () => {
 
       setFormData({ username: "", password: "" });
     } catch (err) {
+      toast.dismiss();
       toast.error(
         err.response?.data?.msg || "Invalid username or password ❌",
         { autoClose: 2000 },
@@ -88,8 +91,6 @@ const SignIn = () => {
           Forgot Password?
         </a>
       </form>
-
-      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 };

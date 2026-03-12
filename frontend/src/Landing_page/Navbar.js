@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { useContext, useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { FaBell } from "react-icons/fa";
+import { FaBell, FaBars, FaTimes } from "react-icons/fa";
 
 import { CityContext } from "../context/CityContext";
 import { AuthContext } from "../context/AuthContext";
@@ -22,6 +22,7 @@ const Navbar = () => {
   // 👤 Profile & 🪙 Coin dropdowns (CLICK BASED)
   const [profileOpen, setProfileOpen] = useState(false);
   const [coinOpen, setCoinOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const profileRef = useRef(null);
   const coinRef = useRef(null);
@@ -111,49 +112,71 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   // ================= UI =================
   return (
     <nav
       className="navbar navbar-expand-lg border-bottom sticky-top"
       style={{ height: "4.4rem" }}
     >
-      <div className="container-fluid d-flex justify-content-between align-items-center px-4">
-        {/* ================= LEFT ================= */}
-        <div className="d-flex align-items-center gap-4">
-          <Link className="navbar-brand" to="/">
-            <strong style={{ fontSize: "22px", color: "#1d4ed8" }}>
-              Taskora
-            </strong>
-          </Link>
+      <div className="container-fluid d-flex justify-content-between align-items-center px-4 position-relative">
+        {/* ================= LEFT / LOGO ================= */}
+        <div className="d-flex align-items-center justify-content-between w-100 w-lg-auto">
+          <div className="d-flex align-items-center gap-4">
+            <Link className="navbar-brand" to="/">
+              <strong style={{ fontSize: "22px", color: "#1d4ed8" }}>
+                Taskora
+              </strong>
+            </Link>
 
-          <span className="text-muted">📍 {city || "Select location"}</span>
+            <span className="text-muted d-none d-lg-inline">📍 {city || "Select location"}</span>
+          </div>
 
-          <Link className="nav-link" to="/gigs">
-            Gigs{" "}
-            {gigCount !== null && (
-              <span className="badge bg-primary ms-1">{gigCount}</span>
-            )}
-          </Link>
+          {/* MOBILE HAMBURGER */}
+          <button 
+            className="mobile-menu-btn d-lg-none" 
+            onClick={toggleMobileMenu}
+            aria-label="Toggle navigation"
+          >
+            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+          </button>
+        </div>
 
-          <Link className="nav-link" to="/services">
-            Services{" "}
-            {serviceCount !== null && (
-              <span className="badge bg-danger ms-1">{serviceCount}</span>
-            )}
-          </Link>
+        {/* ================= CENTER / LINKS ================= */}
+        <div className={`nav-links-container ${isMobileMenuOpen ? "show-mobile-menu" : ""}`}>
+          <div className="d-flex flex-column flex-lg-row align-items-lg-center gap-4 gap-lg-4 nav-links-wrapper">
+            <span className="text-muted d-lg-none mobile-city">📍 {city || "Select location"}</span>
 
-          <Link className="nav-link" to="/about">
-            About
-          </Link>
-          <Link className="nav-link" to="/how-it-works">
-            How it works
-          </Link>
-          <Link className="nav-link" to="/help">
-            Help
-          </Link>
-          <Link className="nav-link" to="/contact">
-            Contact
-          </Link>
+            <Link className="nav-link" to="/gigs" onClick={() => setIsMobileMenuOpen(false)}>
+              Gigs{" "}
+              {gigCount !== null && (
+                <span className="badge bg-primary ms-1">{gigCount}</span>
+              )}
+            </Link>
+
+            <Link className="nav-link" to="/services" onClick={() => setIsMobileMenuOpen(false)}>
+              Services{" "}
+              {serviceCount !== null && (
+                <span className="badge bg-danger ms-1">{serviceCount}</span>
+              )}
+            </Link>
+
+            <Link className="nav-link" to="/about" onClick={() => setIsMobileMenuOpen(false)}>
+              About
+            </Link>
+            <Link className="nav-link" to="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
+              How it works
+            </Link>
+            <Link className="nav-link" to="/help" onClick={() => setIsMobileMenuOpen(false)}>
+              Help
+            </Link>
+            <Link className="nav-link" to="/contact" onClick={() => setIsMobileMenuOpen(false)}>
+              Contact
+            </Link>
+          </div>
         </div>
 
         {/* ================= RIGHT ================= */}
@@ -203,15 +226,16 @@ const Navbar = () => {
           {/* 🪙 COIN DROPDOWN */}
           {user && (
             <div className="position-relative" ref={coinRef}>
-              <span
-                className="fw-bold text-warning cursor-pointer"
+              <div
+                className="coin-container d-flex align-items-center gap-1 cursor-pointer"
                 onClick={() => {
                   setCoinOpen(!coinOpen);
                   setProfileOpen(false);
                 }}
               >
-                🪙 {user.tokens}
-              </span>
+                <span className="coin-icon">🪙</span>
+                <span className="fw-bold text-warning">{user.tokens}</span>
+              </div>
 
               {coinOpen && (
                 <div className="dropdown-menu show p-3">

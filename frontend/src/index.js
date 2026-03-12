@@ -44,6 +44,7 @@ import BuyTokens from "./pages/BuyTokens";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VisitProfile from "./pages/VisitProfile";
+import AIPost from "./pages/AIPost";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -60,8 +61,8 @@ root.render(
         <TokenProvider>
           <Navbar />
 
-          <ToastContainer position="top-center" autoClose={3000} />
-          <Toaster position="top-center" reverseOrder={false} />
+          <ToastContainer position="top-right" autoClose={3000} className="toast-container-override" />
+          <Toaster position="top-right" reverseOrder={false} containerClassName="hot-toast-override" />
 
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -133,6 +134,9 @@ root.render(
             <Route path="/reset-password/:token" element={<ResetPassword />} />
 
             <Route path="/profile/:userId" element={<VisitProfile/>} />
+            
+            <Route path="/ai-post" element={<AIPost/>} />
+
           </Routes>
 
           <Footer />

@@ -4,6 +4,7 @@
 require("dotenv").config();
 
 // ================= IMPORTS =================
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -21,6 +22,10 @@ const { deductTokens } = require("./utils/tokenManager");
 const tokenRoutes = require("./routes/tokenRoutes");
 const { createWelcomeBonus } = require("./controllers/tokenController");
 const crypto = require("crypto");
+const aiRoutes = require("./routes/aiChat");
+
+
+const OpenAI = require("openai");
 
 // ================= MODELS =================
 
@@ -54,6 +59,10 @@ const url = process.env.MONGO_URL;
 const PORT = process.env.PORT || 3002;
 const secret = process.env.SECRET;
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // ================= MIDDLEWARE =================
 app.use(express.json());
@@ -103,6 +112,10 @@ app.use("/api", notificationRoutes);
 //review
 app.use("/api/reviews", reviewRoutes);
 
+//aI
+
+app.use("/api/ai", aiRoutes);
+
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
 passport.deserializeUser(UserModel.deserializeUser());
@@ -149,7 +162,7 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
     } = req.body;
 
     /**
-     * 0️⃣ Hard backend validation (baseline safety)
+     * 0️⃣ Hard backend validation
      */
     if (
       !title ||
@@ -164,19 +177,86 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
     }
 
     /**
-     * 1️⃣ AI CHECK (ONLY checks title & description internally)
+     * 1️⃣ AI VALIDATION (OpenAI)
      */
-    await axios.post(`${process.env.FASTAPI_URL}/analyze`, {
-      title,
-      description,
-      location: location || "na",
-      category,
-      date,
-      contact,
+
+    const prompt = `
+You are an AI safety reviewer for a local job marketplace called TaskOra.
+
+Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
+
+Think carefully about the INTENT and CONTEXT of the text before deciding.
+
+Important rules:
+
+1. Do NOT reject content just because it contains sensitive words like "kill", "drug", "hack", etc.  
+   Evaluate whether the user is actually requesting illegal or harmful work.
+
+2. If the text refers to a book title, movie title, news discussion, or other harmless reference, it should be allowed.
+
+3. Reject only if the user is actually requesting:
+   - illegal activity
+   - violence
+   - sexual services
+   - scams or financial fraud
+   - hacking or cybercrime
+   - dangerous activities
+
+4. Also reject if the text is clearly gibberish or meaningless.
+
+5. The gig must also make sense as a real local job or task.
+
+Examples:
+
+Allowed:
+- "Need someone to deliver books"
+- "Looking for a helper to move furniture"
+- "Selling the book 'Kill the Police'"
+
+Rejected:
+- "Need someone to hack Instagram account"
+- "Looking for a girl for night service"
+- "Send money first then I give work"
+
+Gig to analyze:
+
+Title: ${title}
+
+Description: ${description}
+
+Respond ONLY in JSON format:
+
+{
+  "valid": true or false,
+  "reason": "short explanation"
+}
+`;
+
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for job posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
     });
 
+    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+    if (!aiResult.valid) {
+      return res.status(400).json({
+        error: `Gig rejected: ${aiResult.reason}`,
+      });
+    }
+
     /**
-     * 2️⃣ SAVE GIG (BASELINE LOGIC — DO NOT CHANGE)
+     * 2️⃣ SAVE GIG (UNCHANGED)
      */
     const newGig = new Gig({
       title,
@@ -193,11 +273,11 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
     await newGig.save();
 
     /**
-     * 3️⃣ TOKEN DEDUCTION (🔥 NEW — SAFE POINT)
+     * 3️⃣ TOKEN DEDUCTION (UNCHANGED)
      */
     await deductTokens({
       userId: req.user._id,
-      amount: 5, // 🔧 you control this
+      amount: 5,
       reason: "Post Gig",
       gig: newGig._id,
     });
@@ -206,12 +286,12 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
       message: "Gig created successfully",
       gig: newGig,
     });
+
   } catch (err) {
-    console.error("ADD GIG ERROR:", err.response?.data || err.message);
+    console.error("ADD GIG ERROR:", err);
 
     return res.status(400).json({
-      error:
-        err.response?.data?.message || "Gig rejected by AI or invalid data",
+      error: "Gig rejected by AI or invalid data",
     });
   }
 });
@@ -231,7 +311,7 @@ app.post("/addService", isLoggedIn, async (req, res) => {
     } = req.body;
 
     /**
-     * 0️⃣ Hard backend validation (baseline safety)
+     * 0️⃣ Hard backend validation
      */
     if (
       !title ||
@@ -248,37 +328,75 @@ app.post("/addService", isLoggedIn, async (req, res) => {
     }
 
     /**
-     * 1️⃣ AI CHECK (✅ SERVICE MODERATION)
+     * 1️⃣ AI VALIDATION (OpenAI)
      */
-    try {
-      console.log("Calling AI moderation for SERVICE...");
 
-      await axios.post(`${process.env.FASTAPI_URL}/analyze_service`, {
-        title,
-        description,
-        salary,
-        location: location || "na",
-        date,
-        contact,
-      });
+    const prompt = `
+You are an AI safety reviewer for a local job marketplace called TaskOra.
 
-      console.log("✅ AI moderation passed");
-    } catch (aiError) {
-      console.warn("❌ AI moderation failed:");
+Determine whether the following SERVICE post is safe and valid.
 
-      console.warn("Message:", aiError.message);
-      console.warn("Status:", aiError.response?.status);
-      console.warn("Response:", aiError.response?.data);
+Think about CONTEXT and INTENT before deciding.
 
+Reject only if the post contains:
+- illegal activities
+- sexual services
+- scams or financial fraud
+- violent requests
+- hacking or cybercrime
+- clearly meaningless gibberish
+- unrealistic or suspicious job
+
+Do NOT reject just because of sensitive words if the context is harmless.
+
+The service must also make sense as a real job.
+
+Service details:
+
+Title: ${title}
+
+Description: ${description}
+
+Salary: ${salary}
+
+Respond ONLY in JSON:
+
+{
+ "valid": true/false,
+ "reason": "short explanation"
+}
+`;
+
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for job marketplace posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
+    });
+
+    const content = aiResponse.choices[0].message.content
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const aiResult = JSON.parse(content);
+
+    if (!aiResult.valid) {
       return res.status(400).json({
-        error:
-          aiError.response?.data?.message ||
-          "Service rejected by AI moderation",
+        error: `Service rejected: ${aiResult.reason}`,
       });
     }
 
     /**
-     * 2️⃣ SAVE SERVICE (Baseline logic)
+     * 2️⃣ SAVE SERVICE (Baseline logic unchanged)
      */
     const newService = new Service({
       title,
@@ -307,18 +425,15 @@ app.post("/addService", isLoggedIn, async (req, res) => {
       message: "Service created successfully",
       service: newService,
     });
+
   } catch (err) {
-    console.error("🔥 ADD SERVICE ERROR:");
-    console.error("Message:", err.message);
-    console.error("Status:", err.response?.status);
-    console.error("Response:", err.response?.data);
+    console.error("🔥 ADD SERVICE ERROR:", err);
 
     return res.status(500).json({
       error: "Internal server error while creating service",
     });
   }
 });
-
 
 
 ///////

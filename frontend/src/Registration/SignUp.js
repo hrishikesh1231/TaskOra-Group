@@ -716,17 +716,21 @@ const SignUp = () => {
     }
 
     try {
+      toast.dismiss();
+      toast.info("Processing...", { autoClose: 1000 });
       await API.post("/auth/send-otp", {
         name: formData.name,
         email: formData.email,
       });
 
+      toast.dismiss();
       toast.success("OTP sent to your email 📩");
 
       navigate("/verify-otp", {
         state: formData,
       });
     } catch (err) {
+      toast.dismiss();
       toast.error(err.response?.data?.message || "Failed to send OTP");
     }
   };
@@ -800,8 +804,6 @@ const SignUp = () => {
 
         <a href="/login">Already have an account?</a>
       </form>
-
-      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 };
