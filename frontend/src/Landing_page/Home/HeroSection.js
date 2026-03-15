@@ -92,21 +92,39 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div className="post-container">
-            <button
-              className="post-btn gig-btn"
-              onClick={() => handlePostClick("gig")}
-            >
-              Post Gig
-            </button>
+            <div className="post-container">
+              <div className="post-row">
+                <button
+                  className="post-btn gig-btn"
+                  onClick={() => handlePostClick("gig")}
+                >
+                  Post Gig
+                </button>
 
-            <button
-              className="post-btn service-btn"
-              onClick={() => handlePostClick("service")}
-            >
-              Post Service
-            </button>
-          </div>
+                <button
+                  className="post-btn service-btn"
+                  onClick={() => handlePostClick("service")}
+                >
+                  Post Service
+                </button>
+              </div>
+
+              {/* 🤖 AI AUTO POST */}
+              <button
+                className="post-btn ai-btn"
+                onClick={() => {
+                  if (!user) {
+                    toast.error("Login first to use AI posting 🤖");
+                    navigate("/login");
+                    return;
+                  }
+
+                  navigate("/ai-post");
+                }}
+              >
+                🤖 Auto Post
+              </button>
+            </div>
         </div>
 
         

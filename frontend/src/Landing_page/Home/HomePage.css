@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: flex-start; /* keeps hero at top */
   overflow-x: hidden; /* stop horizontal scroll */
-  padding-bottom: 3rem;
+  
 }
 
 /* Add smooth animation when loading */

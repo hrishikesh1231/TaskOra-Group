@@ -2,6 +2,7 @@
 require("dotenv").config();
 
 // ================= IMPORTS =================
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -19,6 +20,10 @@ const { deductTokens } = require("./utils/tokenManager");
 const tokenRoutes = require("./routes/tokenRoutes");
 const { createWelcomeBonus } = require("./controllers/tokenController");
 const crypto = require("crypto");
+const aiRoutes = require("./routes/aiChat");
+
+
+const OpenAI = require("openai");
 
 // ================= MODELS =================
 
@@ -32,6 +37,7 @@ const { Application } = require("./models/ApplicationModel");
 // const { ServiceApplication } = require("./models/ServiceApplicationModel");
 const ServiceApplication = require("./models/ServiceApplicationModel");
 const TokenTransaction = require("./models/TokenTransaction");
+const Contract = require("./models/ContractModel");
 
 const Otp = require("./models/OtpModel");
 
@@ -53,17 +59,30 @@ const PORT = process.env.PORT || 3002;
 const secret = process.env.SECRET;
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 // ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// app.use(
+//   cors({
+//     origin: "http://localhost:3000",
+//     credentials: true,
+//   }),
+// );
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",
+      "http://192.168.1.4:3000"
+    ],
     credentials: true,
-  }),
+  })
 );
-
 app.set("trust proxy", 1);
 
 // ================= SESSION =================
@@ -99,6 +118,10 @@ app.use("/api", notificationRoutes);
 //review
 app.use("/api/reviews", reviewRoutes);
 
+//aI
+
+app.use("/api/ai", aiRoutes);
+
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
 passport.deserializeUser(UserModel.deserializeUser());
@@ -121,6 +144,161 @@ const transporter = nodemailer.createTransport({
 app.use("/api/auth", require("./routes/authRoutes"));
 
 
+// app.post("/addGig", isLoggedIn, async (req, res) => {
+//   try {
+//     const {
+//       title,
+//       description,
+//       category,
+//       state,
+//       district,
+//       location,
+//       date,
+//       contact,
+//        latitude,
+//   longitude
+//     } = req.body;
+
+//     /**
+//      * 0️⃣ Hard backend validation
+//      */
+//     if (
+//       !title ||
+//       !description ||
+//       !category ||
+//       !state ||
+//       !district ||
+//       !date ||
+//       !contact
+//     ) {
+//       return res.status(400).json({ error: "Missing required fields" });
+//     }
+
+//     /**
+//      * 1️⃣ AI VALIDATION (OpenAI)
+//      */
+
+//     const prompt = `
+// You are an AI safety reviewer for a local job marketplace called TaskOra.
+
+// Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
+
+// Think carefully about the INTENT and CONTEXT of the text before deciding.
+
+// Important rules:
+
+// 1. Do NOT reject content just because it contains sensitive words like "kill", "drug", "hack", etc.  
+//    Evaluate whether the user is actually requesting illegal or harmful work.
+
+// 2. If the text refers to a book title, movie title, news discussion, or other harmless reference, it should be allowed.
+
+// 3. Reject only if the user is actually requesting:
+//    - illegal activity
+//    - violence
+//    - sexual services
+//    - scams or financial fraud
+//    - hacking or cybercrime
+//    - dangerous activities
+
+// 4. Also reject if the text is clearly gibberish or meaningless.
+
+// 5. The gig must also make sense as a real local job or task.
+
+// Examples:
+
+// Allowed:
+// - "Need someone to deliver books"
+// - "Looking for a helper to move furniture"
+// - "Selling the book 'Kill the Police'"
+
+// Rejected:
+// - "Need someone to hack Instagram account"
+// - "Looking for a girl for night service"
+// - "Send money first then I give work"
+
+// Gig to analyze:
+
+// Title: ${title}
+
+// Description: ${description}
+
+// Respond ONLY in JSON format:
+
+// {
+//   "valid": true or false,
+//   "reason": "short explanation"
+// }
+// `;
+
+//     const aiResponse = await openai.chat.completions.create({
+//       model: "gpt-4.1-mini",
+//       messages: [
+//         {
+//           role: "system",
+//           content: "You are a strict safety validator for job posts.",
+//         },
+//         {
+//           role: "user",
+//           content: prompt,
+//         },
+//       ],
+//       temperature: 0,
+//     });
+
+//     const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+//     if (!aiResult.valid) {
+//       return res.status(400).json({
+//         error: `Gig rejected: ${aiResult.reason}`,
+//       });
+//     }
+
+//     /**
+//      * 2️⃣ SAVE GIG (UNCHANGED)
+//      */
+//     const newGig = new Gig({
+//       title,
+//       description,
+//       category,
+//       state,
+//       district,
+//       location,
+//       date,
+//       contact,
+//       postedBy: req.user._id,
+//        coordinates: {
+//     type: "Point",
+//     coordinates: [Number(longitude), Number(latitude)]
+//   }
+//     });
+
+//     await newGig.save();
+
+//     /**
+//      * 3️⃣ TOKEN DEDUCTION (UNCHANGED)
+//      */
+//     await deductTokens({
+//       userId: req.user._id,
+//       amount: 5,
+//       reason: "Post Gig",
+//       gig: newGig._id,
+//     });
+
+//     return res.status(201).json({
+//       message: "Gig created successfully",
+//       gig: newGig,
+//     });
+
+//   } catch (err) {
+//     console.error("ADD GIG ERROR:", err);
+
+//     return res.status(400).json({
+//       error: "Gig rejected by AI or invalid data",
+//     });
+//   }
+// });
+
+
 app.post("/addGig", isLoggedIn, async (req, res) => {
   try {
     const {
@@ -129,13 +307,16 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
       category,
       state,
       district,
+      taluka,
       location,
       date,
       contact,
+      latitude,
+      longitude
     } = req.body;
 
     /**
-     * 0️⃣ Hard backend validation (baseline safety)
+     * 0️⃣ Hard backend validation
      */
     if (
       !title ||
@@ -143,6 +324,8 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
       !category ||
       !state ||
       !district ||
+      !taluka ||
+      !location ||
       !date ||
       !contact
     ) {
@@ -150,40 +333,114 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
     }
 
     /**
-     * 1️⃣ AI CHECK (ONLY checks title & description internally)
+     * 1️⃣ AI VALIDATION (OpenAI)
      */
-    await axios.post(`${process.env.FASTAPI_URL}/analyze`, {
-      title,
-      description,
-      location: location || "na",
-      category,
-      date,
-      contact,
+
+    const prompt = `
+You are an AI safety reviewer for a local job marketplace called TaskOra.
+
+Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
+
+Think carefully about the INTENT and CONTEXT of the text before deciding.
+
+Important rules:
+
+1. Do NOT reject content just because it contains sensitive words like "kill", "drug", "hack", etc.  
+   Evaluate whether the user is actually requesting illegal or harmful work.
+
+2. If the text refers to a book title, movie title, news discussion, or other harmless reference, it should be allowed.
+
+3. Reject only if the user is actually requesting:
+   - illegal activity
+   - violence
+   - sexual services
+   - scams or financial fraud
+   - hacking or cybercrime
+   - dangerous activities
+
+4. Also reject if the text is clearly gibberish or meaningless.
+
+5. The gig must also make sense as a real local job or task.
+
+Examples:
+
+Allowed:
+- "Need someone to deliver books"
+- "Looking for a helper to move furniture"
+- "Selling the book 'Kill the Police'"
+
+Rejected:
+- "Need someone to hack Instagram account"
+- "Looking for a girl for night service"
+- "Send money first then I give work"
+
+Gig to analyze:
+
+Title: ${title}
+
+Description: ${description}
+
+Respond ONLY in JSON format:
+
+{
+  "valid": true or false,
+  "reason": "short explanation"
+}
+`;
+
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for job posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
     });
 
+    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+    if (!aiResult.valid) {
+      return res.status(400).json({
+        error: `Gig rejected: ${aiResult.reason}`,
+      });
+    }
+
     /**
-     * 2️⃣ SAVE GIG (BASELINE LOGIC — DO NOT CHANGE)
+     * 2️⃣ SAVE GIG
      */
+
     const newGig = new Gig({
       title,
       description,
       category,
       state,
       district,
+      taluka,
       location,
       date,
       contact,
       postedBy: req.user._id,
+      coordinates: {
+        type: "Point",
+        coordinates: [Number(longitude), Number(latitude)]
+      }
     });
 
     await newGig.save();
 
     /**
-     * 3️⃣ TOKEN DEDUCTION (🔥 NEW — SAFE POINT)
+     * 3️⃣ TOKEN DEDUCTION
      */
+
     await deductTokens({
       userId: req.user._id,
-      amount: 5, // 🔧 you control this
+      amount: 5,
       reason: "Post Gig",
       gig: newGig._id,
     });
@@ -192,15 +449,19 @@ app.post("/addGig", isLoggedIn, async (req, res) => {
       message: "Gig created successfully",
       gig: newGig,
     });
+
   } catch (err) {
-    console.error("ADD GIG ERROR:", err.response?.data || err.message);
+    console.error("ADD GIG ERROR:", err);
 
     return res.status(400).json({
-      error:
-        err.response?.data?.message || "Gig rejected by AI or invalid data",
+      error: "Gig rejected by AI or invalid data",
     });
   }
 });
+
+
+
+
 
 // ================= ADD SERVICE (BASELINE + AI) =================
 app.post("/addService", isLoggedIn, async (req, res) => {
@@ -217,7 +478,7 @@ app.post("/addService", isLoggedIn, async (req, res) => {
     } = req.body;
 
     /**
-     * 0️⃣ Hard backend validation (baseline safety)
+     * 0️⃣ Hard backend validation
      */
     if (
       !title ||
@@ -234,37 +495,75 @@ app.post("/addService", isLoggedIn, async (req, res) => {
     }
 
     /**
-     * 1️⃣ AI CHECK (✅ SERVICE MODERATION)
+     * 1️⃣ AI VALIDATION (OpenAI)
      */
-    try {
-      console.log("Calling AI moderation for SERVICE...");
 
-      await axios.post(`${process.env.FASTAPI_URL}/analyze_service`, {
-        title,
-        description,
-        salary,
-        location: location || "na",
-        date,
-        contact,
-      });
+    const prompt = `
+You are an AI safety reviewer for a local job marketplace called TaskOra.
 
-      console.log("✅ AI moderation passed");
-    } catch (aiError) {
-      console.warn("❌ AI moderation failed:");
+Determine whether the following SERVICE post is safe and valid.
 
-      console.warn("Message:", aiError.message);
-      console.warn("Status:", aiError.response?.status);
-      console.warn("Response:", aiError.response?.data);
+Think about CONTEXT and INTENT before deciding.
 
+Reject only if the post contains:
+- illegal activities
+- sexual services
+- scams or financial fraud
+- violent requests
+- hacking or cybercrime
+- clearly meaningless gibberish
+- unrealistic or suspicious job
+
+Do NOT reject just because of sensitive words if the context is harmless.
+
+The service must also make sense as a real job.
+
+Service details:
+
+Title: ${title}
+
+Description: ${description}
+
+Salary: ${salary}
+
+Respond ONLY in JSON:
+
+{
+ "valid": true/false,
+ "reason": "short explanation"
+}
+`;
+
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for job marketplace posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
+    });
+
+    const content = aiResponse.choices[0].message.content
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const aiResult = JSON.parse(content);
+
+    if (!aiResult.valid) {
       return res.status(400).json({
-        error:
-          aiError.response?.data?.message ||
-          "Service rejected by AI moderation",
+        error: `Service rejected: ${aiResult.reason}`,
       });
     }
 
     /**
-     * 2️⃣ SAVE SERVICE (Baseline logic)
+     * 2️⃣ SAVE SERVICE (Baseline logic unchanged)
      */
     const newService = new Service({
       title,
@@ -293,17 +592,16 @@ app.post("/addService", isLoggedIn, async (req, res) => {
       message: "Service created successfully",
       service: newService,
     });
+
   } catch (err) {
-    console.error("🔥 ADD SERVICE ERROR:");
-    console.error("Message:", err.message);
-    console.error("Status:", err.response?.status);
-    console.error("Response:", err.response?.data);
+    console.error("🔥 ADD SERVICE ERROR:", err);
 
     return res.status(500).json({
       error: "Internal server error while creating service",
     });
   }
 });
+
 
 ///////
 console.log("🔥 REGISTERING GIG ROUTES");
@@ -332,26 +630,80 @@ app.get("/gig/:id", isLoggedIn, async (req, res) => {
 // ================= PUT GIG (EDIT + AI) =================
 app.put("/gig/:id", isLoggedIn, async (req, res) => {
   try {
-    // 🔥 SEND FULL GigData SHAPE (MANDATORY)
-    const aiRes = await axios.post(`${FASTAPI_URL}/analyze`, {
-      title: req.body.title,
-      description: req.body.description,
-      location: req.body.location || "unknown",
-      category: req.body.category || "Other",
-      date: req.body.date,
-      contact: req.body.contact,
+
+    const { title, description, location, category, date, contact } = req.body;
+
+    // ===============================
+    // AI PROMPT
+    // ===============================
+
+    const prompt = `
+You are an AI safety reviewer for a local job marketplace called TaskOra.
+
+Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
+
+Think carefully about the INTENT and CONTEXT of the text before deciding.
+
+Important rules:
+
+1. Do NOT reject content just because it contains sensitive words like "kill", "drug", "hack".
+2. Reject only if the user is requesting illegal activity, violence, sexual services, scams, hacking, or dangerous activities.
+3. Reject if text is gibberish.
+4. Gig must make sense as a real local job.
+
+Gig to analyze:
+
+Title: ${title}
+
+Description: ${description}
+
+Respond ONLY in JSON format:
+
+{
+  "valid": true or false,
+  "reason": "short explanation"
+}
+`;
+
+    // ===============================
+    // OPENAI CALL
+    // ===============================
+
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for job posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
     });
 
-    if (aiRes.data.status !== "ok") {
+    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+    // ===============================
+    // REJECT IF AI SAYS INVALID
+    // ===============================
+
+    if (!aiResult.valid) {
       return res.status(400).json({
-        error: aiRes.data.message,
+        error: `Gig rejected: ${aiResult.reason}`,
       });
     }
+
+    // ===============================
+    // UPDATE GIG
+    // ===============================
 
     const updatedGig = await Gig.findOneAndUpdate(
       { _id: req.params.id, postedBy: req.user._id },
       req.body,
-      { new: true },
+      { new: true }
     );
 
     if (!updatedGig) {
@@ -364,19 +716,17 @@ app.put("/gig/:id", isLoggedIn, async (req, res) => {
       message: "Gig updated successfully",
       gig: updatedGig,
     });
+
   } catch (err) {
-    console.error("❌ UPDATE GIG ERROR:", err.response?.data || err.message);
 
-    if (err.response?.data?.message) {
-      return res.status(400).json({
-        error: err.response.data.message,
-      });
-    }
+    console.error("❌ UPDATE GIG ERROR:", err);
 
-    res.status(500).json({ error: "Failed to update gig" });
+    res.status(500).json({
+      error: "Failed to update gig",
+    });
+
   }
 });
-
 ///////
 console.log("🔥 REGISTERING SERVICE ROUTES");
 
@@ -956,22 +1306,97 @@ app.get("/my-services", isLoggedIn, async (req, res) => {
 // ================= MY APPLICATIONS =================
 app.get("/my-applications", isLoggedIn, async (req, res) => {
   try {
+
     const applications = await Application.find({
       applicant: req.user._id,
     })
       .populate({
         path: "gig",
-        select: "title location date category district state",
+        select:
+          "title description location date category district state taluka coordinates contact",
       })
       .sort({ createdAt: -1 })
-      .lean(); // ✅ faster, read-only
+      .lean(); // faster, read-only
 
     res.status(200).json(applications);
+
   } catch (err) {
+
     console.error("❌ Error fetching applications:", err);
+
     res.status(500).json({
       error: "Failed to fetch applications",
     });
+
+  }
+});
+
+
+app.delete("/application/:id", isLoggedIn, async (req, res) => {
+  try {
+
+    const application = await Application.findById(req.params.id);
+
+    if (!application) {
+      return res.status(404).json({
+        error: "Application not found"
+      });
+    }
+
+    // security check
+    if (application.applicant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: "Unauthorized"
+      });
+    }
+
+    await Application.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "Application deleted successfully"
+    });
+
+  } catch (err) {
+
+    console.error("DELETE APPLICATION ERROR:", err);
+
+    res.status(500).json({
+      error: "Failed to delete application"
+    });
+
+  }
+});
+
+
+
+// deleete contract history
+
+app.delete("/api/contracts/:id", isLoggedIn, async (req, res) => {
+  try {
+
+    const contract = await Contract.findById(req.params.id);
+
+    if (!contract) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    if (
+      contract.recruiter.toString() !== req.user._id.toString() &&
+      contract.applicant.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    await Contract.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Contract deleted successfully" });
+
+  } catch (err) {
+
+    console.error("DELETE CONTRACT ERROR:", err);
+
+    res.status(500).json({ error: "Failed to delete contract" });
+
   }
 });
 

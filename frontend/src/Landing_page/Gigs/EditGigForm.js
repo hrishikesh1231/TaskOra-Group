@@ -1,243 +1,231 @@
-
-
-// import React, { useEffect, useState } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
-// import axios from "axios";
-// import "../Posts/PostGigForm.css";
-// import { toast } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-
-// const EditGigForm = () => {
-//   const { id } = useParams(); // gig id
-//   const navigate = useNavigate();
-
-//   const [formData, setFormData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   // ================= FETCH GIG =================
-//   useEffect(() => {
-//     const fetchGig = async () => {
-//       try {
-//         // ✅ uses global axios baseURL + cookies
-//         const res = await axios.get(`/gig/${id}`);
-
-//         setFormData({
-//           title: res.data.title || "",
-//           description: res.data.description || "",
-//           location: res.data.location || "",
-//           category: res.data.category || "",
-//           date: res.data.date ? res.data.date.split("T")[0] : "",
-//           contact: res.data.contact || "",
-//         });
-//       } catch (err) {
-//         console.error("❌ Error fetching gig:", err);
-//         toast.error("Failed to load gig ❌");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchGig();
-//   }, [id]);
-
-//   // ================= HANDLE CHANGE =================
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   // ================= UPDATE GIG =================
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       await axios.put(`/gig/${id}`, formData);
-
-//       toast.success("✅ Gig updated successfully!");
-//       setTimeout(() => navigate("/my-gigs"), 1500);
-//     } catch (err) {
-//       console.error("❌ Error updating gig:", err.response?.data || err);
-
-//       toast.error(
-//         err.response?.data?.error ||
-//           err.response?.data?.message ||
-//           "Failed to update gig ❌",
-//         { autoClose: 3000 }
-//       );
-//     }
-//   };
-
-//   // ================= UI STATES =================
-//   if (loading) return <p>Loading gig data...</p>;
-//   if (!formData) return <p>Gig not found ❌</p>;
-
-//   return (
-//     <div className="form-container">
-//       <h2>Edit Gig</h2>
-
-//       <form onSubmit={handleSubmit}>
-//         <input
-//           type="text"
-//           name="title"
-//           placeholder="Gig Title"
-//           value={formData.title}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <textarea
-//           name="description"
-//           placeholder="Gig Description"
-//           value={formData.description}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         {/* ⚠️ Only editable location (not district/state) */}
-//         <input
-//           type="text"
-//           name="location"
-//           placeholder="Location (Area / Locality)"
-//           value={formData.location}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <select
-//           name="category"
-//           value={formData.category}
-//           onChange={handleChange}
-//           required
-//           className="dropdown"
-//         >
-//           <option value="">-- Select Category --</option>
-//           <option value="Event">Event</option>
-//           <option value="Cleaning">Cleaning</option>
-//           <option value="Teaching">Teaching</option>
-//           <option value="Technical">Technical</option>
-//           <option value="Service">Service</option>
-//           <option value="Construction">Construction</option>
-//           <option value="Repair">Repair</option>
-//           <option value="Delivery">Delivery</option>
-//           <option value="Transport">Transport</option>
-//           <option value="Healthcare">Healthcare</option>
-//           <option value="Childcare">Childcare</option>
-//           <option value="Pet Care">Pet Care</option>
-//           <option value="Gardening">Gardening</option>
-//           <option value="Cooking">Cooking</option>
-//           <option value="Freelance">Freelance</option>
-//           <option value="Design">Design</option>
-//           <option value="Writing">Writing</option>
-//           <option value="Music">Music</option>
-//           <option value="Photography">Photography</option>
-//           <option value="Fitness">Fitness</option>
-//           <option value="Security">Security</option>
-//           <option value="Retail">Retail</option>
-//           <option value="Hospitality">Hospitality</option>
-//           <option value="Other">Other</option>
-//         </select>
-
-//         <input
-//           type="date"
-//           name="date"
-//           value={formData.date}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <input
-//           type="text"
-//           name="contact"
-//           placeholder="Contact Number"
-//           value={formData.contact}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <button type="submit" className="submit-btn">
-//           Save Changes
-//         </button>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default EditGigForm;
-
-
-
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useEffect, useState, useRef } from "react";
 import "../Posts/PostGigForm.css";
+import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate, useParams } from "react-router-dom";
+import { indiaStatesDistricts } from "../../Data/indiaStatesDistricts";
 
 const EditGigForm = () => {
+
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // ================= LOAD GIG =================
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    state: "",
+    district: "",
+    taluka: "",
+    location: "",
+    category: "",
+    date: "",
+    contact: "",
+    latitude: "",
+    longitude: ""
+  });
+
+  // ======================
+  // LOAD GIG DATA
+  // ======================
   useEffect(() => {
+
     const fetchGig = async () => {
       try {
+
         const res = await axios.get(`/gig/${id}`);
+        const gig = res.data;
+
         setFormData({
-          title: res.data.title,
-          description: res.data.description,
-          location: res.data.location,
-          category: res.data.category,
-          date: res.data.date.split("T")[0],
-          contact: res.data.contact,
+          title: gig.title,
+          description: gig.description,
+          state: gig.state,
+          district: gig.district,
+          taluka: gig.taluka,
+          location: gig.location,
+          category: gig.category,
+          date: gig.date.split("T")[0],
+          contact: gig.contact,
+          latitude: gig.latitude,
+          longitude: gig.longitude
         });
+
       } catch (err) {
-        toast.error(
-          err.response?.data?.error || "Failed to load gig"
-        );
+        toast.error("Failed to load gig");
       } finally {
         setLoading(false);
       }
     };
 
     fetchGig();
+
   }, [id]);
 
-  // ================= HANDLE CHANGE =================
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // ======================
+  // MAP INIT
+  // ======================
+  useEffect(() => {
+
+    if (!window.L || loading) return;
+
+    const lat = formData.latitude || 20.5937;
+    const lng = formData.longitude || 78.9629;
+
+    const map = window.L.map("editGigMap").setView([lat, lng], 13);
+    mapRef.current = map;
+
+    window.L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      { attribution: "© OpenStreetMap contributors" }
+    ).addTo(map);
+
+    if (formData.latitude && formData.longitude) {
+
+      markerRef.current = window.L
+        .marker([formData.latitude, formData.longitude])
+        .addTo(map);
+
+    }
+
+    map.on("click", (e) => {
+
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      if (markerRef.current) {
+        markerRef.current.setLatLng([lat, lng]);
+      } else {
+        markerRef.current = window.L.marker([lat, lng]).addTo(map);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        latitude: lat,
+        longitude: lng
+      }));
+
+    });
+
+    return () => map.remove();
+
+  }, [loading]);
+
+  // ======================
+  // CURRENT LOCATION
+  // ======================
+  const handleCurrentLocation = () => {
+
+    navigator.geolocation.getCurrentPosition(
+
+      (pos) => {
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        const map = mapRef.current;
+
+        if (map) {
+
+          map.setView([lat, lng], 16);
+
+          if (markerRef.current) {
+            markerRef.current.setLatLng([lat, lng]);
+          } else {
+            markerRef.current = window.L.marker([lat, lng]).addTo(map);
+          }
+
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng
+        }));
+
+        toast.success("Location updated 📍");
+
+      },
+
+      () => toast.error("Location detection failed"),
+      { enableHighAccuracy: true }
+
+    );
+
   };
 
-  // ================= SAVE (AI RUNS IN BACKEND) =================
+  // ======================
+  // INPUT CHANGE
+  // ======================
+  const handleChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+
+  };
+
+  // ======================
+  // UPDATE GIG
+  // ======================
   const handleSubmit = async (e) => {
+
     e.preventDefault();
     setSaving(true);
 
     try {
+
       await axios.put(`/gig/${id}`, formData);
-      toast.success("✅ Gig updated successfully");
-      setTimeout(() => navigate("/my-gigs"), 1500);
+
+      toast.success("Gig updated successfully ✅");
+
+      setTimeout(() => {
+        navigate("/my-gigs");
+      }, 1500);
+
     } catch (err) {
+
       toast.error(
         err.response?.data?.error ||
-          "Update blocked by AI or server error"
+        "Update blocked by AI or server error"
       );
+
     } finally {
       setSaving(false);
     }
+
   };
 
   if (loading) return <p>Loading gig...</p>;
-  if (!formData) return <p>Gig not found ❌</p>;
 
   return (
+
     <div className="form-container">
+
       <h2>Edit Gig</h2>
 
       <form onSubmit={handleSubmit}>
+
+        {/* CATEGORY */}
+        <label>Gig Category</label>
+        <select name="category" value={formData.category} onChange={handleChange} required>
+          <option value="">-- Select Category --</option>
+          <option value="Cleaning">Cleaning</option>
+          <option value="Event">Event Help</option>
+          <option value="Delivery">Delivery</option>
+          <option value="Repair">Repair</option>
+          <option value="Other">Other</option>
+        </select>
+
+        {/* TITLE */}
+        <label>Gig Title</label>
         <input
           type="text"
           name="title"
@@ -246,6 +234,8 @@ const EditGigForm = () => {
           required
         />
 
+        {/* DESCRIPTION */}
+        <label>Gig Description</label>
         <textarea
           name="description"
           value={formData.description}
@@ -253,6 +243,56 @@ const EditGigForm = () => {
           required
         />
 
+        {/* STATE */}
+        <label>Select State</label>
+        <select
+          name="state"
+          value={formData.state}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              state: e.target.value,
+              district: ""
+            })
+          }
+          required
+        >
+          <option value="">-- Select State --</option>
+
+          {Object.keys(indiaStatesDistricts).map((state) => (
+            <option key={state} value={state}>{state}</option>
+          ))}
+        </select>
+
+        {/* DISTRICT */}
+        <label>Select District</label>
+        <select
+          name="district"
+          value={formData.district}
+          onChange={handleChange}
+          required
+          disabled={!formData.state}
+        >
+          <option value="">-- Select District --</option>
+
+          {formData.state &&
+            indiaStatesDistricts[formData.state].map((district) => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+        </select>
+
+        {/* TALUKA */}
+        <label>Taluka</label>
+        <input
+          type="text"
+          name="taluka"
+          value={formData.taluka}
+          onChange={handleChange}
+          required
+        />
+
+        {/* AREA */}
+        <label>Area / Locality</label>
         <input
           type="text"
           name="location"
@@ -261,21 +301,28 @@ const EditGigForm = () => {
           required
         />
 
-        <select
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Select category</option>
-          <option value="Event">Event</option>
-          <option value="Cleaning">Cleaning</option>
-          <option value="Teaching">Teaching</option>
-          <option value="Technical">Technical</option>
-          <option value="Service">Service</option>
-          <option value="Other">Other</option>
-        </select>
+        {/* MAP */}
+        <label>Update Exact Location</label>
 
+        <button
+          type="button"
+          onClick={handleCurrentLocation}
+          style={{ marginBottom: "10px" }}
+        >
+          📍 Use My Current Location
+        </button>
+
+        <div
+          id="editGigMap"
+          style={{
+            height: "300px",
+            marginBottom: "15px",
+            borderRadius: "8px"
+          }}
+        />
+
+        {/* DATE */}
+        <label>Work Date</label>
         <input
           type="date"
           name="date"
@@ -284,6 +331,8 @@ const EditGigForm = () => {
           required
         />
 
+        {/* CONTACT */}
+        <label>Contact Number</label>
         <input
           type="text"
           name="contact"
@@ -293,9 +342,11 @@ const EditGigForm = () => {
         />
 
         <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? "Updating..." : "Update Gig"}
         </button>
+
       </form>
+
     </div>
   );
 };

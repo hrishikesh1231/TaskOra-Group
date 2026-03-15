@@ -1,140 +1,259 @@
-/* ================= APPLICATION HISTORY ================= */
+/* PAGE CONTAINER */
 
-.history-container {
-  max-width: 900px;
-  margin: 30px auto;
-  padding: 20px;
-}
-
-.history-container h2 {
-  text-align: center;
-  margin-bottom: 25px;
-  font-size: 26px;
-  font-weight: 600;
+.history-container{
+max-width:900px;
+margin:auto;
+padding:30px 15px;
 }
 
-/* Card */
-.history-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin-bottom: 20px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* PAGE TITLE */
+
+.history-container h2{
+text-align:center;
+font-size:26px;
+margin-bottom:25px;
+color:#0f172a;
 }
 
-.history-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+/* APPLICATION CARD */
+
+.history-card{
+
+background:#ffffff;
+
+padding:22px;
+margin-bottom:22px;
+
+border-radius:12px;
+
+box-shadow:0 4px 18px rgba(0,0,0,0.05);
+
+transition:all 0.25s ease;
+
+border-left:5px solid #2563eb;
+
 }
 
-/* Text */
-.history-card h3 {
-  margin-bottom: 8px;
-  font-size: 20px;
-  color: #111827;
+.history-card:hover{
+
+transform:translateY(-3px);
+
+box-shadow:0 10px 28px rgba(0,0,0,0.08);
+
 }
 
-.history-card p {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #374151;
+/* GIG TITLE */
+
+.history-card h3{
+font-size:20px;
+font-weight:600;
+margin-bottom:10px;
+color:#0f172a;
 }
 
-/* Applied date */
-.applied-date {
-  margin-top: 10px;
-  font-size: 13px;
-  color: #6b7280;
+/* TEXT DETAILS */
+
+.history-card p{
+
+font-size:14px;
+margin:5px 0;
+color:#334155;
+
 }
 
-/* Image preview (optional) */
-.preview-container {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  flex-wrap: wrap;
+.history-card strong{
+color:#0f172a;
 }
 
-.preview-img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+/* APPLIED DATE */
+
+.applied-date{
+
+margin-top:10px;
+font-size:13px;
+color:#64748b;
+
 }
 
-/* Empty state */
-.no-history {
-  text-align: center;
-  font-size: 16px;
-  color: #9ca3af;
-  margin-top: 40px;
+/* IMAGE PREVIEW */
+
+.preview-container{
+
+display:flex;
+gap:10px;
+margin-top:10px;
+
 }
 
-/* Loading */
-.loading {
-  text-align: center;
-  font-size: 16px;
-  margin-top: 40px;
-  color: #6b7280;
-}
-/* .confirm-btn{
-  margin-top: 6px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  background: #4f46e5;
-  color: white;
-  cursor: pointer;
-} */
-/* 🔍 View Contract Button */
-.visit-contract-btn {
-  margin-top: 8px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #4e73df, #224abe);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.preview-img{
+
+width:80px;
+height:80px;
+
+object-fit:cover;
+
+border-radius:8px;
+
+border:1px solid #e2e8f0;
+
 }
 
-.visit-contract-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+/* MAP BUTTON */
+
+.map-btn{
+
+margin-top:6px;
+
+padding:6px 12px;
+
+background:#2563eb;
+color:white;
+
+border:none;
+border-radius:6px;
+
+font-size:13px;
+
+cursor:pointer;
+
+transition:0.2s;
+
 }
 
-.visit-contract-btn:active {
-  transform: scale(0.98);
-}
-.confirm-btn {
-  padding: 8px 14px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
+.map-btn:hover{
+
+background:#1d4ed8;
+
 }
 
-.confirm-btn:hover {
-  background-color: #218838;
+/* CONFIRM BUTTON */
+
+.confirm-btn{
+
+background:#22c55e;
+color:white;
+
+border:none;
+padding:7px 12px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+font-size:13px;
+
 }
 
-.reject-btn {
-  padding: 8px 14px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
+.confirm-btn:hover{
+background:#16a34a;
 }
 
-.reject-btn:hover {
-  background-color: #c82333;
+/* REJECT BUTTON */
+
+.reject-btn{
+
+background:#ef4444;
+color:white;
+
+border:none;
+padding:7px 12px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+font-size:13px;
+
+}
+
+.reject-btn:hover{
+background:#dc2626;
+}
+
+/* CONTRACT BUTTONS */
+
+.contract-buttons{
+
+display:flex;
+gap:10px;
+margin-top:10px;
+
+}
+
+/* VIEW CONTRACT */
+
+.visit-contract-btn{
+
+margin-top:8px;
+
+background:#2563eb;
+color:white;
+
+border:none;
+
+padding:7px 12px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+font-size:13px;
+
+}
+
+.visit-contract-btn:hover{
+background:#1d4ed8;
+}
+
+/* DELETE HISTORY */
+
+.delete-history-btn{
+
+margin-top:12px;
+
+background:#64748b;
+color:white;
+
+border:none;
+
+padding:7px 12px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+font-size:13px;
+
+}
+
+.delete-history-btn:hover{
+background:#475569;
+}
+
+/* NO HISTORY MESSAGE */
+
+.no-history{
+
+text-align:center;
+
+color:#64748b;
+
+font-size:15px;
+
+margin-top:40px;
+
+}
+
+/* LOADING */
+
+.loading{
+
+text-align:center;
+
+margin-top:40px;
+
+font-size:16px;
+
+color:#334155;
+
 }

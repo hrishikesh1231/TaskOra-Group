@@ -304,3 +304,25 @@
   }
 
 }
+
+/* ================================
+   🗑 Delete Contract History Button
+================================ */
+
+.delete-contract-btn {
+  background: linear-gradient(135deg, #64748b, #475569);
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-left: 10px;
+  transition: all 0.25s ease;
+}
+
+.delete-contract-btn:hover {
+  background: linear-gradient(135deg, #475569, #334155);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}

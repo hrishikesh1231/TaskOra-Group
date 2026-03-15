@@ -230,6 +230,7 @@ import VisitProfile from "./pages/VisitProfile";
 import { CountsProvider } from "./context/CountsContext";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import AIPost from "./pages/AIPost";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -250,8 +251,13 @@ root.render(
            <div className="app-wrapper">
           <Navbar />
 
+{/* <<<<<<< HEAD */}
           <ToastContainer position="top-center" autoClose={3000} />
           <main className="page-content">
+{/* =======
+          <ToastContainer position="top-right" autoClose={3000} className="toast-container-override" />
+          <Toaster position="top-right" reverseOrder={false} containerClassName="hot-toast-override" />
+>>>>>>> origin/feature-work-102 */}
 
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -323,6 +329,11 @@ root.render(
             <Route path="/reset-password/:token" element={<ResetPassword />} />
 
              <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/profile/:userId" element={<VisitProfile/>} />
+            
+            <Route path="/ai-post" element={<AIPost/>} />
+
+          {/* </Routes> */}
 
 
             <Route path="/profile/:userId" element={<VisitProfile/>} />
