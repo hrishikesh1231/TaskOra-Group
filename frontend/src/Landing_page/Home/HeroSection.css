@@ -500,3 +500,66 @@
   }
 
 }
+
+/* ================= POST BUTTON BASE ================= */
+
+.post-btn {
+  padding: 15px 34px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.2px;
+  color: white;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.15);
+}
+
+/* ================= 🟧 SAFFRON ================= */
+/* Post Gig */
+
+.gig-btn {
+  background: linear-gradient(135deg, #FF9933, #ff7a00);
+  box-shadow: 0 10px 25px rgba(255, 153, 51, 0.35);
+}
+
+.gig-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(255, 153, 51, 0.45);
+}
+
+/* ================= ⚪ WHITE ================= */
+/* Post Service */
+
+.service-btn {
+  background: linear-gradient(135deg, #ffffff, #e5e7eb);
+  color: #0f172a;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.service-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+/* ================= 🟩 GREEN ================= */
+/* AI Auto Post */
+
+.ai-btn {
+  background: linear-gradient(135deg, #138808, #0f7a07);
+  color: white;
+  box-shadow: 0 10px 25px rgba(19, 136, 8, 0.35);
+}
+
+.ai-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(19, 136, 8, 0.45);
+}
+
+/* ================= CLICK EFFECT ================= */
+
+.post-btn:active {
+  transform: translateY(1px) scale(0.98);
+}

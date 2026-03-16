@@ -1,5 +1,3 @@
-
-
 import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -13,7 +11,6 @@ import { NotificationContext } from "../context/NotificationContext";
 import { CountsContext } from "../context/CountsContext";
 
 const Navbar = () => {
-
   const { city } = useContext(CityContext);
   const { user, logout } = useContext(AuthContext);
   const { unreadCount } = useContext(NotificationContext);
@@ -26,6 +23,7 @@ const Navbar = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [coinOpen, setCoinOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [nearbyAvailable, setNearbyAvailable] = useState(false);
 
   const profileRef = useRef(null);
   const coinRef = useRef(null);
@@ -33,21 +31,20 @@ const Navbar = () => {
   /* ================= CLOSE MOBILE MENU ================= */
 
   const closeMenu = () => {
-  const menu = document.getElementById("taskoraNavbar");
+    const menu = document.getElementById("taskoraNavbar");
 
-  if (!menu) return;
+    if (!menu) return;
 
-  const bsCollapse = Collapse.getInstance(menu);
+    const bsCollapse = Collapse.getInstance(menu);
 
-  if (bsCollapse) {
-    bsCollapse.hide();
-  }
-};
+    if (bsCollapse) {
+      bsCollapse.hide();
+    }
+  };
 
   /* ================= CITY COUNTS ================= */
 
   useEffect(() => {
-
     if (!city || city.trim() === "") {
       setGigCount(null);
       setServiceCount(null);
@@ -58,10 +55,9 @@ const Navbar = () => {
 
     const fetchCounts = async () => {
       try {
-
         const [gigRes, serviceRes] = await Promise.all([
           axios.get(`/count/gigs/${encodeURIComponent(normalizedCity)}`),
-          axios.get(`/count/services/${encodeURIComponent(normalizedCity)}`)
+          axios.get(`/count/services/${encodeURIComponent(normalizedCity)}`),
         ]);
 
         const gigCount = gigRes?.data?.count ?? 0;
@@ -69,25 +65,19 @@ const Navbar = () => {
 
         setGigCount(gigCount);
         setServiceCount(serviceCount);
-
       } catch {
-
         setGigCount(0);
         setServiceCount(0);
-
       }
     };
 
     fetchCounts();
-
   }, [city]);
 
   /* ================= CLICK OUTSIDE ================= */
 
   useEffect(() => {
-
     const handleClickOutside = (e) => {
-
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
       }
@@ -95,22 +85,40 @@ const Navbar = () => {
       if (coinRef.current && !coinRef.current.contains(e.target)) {
         setCoinOpen(false);
       }
-
     };
 
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
-
   }, []);
 
+  /* ================= NEARBY TASK CHECK ================= */
+
+  useEffect(() => {
+    if (!user) return; // 🚀 only run if user logged in
+
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      try {
+        const res = await axios.get(`/api/gigs/nearby?lat=${lat}&lng=${lng}`);
+
+        if (res.data && res.data.length > 0) {
+          setNearbyAvailable(true);
+        }
+      } catch (err) {
+        console.log("Nearby check error", err);
+      }
+    });
+  }, [user]);
   /* ================= UI ================= */
 
   return (
     <nav className="navbar navbar-expand-lg sticky-top taskora-navbar">
-
       <div className="container-fluid">
-
         {/* BRAND */}
 
         <Link className="navbar-brand" to="/">
@@ -133,14 +141,10 @@ const Navbar = () => {
         {/* COLLAPSE MENU */}
 
         <div className="collapse navbar-collapse" id="taskoraNavbar">
-
           {/* LEFT LINKS */}
 
           <div className="navbar-nav me-auto align-items-lg-center gap-lg-3">
-
-            <span className="text-muted">
-              📍 {city || "Select location"}
-            </span>
+            <span className="text-muted">📍 {city || "Select location"}</span>
 
             {/* GIGS */}
 
@@ -149,15 +153,11 @@ const Navbar = () => {
               to="/gigs"
               onClick={closeMenu}
             >
-
               <span className="nav-text">Gigs</span>
 
               {gigCount !== null && (
-                <span className="nav-count-badge">
-                  {gigCount}
-                </span>
+                <span className="nav-count-badge">{gigCount}</span>
               )}
-
             </Link>
 
             {/* SERVICES */}
@@ -167,15 +167,11 @@ const Navbar = () => {
               to="/services"
               onClick={closeMenu}
             >
-
               <span className="nav-text">Services</span>
 
               {serviceCount !== null && (
-                <span className="nav-count-badge service">
-                  {serviceCount}
-                </span>
+                <span className="nav-count-badge service">{serviceCount}</span>
               )}
-
             </Link>
 
             <Link className="nav-link" to="/about" onClick={closeMenu}>
@@ -193,19 +189,24 @@ const Navbar = () => {
             <Link className="nav-link" to="/contact" onClick={closeMenu}>
               Contact
             </Link>
-
+            <Link
+              className={`nav-link nearby-btn ${
+                user && nearbyAvailable ? "nearby-achievement" : ""
+              }`}
+              to={user ? "/nearby-tasks" : "/login"}
+              onClick={closeMenu}
+            >
+              📍 Nearby Tasks
+            </Link>
           </div>
 
           {/* RIGHT SECTION */}
 
           <div className="d-flex align-items-center gap-3 mt-3 mt-lg-0">
-
             {/* 🔔 NOTIFICATION */}
 
             {user && (
-
               <div className="position-relative">
-
                 <FaBell
                   className="cursor-pointer"
                   onClick={() => {
@@ -215,21 +216,15 @@ const Navbar = () => {
                 />
 
                 {unreadCount > 0 && (
-                  <span className="notif-badge">
-                    {unreadCount}
-                  </span>
+                  <span className="notif-badge">{unreadCount}</span>
                 )}
-
               </div>
-
             )}
 
             {/* TOKEN */}
 
             {user && (
-
               <div className="position-relative" ref={coinRef}>
-
                 <span
                   className="fw-bold text-warning cursor-pointer"
                   onClick={() => {
@@ -241,14 +236,10 @@ const Navbar = () => {
                 </span>
 
                 {coinOpen && (
-
                   <div className="dropdown-menu show p-3">
-
                     <p className="fw-bold mb-1">Token Balance</p>
 
-                    <p className="text-primary fs-5">
-                      {user.tokens}
-                    </p>
+                    <p className="text-primary fs-5">{user.tokens}</p>
 
                     <Link
                       className="dropdown-item"
@@ -265,21 +256,15 @@ const Navbar = () => {
                     >
                       Buy Tokens
                     </Link>
-
                   </div>
-
                 )}
-
               </div>
-
             )}
 
             {/* PROFILE */}
 
             {user ? (
-
               <div className="position-relative" ref={profileRef}>
-
                 <div
                   className="d-flex align-items-center gap-2 cursor-pointer"
                   onClick={() => {
@@ -287,7 +272,6 @@ const Navbar = () => {
                     setCoinOpen(false);
                   }}
                 >
-
                   <span className="fw-semibold text-primary">
                     {user.username}
                   </span>
@@ -295,13 +279,10 @@ const Navbar = () => {
                   <div className="profile-circle">
                     {user.username.charAt(0).toUpperCase()}
                   </div>
-
                 </div>
 
                 {profileOpen && (
-
                   <div className="dropdown-menu show">
-
                     <Link className="dropdown-item" to="/applications">
                       Task Applied History
                     </Link>
@@ -338,17 +319,11 @@ const Navbar = () => {
                     >
                       Logout
                     </button>
-
                   </div>
-
                 )}
-
               </div>
-
             ) : (
-
               <>
-
                 <Link to="/login" className="btn btn-outline-primary">
                   Login
                 </Link>
@@ -356,17 +331,11 @@ const Navbar = () => {
                 <Link to="/signUp" className="btn btn-danger">
                   Register
                 </Link>
-
               </>
-
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </nav>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from "react";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -92,49 +91,46 @@ const HeroSection = () => {
             </div>
           </div>
 
-            <div className="post-container">
-              <div className="post-row">
-                <button
-                  className="post-btn gig-btn"
-                  onClick={() => handlePostClick("gig")}
-                >
-                  Post Gig
-                </button>
-
-                <button
-                  className="post-btn service-btn"
-                  onClick={() => handlePostClick("service")}
-                >
-                  Post Service
-                </button>
-              </div>
-
-              {/* 🤖 AI AUTO POST */}
+          <div className="post-container">
+            <div className="post-row">
               <button
-                className="post-btn ai-btn"
-                onClick={() => {
-                  if (!user) {
-                    toast.error("Login first to use AI posting 🤖");
-                    navigate("/login");
-                    return;
-                  }
-
-                  navigate("/ai-post");
-                }}
+                className="post-btn gig-btn"
+                onClick={() => handlePostClick("gig")}
               >
-                🤖 Auto Post
+                Post Gig
+              </button>
+
+              <button
+                className="post-btn service-btn"
+                onClick={() => handlePostClick("service")}
+              >
+                Post Service
               </button>
             </div>
-        </div>
 
-        
+            {/* 🤖 AI AUTO POST */}
+            <button
+              className="post-btn ai-btn"
+              onClick={() => {
+                if (!user) {
+                  toast.error("Login first to use AI posting 🤖");
+                  navigate("/login");
+                  return;
+                }
+
+                navigate("/ai-post");
+              }}
+            >
+              🤖 Auto Post
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ✅ PREMIUM MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-
             {modalType === "gig" ? (
               <>
                 <h3>🚀 What is a Gig?</h3>
@@ -143,15 +139,16 @@ const HeroSection = () => {
                   usually completed within a day or two.
                 </p>
                 <p>
-                  <strong>Examples:</strong> Cleaning, Delivery, Repair,
-                  Event Help
+                  <strong>Examples:</strong> Cleaning, Delivery, Repair, Event
+                  Help
                 </p>
               </>
             ) : (
               <>
                 <h3>💼 What is a Service?</h3>
                 <p>
-                  A <strong>Service</strong> is for long-term or permanent hiring.
+                  A <strong>Service</strong> is for long-term or permanent
+                  hiring.
                 </p>
                 <p>
                   <strong>Examples:</strong> Shop Worker, Office Assistant,
@@ -168,14 +165,10 @@ const HeroSection = () => {
                 Cancel
               </button>
 
-              <button
-                onClick={handleAgree}
-                className="agree-btn"
-              >
+              <button onClick={handleAgree} className="agree-btn">
                 Agree & Continue
               </button>
             </div>
-
           </div>
         </div>
       )}

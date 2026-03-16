@@ -231,6 +231,7 @@ import { CountsProvider } from "./context/CountsContext";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import AIPost from "./pages/AIPost";
+import NearbyTasks from "./Landing_page/Gigs/NearbyTasks";
 
 /* ================= AXIOS GLOBAL CONFIG ================= */
 axios.defaults.baseURL = "http://localhost:3002";
@@ -332,6 +333,7 @@ root.render(
             <Route path="/profile/:userId" element={<VisitProfile/>} />
             
             <Route path="/ai-post" element={<AIPost/>} />
+            <Route path="/nearby-tasks" element={<NearbyTasks />} />
 
           {/* </Routes> */}
 

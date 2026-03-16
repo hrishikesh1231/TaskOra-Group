@@ -2151,6 +2151,47 @@ app.get("/users/:id/profile", async (req, res) => {
   }
 });
 
+
+app.get("/api/gigs/nearby", async (req, res) => {
+  try {
+
+    const { lat, lng } = req.query;
+
+    const gigs = await Gig.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)]
+          },
+          distanceField: "distance",
+          maxDistance: 50000,
+          spherical: true
+        }
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "postedBy",
+          foreignField: "_id",
+          as: "postedBy"
+        }
+      },
+
+      {
+        $unwind: "$postedBy"
+      }
+
+    ]);
+
+    res.json(gigs);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching nearby gigs" });
+  }
+});
 require("./utils/gigCleanup");
 // ================= START =================
 app.listen(PORT, async () => {

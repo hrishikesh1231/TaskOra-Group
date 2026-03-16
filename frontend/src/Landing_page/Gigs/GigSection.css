@@ -262,3 +262,14 @@ font-size:13px;
 }
 
 }
+
+.distance-badge {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
