@@ -382,28 +382,6 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 
 
 
-// 3️⃣ VIEW MY CONTRACTS (OWNER + APPLICANT)
-// ======================================================
-// router.get("/contracts/my", isLoggedIn, async (req, res) => {
-//   try {
-//     const contracts = await Contract.find({
-//       applicant: req.user._id,
-//     })
-//       .populate("gig")
-//       .populate("service")
-//       .populate("recruiter", "name email");
-
-//     res.json(contracts);
-
-//   } catch (err) {
-//     console.error("❌ FETCH CONTRACT ERROR:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
-
-
-
 
 // router.get("/contracts/my", isLoggedIn, async (req, res) => {
 //   try {
@@ -418,37 +396,29 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 //       .populate("applicant", "_id username email")
 //       .sort({ createdAt: -1 });
 
-// <<<<<<< HEAD
-//     // 🔥 CHECK EXPIRY FOR GIG CONTRACTS
+//     // CHECK EXPIRY
 //     for (let contract of contracts) {
-
 //       if (
-//         contract.gig && // only gigs
+//         contract.gig &&
 //         contract.status === "recruiter_confirmed" &&
 //         contract.expiresAt &&
 //         contract.expiresAt < new Date()
 //       ) {
-//         // ✅ Expire contract
 //         contract.status = "expired";
 //         await contract.save();
 
-//         // ✅ Reopen gig
 //         await Gig.findByIdAndUpdate(contract.gig._id, {
 //           isClosed: false,
 //         });
 
-//         // ✅ Reset application
 //         await Application.findOneAndUpdate(
 //           {
 //             gig: contract.gig._id,
 //             applicant: contract.applicant,
 //           },
-//           {
-//             status: "rejected",
-//           }
+//           { status: "rejected" }
 //         );
 
-//         // ✅ Notify recruiter
 //         await Notification.create({
 //           user: contract.recruiter._id,
 //           title: "Contract Expired ⏳",
@@ -459,9 +429,7 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 //       }
 //     }
 
-//     res.json(contracts);
-// =======
-//     // 🔥 ADD THIS PART
+//     // ADD recruiter flag
 //     const updatedContracts = contracts.map(contract => ({
 //       ...contract.toObject(),
 //       isRecruiter:
@@ -469,7 +437,6 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 //     }));
 
 //     res.json(updatedContracts);
-// >>>>>>> origin/feature-work-100
 
 //   } catch (err) {
 //     console.error("FETCH CONTRACT ERROR:", err);
@@ -487,6 +454,7 @@ router.get("/contracts/my", isLoggedIn, async (req, res) => {
       ]
     })
       .populate("gig")
+      .populate("service") // ✅ ONLY ADD THIS LINE
       .populate("recruiter", "_id username email")
       .populate("applicant", "_id username email")
       .sort({ createdAt: -1 });

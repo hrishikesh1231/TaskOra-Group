@@ -463,6 +463,146 @@ Respond ONLY in JSON format:
 
 
 
+// // ================= ADD SERVICE (BASELINE + AI) =================
+// app.post("/addService", isLoggedIn, async (req, res) => {
+//   try {
+//     const {
+//       title,
+//       description,
+//       salary,
+//       state,
+//       district,
+//       location,
+//       date,
+//       contact,
+//     } = req.body;
+
+//     /**
+//      * 0️⃣ Hard backend validation
+//      */
+//     if (
+//       !title ||
+//       !description ||
+//       salary === undefined ||
+//       !state ||
+//       !district ||
+//       !date ||
+//       !contact
+//     ) {
+//       return res.status(400).json({
+//         error: "Missing required fields",
+//       });
+//     }
+
+//     /**
+//      * 1️⃣ AI VALIDATION (OpenAI)
+//      */
+
+//     const prompt = `
+// You are an AI safety reviewer for a local job marketplace called TaskOra.
+
+// Determine whether the following SERVICE post is safe and valid.
+
+// Think about CONTEXT and INTENT before deciding.
+
+// Reject only if the post contains:
+// - illegal activities
+// - sexual services
+// - scams or financial fraud
+// - violent requests
+// - hacking or cybercrime
+// - clearly meaningless gibberish
+// - unrealistic or suspicious job
+
+// Do NOT reject just because of sensitive words if the context is harmless.
+
+// The service must also make sense as a real job.
+
+// Service details:
+
+// Title: ${title}
+
+// Description: ${description}
+
+// Salary: ${salary}
+
+// Respond ONLY in JSON:
+
+// {
+//  "valid": true/false,
+//  "reason": "short explanation"
+// }
+// `;
+
+//     const aiResponse = await openai.chat.completions.create({
+//       model: "gpt-4.1-mini",
+//       messages: [
+//         {
+//           role: "system",
+//           content: "You are a strict safety validator for job marketplace posts.",
+//         },
+//         {
+//           role: "user",
+//           content: prompt,
+//         },
+//       ],
+//       temperature: 0,
+//     });
+
+//     const content = aiResponse.choices[0].message.content
+//       .replace(/```json/g, "")
+//       .replace(/```/g, "")
+//       .trim();
+
+//     const aiResult = JSON.parse(content);
+
+//     if (!aiResult.valid) {
+//       return res.status(400).json({
+//         error: `Service rejected: ${aiResult.reason}`,
+//       });
+//     }
+
+//     /**
+//      * 2️⃣ SAVE SERVICE (Baseline logic unchanged)
+//      */
+//     const newService = new Service({
+//       title,
+//       description,
+//       salary,
+//       state,
+//       district,
+//       location,
+//       date,
+//       contact,
+//       postedBy: req.user._id,
+//     });
+
+//     await newService.save();
+
+//     /**
+//      * 3️⃣ TOKEN DEDUCTION
+//      */
+//     await deductTokens({
+//       userId: req.user._id,
+//       amount: 3,
+//       reason: "Post Service",
+//     });
+
+//     return res.status(201).json({
+//       message: "Service created successfully",
+//       service: newService,
+//     });
+
+//   } catch (err) {
+//     console.error("🔥 ADD SERVICE ERROR:", err);
+
+//     return res.status(500).json({
+//       error: "Internal server error while creating service",
+//     });
+//   }
+// });
+
+
 // ================= ADD SERVICE (BASELINE + AI) =================
 app.post("/addService", isLoggedIn, async (req, res) => {
   try {
@@ -472,9 +612,12 @@ app.post("/addService", isLoggedIn, async (req, res) => {
       salary,
       state,
       district,
+      taluka,   // ✅ added
       location,
       date,
       contact,
+      lat,      // ✅ added
+      lng       // ✅ added
     } = req.body;
 
     /**
@@ -486,6 +629,7 @@ app.post("/addService", isLoggedIn, async (req, res) => {
       salary === undefined ||
       !state ||
       !district ||
+      !taluka ||   // ✅ added
       !date ||
       !contact
     ) {
@@ -571,10 +715,19 @@ Respond ONLY in JSON:
       salary,
       state,
       district,
+      taluka,     // ✅ added
       location,
       date,
       contact,
       postedBy: req.user._id,
+
+      // ✅ coordinates (optional)
+      geoLocation: lat && lng
+        ? {
+            type: "Point",
+            coordinates: [lng, lat], // important order
+          }
+        : undefined,
     });
 
     await newService.save();
@@ -601,7 +754,6 @@ Respond ONLY in JSON:
     });
   }
 });
-
 
 ///////
 console.log("🔥 REGISTERING GIG ROUTES");
@@ -1400,6 +1552,9 @@ app.delete("/api/contracts/:id", isLoggedIn, async (req, res) => {
   }
 });
 
+
+
+
 // ================= DELETE GIG (OWNER ONLY) =================
 app.delete("/gig/:id", isLoggedIn, async (req, res) => {
   try {
@@ -1655,60 +1810,6 @@ app.post(
   },
 );
 
-///////////////
-
-// app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
-//   try {
-//     // 1️⃣ Verify service exists
-//     const service = await Service.findById(req.params.id);
-
-//     if (!service) {
-//       return res.status(404).json({ error: "Service not found" });
-//     }
-
-//     // 2️⃣ Owner-only access
-//     if (service.postedBy.toString() !== req.user._id.toString()) {
-//       return res.status(403).json({
-//         error: "Not authorized to view applicants",
-//       });
-//     }
-
-//     // 🔥 CHECK IF SOMEONE IS SELECTED
-//     const selectedApp = await ServiceApplication.findOne({
-//       service: service._id,
-//       status: "selected",
-//     });
-
-//     let applications;
-
-//     if (selectedApp) {
-//       // ✅ If selected exists → return only that one
-//       applications = await ServiceApplication.find({
-//         service: service._id,
-//         status: "selected",
-//       })
-//         .populate("applicant", "username email")
-//         .sort({ createdAt: -1 });
-//     } else {
-//       // ✅ Otherwise return all
-//       applications = await ServiceApplication.find({
-//         service: service._id,
-//       })
-//         .populate("applicant", "username email")
-//         .sort({ createdAt: -1 });
-//     }
-
-//     res.status(200).json({
-//       count: applications.length,
-//       applications,
-//     });
-//   } catch (err) {
-//     console.error("❌ Error fetching service applicants:", err);
-//     res.status(500).json({
-//       error: "Failed to fetch applicants",
-//     });
-//   }
-// });
 
 app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   try {
@@ -1842,6 +1943,8 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
 //   }
 // );
 
+
+
 app.post(
   "/service-application/:applicationId/select",
   isLoggedIn,
@@ -1924,6 +2027,9 @@ app.post(
     }
   },
 );
+
+
+
 
 // ================= GET CURRENT USER =================
 app.get("/me", isLoggedIn, (req, res) => {
@@ -2192,6 +2298,55 @@ app.get("/api/gigs/nearby", async (req, res) => {
     res.status(500).json({ message: "Error fetching nearby gigs" });
   }
 });
+
+
+// ================= DELETE SERVICE APPLICATION =================
+
+app.delete("/service-application/:id", isLoggedIn, async (req, res) => {
+
+  try {
+
+    const applicationId = req.params.id;
+
+    const application = await ServiceApplication.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({
+        error: "Application not found"
+      });
+    }
+
+    // Ensure only the applicant can delete
+    if (String(application.applicant) !== String(req.user._id)) {
+      return res.status(403).json({
+        error: "Not authorized to delete this application"
+      });
+    }
+
+    await ServiceApplication.findByIdAndDelete(applicationId);
+
+    res.json({
+      message: "Service application deleted successfully"
+    });
+
+  } catch (err) {
+
+    console.error("DELETE SERVICE APPLICATION ERROR:", err);
+
+    res.status(500).json({
+      error: "Internal server error"
+    });
+
+  }
+
+});
+
+
+
+
+
+
+
 require("./utils/gigCleanup");
 // ================= START =================
 app.listen(PORT, async () => {

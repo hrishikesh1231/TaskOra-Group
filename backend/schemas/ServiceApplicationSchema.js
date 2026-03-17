@@ -1,18 +1,4 @@
-// // const mongoose = require("mongoose");
-// // const { Schema } = mongoose;
 
-// // const ServiceApplicationSchema = new Schema({
-// //   service: { type: mongoose.Schema.Types.ObjectId, ref: "service", required: true },
-// //   applicant: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
-// //   name: { type: String, required: true },
-// //   message: { type: String, required: true },
-// //   contact: { type: String, required: true },
-// //   charges: { type: String, required: true },
-// //   pictures: [String],
-// //   createdAt: { type: Date, default: Date.now },
-// // });
-
-// // module.exports = { ServiceApplicationSchema };
 
 
 // const mongoose = require("mongoose");
@@ -22,40 +8,25 @@
 //   {
 //     service: {
 //       type: Schema.Types.ObjectId,
-//       ref: "Service", // ✅ FIXED (case-sensitive)
+//       ref: "Service",
 //       required: true,
 //     },
 //     applicant: {
 //       type: Schema.Types.ObjectId,
-//       ref: "User", // ✅ FIXED
+//       ref: "user", // ✅ FIXED
 //       required: true,
 //     },
-//     name: {
-//       type: String,
-//       required: true,
-//     },
-//     message: {
-//       type: String,
-//       required: true,
-//     },
-//     contact: {
-//       type: String,
-//       required: true,
-//     },
-//     charges: {
-//       type: String,
-//       required: true,
-//     },
+//     name: String,
+//     message: String,
+//     contact: String,
+//     charges: String,
 //     pictures: [String],
 //   },
 //   { timestamps: true }
 // );
 
-// // ✅ EXPORT MODEL (NOT SCHEMA)
-// module.exports = mongoose.model(
-//   "ServiceApplication",
-//   ServiceApplicationSchema
-// );
+// module.exports = ServiceApplicationSchema;
+
 
 
 const mongoose = require("mongoose");
@@ -68,16 +39,25 @@ const ServiceApplicationSchema = new Schema(
       ref: "Service",
       required: true,
     },
+
     applicant: {
       type: Schema.Types.ObjectId,
-      ref: "user", // ✅ FIXED
+      ref: "user",
       required: true,
     },
+
     name: String,
     message: String,
     contact: String,
     charges: String,
     pictures: [String],
+
+    // ✅ ADD THIS
+    status: {
+      type: String,
+      enum: ["pending", "selected", "rejected"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

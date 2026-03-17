@@ -2,198 +2,17 @@
 
 
 // import React, { useContext, useState } from "react";
-// import "./PostGigForm.css"; // ✅ reuse same styling
-// import axios from "axios";
-// import { toast } from "react-toastify";
-// import { useNavigate } from "react-router-dom";
-// import { CityContext } from "../../context/CityContext";
-// import { indiaStatesDistricts } from "../../Data/indiaStatesDistricts";
-
-// const PostServiceForm = () => {
-//   const { setCity } = useContext(CityContext); // district
-//   const navigate = useNavigate();
-
-//   const [formData, setFormData] = useState({
-//     title: "",
-//     description: "",
-//     salary: "",
-//     state: "",
-//     district: "",
-//     location: "",
-//     date: "",
-//     contact: "",
-//   });
-
-//   const [loading, setLoading] = useState(false);
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData({ ...formData, [name]: value });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-
-//     try {
-//       await axios.post("/addService", formData, {
-//         withCredentials: true,
-//       });
-
-//       toast.success("Service posted successfully 🎉", { autoClose: 2000 });
-
-//       setTimeout(() => {
-//         setCity(formData.district); // ✅ SAME LOGIC
-//         navigate("/services");       // ✅ SAME LOGIC
-//       }, 2000);
-
-//     } catch (err) {
-//       toast.error(
-//         err.response?.data?.error || "Failed to post service"
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="form-container">
-//       <h2>Post a Service</h2>
-
-//       {/* ✅ ONLY UI TEXT ADDED */}
-//       <p className="form-subtitle">
-//         A <strong>Service</strong> is for long-term or permanent hiring.
-//         <br />
-//         Example: Shop Worker, Office Assistant, Delivery Staff, etc.
-//       </p>
-
-//       <form onSubmit={handleSubmit}>
-        
-//         {/* ✅ Labels Added (No Logic Change) */}
-//         <label>Service Title</label>
-//         <input
-//           type="text"
-//           name="title"
-//           placeholder="Example: Need a shop helper"
-//           value={formData.title}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <label>Service Description</label>
-//         <textarea
-//           name="description"
-//           placeholder="Describe duties, timing, requirements..."
-//           value={formData.description}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <label>Salary / Pay</label>
-//         <input
-//           type="text"
-//           name="salary"
-//           placeholder="Salary / Pay (e.g., ₹10,000/month)"
-//           value={formData.salary}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         {/* STATE */}
-//         <label>Select State</label>
-//         <select
-//           name="state"
-//           value={formData.state}
-//           onChange={(e) =>
-//             setFormData({
-//               ...formData,
-//               state: e.target.value,
-//               district: "",
-//             })
-//           }
-//           required
-//         >
-//           <option value="">-- Select State --</option>
-//           {Object.keys(indiaStatesDistricts).map((state) => (
-//             <option key={state} value={state}>
-//               {state}
-//             </option>
-//           ))}
-//         </select>
-
-//         {/* DISTRICT */}
-//         <label>Select District</label>
-//         <select
-//           name="district"
-//           value={formData.district}
-//           onChange={handleChange}
-//           required
-//           disabled={!formData.state}
-//         >
-//           <option value="">-- Select District --</option>
-//           {formData.state &&
-//             indiaStatesDistricts[formData.state].map((district) => (
-//               <option key={district} value={district}>
-//                 {district}
-//               </option>
-//             ))}
-//         </select>
-
-//         {/* AREA / LOCALITY */}
-//         <label>Area / Locality (Optional)</label>
-//         <input
-//           type="text"
-//           name="location"
-//           placeholder="Area / Locality (optional)"
-//           value={formData.location}
-//           onChange={handleChange}
-//         />
-
-//         <label>Start Date</label>
-//         <small className="input-hint">
-//           When should the worker start?
-//         </small>
-//         <input
-//           type="date"
-//           name="date"
-//           value={formData.date}
-//           min={new Date().toISOString().split("T")[0]}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <label>Contact Number</label>
-//         <input
-//           type="text"
-//           name="contact"
-//           placeholder="Contact Number"
-//           value={formData.contact}
-//           onChange={handleChange}
-//           required
-//         />
-
-//         <button type="submit" disabled={loading}>
-//           {loading ? "Posting..." : "Post Service"}
-//         </button>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default PostServiceForm;
-
-
-
-// import React, { useContext, useState } from "react";
 // import "./PostGigForm.css"; // reuse same styling
 // import axios from "axios";
 // import { toast } from "react-toastify";
 // import { useNavigate } from "react-router-dom";
 // import { CityContext } from "../../context/CityContext";
+// import { CountsContext } from "../../context/CountsContext"; // ⭐ added
 // import { indiaStatesDistricts } from "../../Data/indiaStatesDistricts";
 
 // const PostServiceForm = () => {
-//   const { setCity } = useContext(CityContext); // district
+//   const { setCity } = useContext(CityContext);
+//   const { incrementService } = useContext(CountsContext); // ⭐ added
 //   const navigate = useNavigate();
 
 //   const [formData, setFormData] = useState({
@@ -225,24 +44,29 @@
 //         withCredentials: true,
 //       });
 
-//       // Success toast (use backend message if available)
+//       // ⭐ update navbar service count
+//       incrementService();
+
+//       // Success toast
 //       toast.success(
 //         res.data?.message || "Service posted successfully 🎉",
 //         { autoClose: 2000 }
 //       );
 
-//       // Token deduction toast (UX improvement)
+//       // Token deduction toast
 //       toast.info("3 tokens deducted 💰", { autoClose: 2000 });
 
 //       setTimeout(() => {
-//         setCity(formData.district); // SAME LOGIC
-//         navigate("/services"); // SAME LOGIC
+//         setCity(formData.district);
+//         navigate("/services");
 //       }, 2000);
 
 //     } catch (err) {
+//       // ⭐ harmful content / AI moderation message
 //       toast.error(
-//         err.response?.data?.error || "Failed to post service",
-//         { autoClose: 3000 }
+//         err.response?.data?.error ||
+//         "❌ Harmful content detected. Posting this service is not allowed.",
+//         { autoClose: 4000 }
 //       );
 //     } finally {
 //       setLoading(false);
@@ -253,7 +77,6 @@
 //     <div className="form-container">
 //       <h2>Post a Service</h2>
 
-//       {/* UI explanation */}
 //       <p className="form-subtitle">
 //         A <strong>Service</strong> is for long-term or permanent hiring.
 //         <br />
@@ -382,19 +205,25 @@
 
 
 
-import React, { useContext, useState } from "react";
-import "./PostGigForm.css"; // reuse same styling
+import React, { useContext, useState, useEffect, useRef } from "react";
+import "./PostServiceForm.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { CityContext } from "../../context/CityContext";
-import { CountsContext } from "../../context/CountsContext"; // ⭐ added
+import { CountsContext } from "../../context/CountsContext";
 import { indiaStatesDistricts } from "../../Data/indiaStatesDistricts";
 
 const PostServiceForm = () => {
+
   const { setCity } = useContext(CityContext);
-  const { incrementService } = useContext(CountsContext); // ⭐ added
+  const { incrementService } = useContext(CountsContext);
   const navigate = useNavigate();
+
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -402,125 +231,223 @@ const PostServiceForm = () => {
     salary: "",
     state: "",
     district: "",
+    taluka: "",
     location: "",
     date: "",
     contact: "",
+    lat: "",
+    lng: ""
   });
 
-  const [loading, setLoading] = useState(false);
+  // ================= MAP =================
+  useEffect(() => {
 
-  // Handle Input Changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (!window.L) return;
+
+    const map = window.L.map("serviceMap").setView([20.5937, 78.9629], 5);
+    mapRef.current = map;
+
+    window.L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      { attribution: "© OpenStreetMap contributors" }
+    ).addTo(map);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        map.setView([lat, lng], 15);
+
+        markerRef.current = window.L.marker([lat, lng]).addTo(map);
+
+        setFormData((prev) => ({
+          ...prev,
+          lat,
+          lng
+        }));
+
+      },
+      () => {}
+    );
+
+    map.on("click", (e) => {
+
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      if (markerRef.current) {
+        markerRef.current.setLatLng([lat, lng]);
+      } else {
+        markerRef.current = window.L.marker([lat, lng]).addTo(map);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        lat,
+        lng
+      }));
+
+    });
+
+    return () => map.remove();
+
+  }, []);
+
+  // ================= CURRENT LOCATION =================
+  const handleCurrentLocation = () => {
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        setFormData((prev) => ({
+          ...prev,
+          lat,
+          lng
+        }));
+
+        const map = mapRef.current;
+
+        if (map) {
+
+          map.setView([lat, lng], 17);
+
+          if (markerRef.current) {
+            markerRef.current.setLatLng([lat, lng]);
+          } else {
+            markerRef.current = window.L.marker([lat, lng]).addTo(map);
+          }
+
+        }
+
+        toast.success("Location detected 📍");
+
+      },
+      () => {
+        toast.error("Unable to detect location");
+      }
+    );
+
   };
 
-  // Submit Service
+  // ================= INPUT CHANGE =================
+  const handleChange = (e) => {
+
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+
+  };
+
+  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
+
     e.preventDefault();
     setLoading(true);
 
+    if (!formData.lat || !formData.lng) {
+      toast.error("Please select exact location on map 📍");
+      setLoading(false);
+      return;
+    }
+
     try {
+
       const res = await axios.post("/addService", formData, {
-        withCredentials: true,
+        withCredentials: true
       });
 
-      // ⭐ update navbar service count
       incrementService();
 
-      // Success toast
-      toast.success(
-        res.data?.message || "Service posted successfully 🎉",
-        { autoClose: 2000 }
-      );
+      toast.success(res.data?.message || "Service posted successfully 🎉");
 
-      // Token deduction toast
-      toast.info("3 tokens deducted 💰", { autoClose: 2000 });
+      toast.info("3 tokens deducted 💰");
 
       setTimeout(() => {
+
         setCity(formData.district);
-        navigate("/services");
+        navigate(`/services/${formData.district}`);
+
       }, 2000);
 
     } catch (err) {
-      // ⭐ harmful content / AI moderation message
+
       toast.error(
         err.response?.data?.error ||
-        "❌ Harmful content detected. Posting this service is not allowed.",
-        { autoClose: 4000 }
+        "❌ Harmful content detected. Posting this service is not allowed."
       );
+
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
-    <div className="form-container">
+
+    <div className="service-form-container">
+
       <h2>Post a Service</h2>
 
-      <p className="form-subtitle">
-        A <strong>Service</strong> is for long-term or permanent hiring.
-        <br />
-        Example: Shop Worker, Office Assistant, Delivery Staff, etc.
-      </p>
-
       <form onSubmit={handleSubmit}>
-        
-        {/* Title */}
+
         <label>Service Title</label>
         <input
           type="text"
           name="title"
-          placeholder="Example: Need a shop helper"
+          placeholder="Example: Need shop helper"
           value={formData.title}
           onChange={handleChange}
           required
         />
 
-        {/* Description */}
-        <label>Service Description</label>
+        <label>Description</label>
         <textarea
           name="description"
-          placeholder="Describe duties, timing, requirements..."
           value={formData.description}
           onChange={handleChange}
           required
         />
 
-        {/* Salary */}
         <label>Salary / Pay</label>
         <input
           type="text"
           name="salary"
-          placeholder="Salary / Pay (e.g., ₹10,000/month)"
           value={formData.salary}
           onChange={handleChange}
           required
         />
 
-        {/* State */}
+        {/* STATE */}
         <label>Select State</label>
         <select
           name="state"
           value={formData.state}
-          onChange={(e) =>
+          onChange={(e) => {
             setFormData({
               ...formData,
               state: e.target.value,
-              district: "",
-            })
-          }
+              district: ""
+            });
+          }}
           required
         >
           <option value="">-- Select State --</option>
+
           {Object.keys(indiaStatesDistricts).map((state) => (
-            <option key={state} value={state}>
-              {state}
-            </option>
+            <option key={state} value={state}>{state}</option>
           ))}
+
         </select>
 
-        {/* District */}
+        {/* DISTRICT */}
         <label>Select District</label>
         <select
           name="district"
@@ -530,29 +457,45 @@ const PostServiceForm = () => {
           disabled={!formData.state}
         >
           <option value="">-- Select District --</option>
+
           {formData.state &&
             indiaStatesDistricts[formData.state].map((district) => (
-              <option key={district} value={district}>
-                {district}
-              </option>
+              <option key={district} value={district}>{district}</option>
             ))}
+
         </select>
 
-        {/* Location */}
-        <label>Area / Locality (Optional)</label>
+        <label>Taluka</label>
+        <input
+          type="text"
+          name="taluka"
+          value={formData.taluka}
+          onChange={handleChange}
+          required
+        />
+
+        <label>Area / Locality</label>
         <input
           type="text"
           name="location"
-          placeholder="Area / Locality (optional)"
           value={formData.location}
           onChange={handleChange}
         />
 
-        {/* Date */}
+        {/* MAP */}
+        <label>Share Exact Location</label>
+
+        <button
+          type="button"
+          onClick={handleCurrentLocation}
+          className="location-btn"
+        >
+          📍 Use My Current Location
+        </button>
+
+        <div id="serviceMap" className="map-box" />
+
         <label>Start Date</label>
-        <small className="input-hint">
-          When should the worker start?
-        </small>
         <input
           type="date"
           name="date"
@@ -562,24 +505,25 @@ const PostServiceForm = () => {
           required
         />
 
-        {/* Contact */}
         <label>Contact Number</label>
         <input
           type="text"
           name="contact"
-          placeholder="Contact Number"
           value={formData.contact}
           onChange={handleChange}
           required
         />
 
-        {/* Submit */}
         <button type="submit" disabled={loading}>
-          {loading ? "Posting..." : "Post Service"}
+          {loading ? "Posting Service..." : "Post Service"}
         </button>
+
       </form>
+
     </div>
+
   );
+
 };
 
 export default PostServiceForm;

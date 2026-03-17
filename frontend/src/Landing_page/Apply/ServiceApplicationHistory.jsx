@@ -1,54 +1,76 @@
+
+
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
-// import "./ServiceApplicationHistory.css"; // optional styling
+// import "./ApplicationHistory.css"; // ✅ reuse same CSS
 
 // const ServiceApplicationHistory = () => {
-//   const [apps, setApps] = useState([]);
+//   const [applications, setApplications] = useState([]);
 //   const [loading, setLoading] = useState(true);
 
 //   useEffect(() => {
-//     const fetchApps = async () => {
+//     const fetchApplications = async () => {
 //       try {
-//         const res = await axios.get("http://localhost:3002/my-service-applications", {
-//           withCredentials: true,
-//         });
-//         setApps(res.data);
+//         // axios baseURL is already set globally
+//         const res = await axios.get("/my-service-applications");
+//         setApplications(res.data);
 //       } catch (err) {
-//         console.error("❌ Error fetching service apps:", err);
+//         console.error("❌ Error fetching service applications:", err);
 //       } finally {
 //         setLoading(false);
 //       }
 //     };
-//     fetchApps();
+
+//     fetchApplications();
 //   }, []);
 
-//   if (loading) return <p>⏳ Loading your service applications...</p>;
+//   if (loading) {
+//     return <p className="loading">⏳ Loading your service applications...</p>;
+//   }
 
 //   return (
 //     <div className="history-container">
-//       <h2>📌 My Service Applications</h2>
-//       {apps.length ? (
-//         apps.map((app) => (
+//       <h2>📌 My Service Application History</h2>
+
+//       {applications.length > 0 ? (
+//         applications.map((app) => (
 //           <div key={app._id} className="history-card">
 //             <h3>{app.service?.title || "Deleted Service"}</h3>
-//             <p><strong>Description:</strong> {app.service?.description}</p>
-//             <p><strong>Location:</strong> {app.service?.location}</p>
-//             <p><strong>Salary:</strong> {app.service?.salary}</p>
-//             <p><strong>Service Date:</strong> {new Date(app.service?.date).toLocaleDateString("en-IN")}</p>
-//             <p><strong>Contact:</strong> {app.service?.contact}</p>
 
-//             <hr />
+//             <p>
+//               <strong>Category:</strong> {app.service?.category || "—"}
+//             </p>
 
-//             {/* ✅ Applicant’s own details */}
-//             <p><strong>Your Message:</strong> {app.message}</p>
-//             <p><strong>Your Charges:</strong> {app.charges}</p>
-//             <p><strong>Your Contact:</strong> {app.contact}</p>
+//             <p>
+//               <strong>Location:</strong>{" "}
+//               {app.service?.location || app.service?.district || "—"}
+//             </p>
 
-//             {/* ✅ Show uploaded images */}
-//             {app.pictures?.length > 0 && (
+//             <p>
+//               <strong>Service Date:</strong>{" "}
+//               {app.service?.date
+//                 ? new Date(app.service.date).toLocaleDateString("en-IN")
+//                 : "—"}
+//             </p>
+
+//             <p>
+//               <strong>Your Message:</strong> {app.message || "—"}
+//             </p>
+
+//             <p>
+//               <strong>Your Charges:</strong> {app.charges || "—"}
+//             </p>
+
+//             {/* ✅ Preview uploaded images */}
+//             {app.pictures && app.pictures.length > 0 && (
 //               <div className="preview-container">
 //                 {app.pictures.map((pic, idx) => (
-//                   <img key={idx} src={pic} alt={`upload-${idx}`} className="preview-img" />
+//                   <img
+//                     key={idx}
+//                     src={pic}
+//                     alt={`upload-${idx}`}
+//                     className="preview-img"
+//                   />
 //                 ))}
 //               </div>
 //             )}
@@ -67,7 +89,9 @@
 //           </div>
 //         ))
 //       ) : (
-//         <p className="no-history">❌ You haven’t applied to any services yet.</p>
+//         <p className="no-history">
+//           ❌ You haven’t applied to any services yet.
+//         </p>
 //       )}
 //     </div>
 //   );
@@ -76,101 +100,388 @@
 // export default ServiceApplicationHistory;
 
 
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./ApplicationHistory.css"; // ✅ reuse same CSS
+import { useNavigate } from "react-router-dom";
+import "./ApplicationHistory.css";
 
 const ServiceApplicationHistory = () => {
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [myContracts, setMyContracts] = useState([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
+
     const fetchApplications = async () => {
       try {
-        // axios baseURL is already set globally
-        const res = await axios.get("/my-service-applications");
+
+        const res = await axios.get(
+          "/my-service-applications",
+          { withCredentials: true }
+        );
+
         setApplications(res.data);
+
       } catch (err) {
-        console.error("❌ Error fetching service applications:", err);
+
+        console.error("Error fetching service applications:", err);
+
       } finally {
+
         setLoading(false);
+
+      }
+    };
+
+    const fetchContracts = async () => {
+      try {
+
+        const res = await axios.get(
+          "/api/service-contracts/my",
+          { withCredentials: true }
+        );
+
+        setMyContracts(res.data);
+
+      } catch (err) {
+
+        console.error("Error fetching service contracts:", err);
+
       }
     };
 
     fetchApplications();
+    fetchContracts();
+
   }, []);
+
+  // 🔎 Find contract for service
+  const findContractForService = (serviceId) => {
+
+    return myContracts.find((c) => {
+
+      if (!c.service) return false;
+
+      if (typeof c.service === "object" && c.service._id) {
+        return c.service._id.toString() === serviceId.toString();
+      }
+
+      return c.service.toString() === serviceId.toString();
+
+    });
+
+  };
+
+  // 🗺 Open map
+  const openMapLocation = (service) => {
+
+    if (service.geoLocation && service.geoLocation.coordinates) {
+
+      const [lng, lat] = service.geoLocation.coordinates;
+
+      const url = `https://www.google.com/maps?q=${lat},${lng}`;
+
+      window.open(url, "_blank");
+
+    }
+
+  };
+
+  // 🗑 Delete history
+  const handleDelete = async (appId) => {
+
+    if (!window.confirm("Delete this application?")) return;
+
+    try {
+
+      await axios.delete(
+        `/service-application/${appId}`,
+        { withCredentials: true }
+      );
+
+      setApplications((prev) =>
+        prev.filter((a) => a._id !== appId)
+      );
+
+      alert("Application deleted");
+
+    } catch (err) {
+
+      alert(
+        err.response?.data?.error ||
+        "Delete failed"
+      );
+
+    }
+
+  };
 
   if (loading) {
     return <p className="loading">⏳ Loading your service applications...</p>;
   }
 
   return (
+
     <div className="history-container">
+
       <h2>📌 My Service Application History</h2>
 
       {applications.length > 0 ? (
-        applications.map((app) => (
-          <div key={app._id} className="history-card">
-            <h3>{app.service?.title || "Deleted Service"}</h3>
 
-            <p>
-              <strong>Category:</strong> {app.service?.category || "—"}
-            </p>
+        applications.map((app) => {
 
-            <p>
-              <strong>Location:</strong>{" "}
-              {app.service?.location || app.service?.district || "—"}
-            </p>
+          const contract = app.service
+            ? findContractForService(app.service._id)
+            : null;
 
-            <p>
-              <strong>Service Date:</strong>{" "}
-              {app.service?.date
-                ? new Date(app.service.date).toLocaleDateString("en-IN")
-                : "—"}
-            </p>
+          return (
 
-            <p>
-              <strong>Your Message:</strong> {app.message || "—"}
-            </p>
+            <div key={app._id} className="history-card">
 
-            <p>
-              <strong>Your Charges:</strong> {app.charges || "—"}
-            </p>
+              <h3>{app.service?.title || "Deleted Service"}</h3>
 
-            {/* ✅ Preview uploaded images */}
-            {app.pictures && app.pictures.length > 0 && (
-              <div className="preview-container">
-                {app.pictures.map((pic, idx) => (
-                  <img
-                    key={idx}
-                    src={pic}
-                    alt={`upload-${idx}`}
-                    className="preview-img"
-                  />
-                ))}
-              </div>
-            )}
+              <p>
+                <strong>Description:</strong>{" "}
+                {app.service?.description || "—"}
+              </p>
 
-            <p className="applied-date">
-              Applied on{" "}
-              {new Date(app.createdAt).toLocaleString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              })}
-            </p>
-          </div>
-        ))
+              <p>
+                <strong>Salary:</strong>{" "}
+                {app.service?.salary || "—"}
+              </p>
+
+              <p>
+                <strong>State:</strong>{" "}
+                {app.service?.state || "—"}
+              </p>
+
+              <p>
+                <strong>District:</strong>{" "}
+                {app.service?.district || "—"}
+              </p>
+
+              <p>
+                <strong>Taluka:</strong>{" "}
+                {app.service?.taluka || "—"}
+              </p>
+
+              <p>
+                <strong>📍 Location:</strong>{" "}
+                {app.service?.location || "—"}
+              </p>
+
+              {/* MAP COORDINATES */}
+
+              {app.service?.geoLocation &&
+                app.service.geoLocation.coordinates && (
+
+                <>
+
+                  <p>
+                    <strong>🧭 Coordinates:</strong>{" "}
+                    {app.service.geoLocation.coordinates[1]},
+                    {" "}
+                    {app.service.geoLocation.coordinates[0]}
+                  </p>
+
+                  <button
+                    className="map-btn"
+                    onClick={() =>
+                      openMapLocation(app.service)
+                    }
+                  >
+                    🗺 View on Map
+                  </button>
+
+                </>
+
+              )}
+
+              <p>
+                <strong>Service Start Date:</strong>{" "}
+                {app.service?.date
+                  ? new Date(app.service.date)
+                      .toLocaleDateString("en-IN")
+                  : "—"}
+              </p>
+
+              <p>
+                <strong>Your Message:</strong>{" "}
+                {app.message || "—"}
+              </p>
+
+              <p>
+                <strong>Your Charges:</strong>{" "}
+                ₹{app.charges || "—"}
+              </p>
+
+              {/* IMAGE PREVIEW */}
+
+              {app.pictures &&
+                app.pictures.length > 0 && (
+
+                <div className="preview-container">
+
+                  {app.pictures.map((pic, idx) => (
+
+                    <img
+                      key={idx}
+                      src={pic}
+                      alt="upload"
+                      className="preview-img"
+                    />
+
+                  ))}
+
+                </div>
+
+              )}
+
+              <p className="applied-date">
+
+                Applied on{" "}
+
+                {new Date(app.createdAt)
+                  .toLocaleString("en-IN", {
+
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+
+                  })}
+
+              </p>
+
+              {/* CONTRACT SECTION */}
+
+              {contract && (
+
+                <div className="contract-section">
+
+                  <p>
+                    <strong>Selection Status:</strong>{" "}
+                    {contract.status}
+                  </p>
+
+                  {!contract.applicantConfirmed &&
+                    contract.status !== "rejected" && (
+
+                    <div className="contract-buttons">
+
+                      <button
+                        className="confirm-btn"
+                        onClick={async () => {
+
+                          await axios.post(
+                            `/api/service-contracts/${contract._id}/confirm`,
+                            {},
+                            { withCredentials: true }
+                          );
+
+                          window.location.reload();
+
+                        }}
+                      >
+                        ✅ Confirm
+                      </button>
+
+                      <button
+                        className="reject-btn"
+                        onClick={async () => {
+
+                          await axios.post(
+                            `/api/service-contracts/${contract._id}/reject`,
+                            {},
+                            { withCredentials: true }
+                          );
+
+                          window.location.reload();
+
+                        }}
+                      >
+                        ❌ Reject
+                      </button>
+
+                    </div>
+
+                  )}
+
+                  {contract.applicantConfirmed && (
+
+                    <div>
+
+                      <p style={{ color: "green" }}>
+                        ✔ You confirmed
+                      </p>
+
+                      {app.service?.contact && (
+
+                        <p>
+                          <strong>📞 Contact:</strong>{" "}
+                          {app.service.contact}
+                        </p>
+
+                      )}
+
+                      <button
+                        className="visit-contract-btn"
+                        onClick={() =>
+                          navigate("/my-contracts")
+                        }
+                      >
+                        🔍 View Contract
+                      </button>
+
+                    </div>
+
+                  )}
+
+                  {contract.status === "rejected" && (
+
+                    <p style={{ color: "red" }}>
+                      ❌ You rejected this contract
+                    </p>
+
+                  )}
+
+                </div>
+
+              )}
+
+              {/* DELETE HISTORY */}
+
+              <button
+                className="delete-history-btn"
+                onClick={() => handleDelete(app._id)}
+              >
+                🗑 Delete History
+              </button>
+
+            </div>
+
+          );
+
+        })
+
       ) : (
+
         <p className="no-history">
           ❌ You haven’t applied to any services yet.
         </p>
+
       )}
+
     </div>
+
   );
+
 };
 
 export default ServiceApplicationHistory;

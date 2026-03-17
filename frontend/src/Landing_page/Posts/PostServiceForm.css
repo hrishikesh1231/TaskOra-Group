@@ -1,96 +1,175 @@
-/* Container */
-.rf-container {
-  display: flex;
-  justify-content: center;
-  margin: 50px auto;
-  padding: 10px;
+/* ================================
+   FULL PAGE BACKGROUND
+================================ */
+
+body:has(.service-form-container) {
+  min-height: 100vh;
+
+  background-image: url("../../assets/bg-post-gig.jpg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-/* Card styling */
-.rf-card {
-  max-width: 500px;
-  width: 100%;
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+body:has(.service-form-container)::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: -1;
 }
 
-/* Title */
-.rf-title {
+/* ================================
+   FORM CARD
+================================ */
+
+.service-form-container {
+
+  max-width: 520px;
+  margin: 60px auto;
+  padding: 32px;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+
+}
+
+/* ================================
+   TITLE
+================================ */
+
+.service-form-container h2 {
   text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.8rem;
-  color: #2c3e50;
+  margin-bottom: 24px;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
-/* Field label + input */
-.rf-field {
+/* ================================
+   FORM
+================================ */
+
+.service-form-container form {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 14px;
 }
 
-.rf-field span {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #333;
+/* ================================
+   INPUTS
+================================ */
+
+.service-form-container input,
+.service-form-container textarea,
+.service-form-container select {
+
+  width: 100%;
+  padding: 13px 14px;
+
+  font-size: 15px;
+
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+
+  transition: all .25s ease;
+
 }
 
-.rf-field input,
-.rf-field textarea {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  transition: border 0.3s ease;
-}
-
-.rf-field input:focus,
-.rf-field textarea:focus {
-  border-color: #28a745; /* green accent */
-  outline: none;
-}
-
-.rf-field textarea {
+.service-form-container textarea {
+  min-height: 100px;
   resize: vertical;
 }
 
-/* Grid for side-by-side fields */
-.rf-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+.service-form-container input:focus,
+.service-form-container textarea:focus,
+.service-form-container select:focus {
+
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  outline: none;
+
 }
 
-/* Action buttons */
-.rf-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
+/* ================================
+   LOCATION BUTTON
+================================ */
 
-.rf-btn {
-  flex: 1;
-  background-color: #28a745;
-  color: white;
-  padding: 12px;
-  font-size: 1rem;
-  border: none;
+.location-btn {
+
+  padding: 10px;
   border-radius: 8px;
+  border: none;
+
+  background: #2563eb;
+  color: white;
+
   cursor: pointer;
-  transition: background 0.3s ease;
+  margin-bottom: 10px;
+
 }
 
-.rf-btn:hover {
-  background-color: #1e7e34;
+.location-btn:hover {
+  background: #1d4ed8;
 }
 
-.rf-btn-secondary {
-  background-color: #ccc;
-  color: #333;
+/* ================================
+   MAP
+================================ */
+
+.map-box {
+
+  height: 300px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+
 }
 
-.rf-btn-secondary:hover {
-  background-color: #bbb;
+/* ================================
+   SUBMIT BUTTON
+================================ */
+
+.service-form-container button[type="submit"] {
+
+  margin-top: 14px;
+  padding: 14px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  border-radius: 10px;
+  border: none;
+
+  cursor: pointer;
+
+  color: white;
+
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+
+}
+
+.service-form-container button[type="submit"]:hover {
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 12px 24px rgba(37,99,235,.35);
+
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width:768px){
+
+.service-form-container{
+
+margin:20px;
+padding:24px;
+
+}
+
 }

@@ -89,7 +89,7 @@ const GigSchema = new Schema({
 
     taluka: {
     type: String,
-    required: true
+    
   },
 
 
@@ -117,7 +117,7 @@ const GigSchema = new Schema({
     type: {
       type: String,
       enum: ["Point"],
-      default: "Point"
+      
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
