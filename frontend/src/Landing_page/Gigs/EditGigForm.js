@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "../Posts/PostGigForm.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -9,9 +9,6 @@ const EditGigForm = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const mapRef = useRef(null);
-  const markerRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,9 +22,7 @@ const EditGigForm = () => {
     location: "",
     category: "",
     date: "",
-    contact: "",
-    latitude: "",
-    longitude: ""
+    contact: ""
   });
 
   // ======================
@@ -50,9 +45,7 @@ const EditGigForm = () => {
           location: gig.location,
           category: gig.category,
           date: gig.date.split("T")[0],
-          contact: gig.contact,
-          latitude: gig.latitude,
-          longitude: gig.longitude
+          contact: gig.contact
         });
 
       } catch (err) {
@@ -65,98 +58,6 @@ const EditGigForm = () => {
     fetchGig();
 
   }, [id]);
-
-  // ======================
-  // MAP INIT
-  // ======================
-  useEffect(() => {
-
-    if (!window.L || loading) return;
-
-    const lat = formData.latitude || 20.5937;
-    const lng = formData.longitude || 78.9629;
-
-    const map = window.L.map("editGigMap").setView([lat, lng], 13);
-    mapRef.current = map;
-
-    window.L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      { attribution: "© OpenStreetMap contributors" }
-    ).addTo(map);
-
-    if (formData.latitude && formData.longitude) {
-
-      markerRef.current = window.L
-        .marker([formData.latitude, formData.longitude])
-        .addTo(map);
-
-    }
-
-    map.on("click", (e) => {
-
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-
-      if (markerRef.current) {
-        markerRef.current.setLatLng([lat, lng]);
-      } else {
-        markerRef.current = window.L.marker([lat, lng]).addTo(map);
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        latitude: lat,
-        longitude: lng
-      }));
-
-    });
-
-    return () => map.remove();
-
-  }, [loading]);
-
-  // ======================
-  // CURRENT LOCATION
-  // ======================
-  const handleCurrentLocation = () => {
-
-    navigator.geolocation.getCurrentPosition(
-
-      (pos) => {
-
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        const map = mapRef.current;
-
-        if (map) {
-
-          map.setView([lat, lng], 16);
-
-          if (markerRef.current) {
-            markerRef.current.setLatLng([lat, lng]);
-          } else {
-            markerRef.current = window.L.marker([lat, lng]).addTo(map);
-          }
-
-        }
-
-        setFormData((prev) => ({
-          ...prev,
-          latitude: lat,
-          longitude: lng
-        }));
-
-        toast.success("Location updated 📍");
-
-      },
-
-      () => toast.error("Location detection failed"),
-      { enableHighAccuracy: true }
-
-    );
-
-  };
 
   // ======================
   // INPUT CHANGE
@@ -299,26 +200,6 @@ const EditGigForm = () => {
           value={formData.location}
           onChange={handleChange}
           required
-        />
-
-        {/* MAP */}
-        <label>Update Exact Location</label>
-
-        <button
-          type="button"
-          onClick={handleCurrentLocation}
-          style={{ marginBottom: "10px" }}
-        >
-          📍 Use My Current Location
-        </button>
-
-        <div
-          id="editGigMap"
-          style={{
-            height: "300px",
-            marginBottom: "15px",
-            borderRadius: "8px"
-          }}
         />
 
         {/* DATE */}

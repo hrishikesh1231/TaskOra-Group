@@ -183,34 +183,49 @@ box-shadow:0 4px 12px rgba(34,197,94,0.35);
 }
 
 /* DELETE BUTTON */
+/* DELETE BUTTON */
 
-.delete-btn{
+.delete-btn {
 
-background:#ef4444;
-border:none;
+  position: absolute;
+  top: 18px;
+  right: 18px;
 
-padding:8px 14px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
 
-border-radius:7px;
+  padding: 8px 14px;
+  border-radius: 8px;
 
-color:white;
-font-size:13px;
-font-weight:500;
+  color: #ffffff; /* 🔥 FIX TEXT */
+  font-size: 13px;
+  font-weight: 600;
 
-cursor:pointer;
+  cursor: pointer;
 
-transition:all 0.25s ease;
+  display: inline-block; /* 🔥 FIX */
+
+  box-shadow: 0 4px 12px rgba(239,68,68,0.35);
+
+  z-index: 10;
+
+  white-space: nowrap; /* 🔥 prevents text cut */
+
+  transition: all 0.25s ease;
 }
 
-.delete-btn:hover{
+/* HOVER */
 
-background:#dc2626;
-
-transform:translateY(-1px);
-
-box-shadow:0 4px 12px rgba(239,68,68,0.35);
+.delete-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
 }
 
+/* CLICK EFFECT */
+
+.delete-btn:active {
+  transform: scale(0.95);
+}
 /* VIEW APPLICANTS BUTTON */
 
 .btn-outline-primary{

@@ -50,6 +50,7 @@ const { upload } = require("./utils/Cloudinary");
 const locationRoutes = require("./routes/locationRoutes");
 const contractRoutes = require("./routes/contractRoutes");
 const ReviewModel = require("./models/ReviewModel");
+const locationMap = require("./utils/locationMap");
 
 const app = express();
 
@@ -990,16 +991,25 @@ app.get("/my-service-applications", isLoggedIn, async (req, res) => {
 //   res.json(gigs);
 // });
 
+
+
 app.get("/getGigs/:city", async (req, res) => {
   try {
 
-    const city = req.params.city;
+    const city = req.params.city.toLowerCase().trim();
+
+    // 👉 get mapped values
+    const searchTerms = locationMap[city] || [city];
+
+    // 👉 convert to regex
+    const regexArray = searchTerms.map(term => new RegExp(term, "i"));
 
     const gigs = await Gig.find({
-      isActive: true,   // ✅ Only active gigs
+      isActive: true,
       $or: [
-        { location: new RegExp(city, "i") },
-        { district: new RegExp(city, "i") }
+        { location: { $in: regexArray } },
+        { district: { $in: regexArray } },
+        { taluka: { $in: regexArray } }
       ]
     }).populate("postedBy", "username email");
 
@@ -1011,35 +1021,23 @@ app.get("/getGigs/:city", async (req, res) => {
   }
 });
 
-// app.get("/getService/:city", async (req, res) => {
-//   try {
-//     const city = req.params.city;
-
-//     const services = await Service.find({
-//       $or: [
-//         { location: new RegExp(city, "i") },
-//         { district: new RegExp(city, "i") },
-//       ],
-//     }).populate("postedBy", "username email"); // ✅ FIX ADDED
-
-//     res.json(services);
-//   } catch (err) {
-//     console.error("Service Fetch Error:", err);
-//     res.status(500).json({ error: "Failed to fetch services" });
-//   }
-// });
 
 
 app.get("/getService/:city", async (req, res) => {
   try {
 
-    const city = req.params.city;
+    const city = req.params.city.toLowerCase().trim();
+
+    const searchTerms = locationMap[city] || [city];
+
+    const regexArray = searchTerms.map(term => new RegExp(term, "i"));
 
     const services = await Service.find({
-      isActive: true,   // ✅ Only active services
+      isActive: true,
       $or: [
-        { location: new RegExp(city, "i") },
-        { district: new RegExp(city, "i") }
+        { location: { $in: regexArray } },
+        { district: { $in: regexArray } },
+        { taluka: { $in: regexArray } }
       ]
     }).populate("postedBy", "username email");
 
@@ -1049,7 +1047,7 @@ app.get("/getService/:city", async (req, res) => {
     console.error("Service Fetch Error:", err);
     res.status(500).json({ error: "Failed to fetch services" });
   }
-});  
+});
 
 
 app.get("/gigs-near-me", isLoggedIn, async (req, res) => {

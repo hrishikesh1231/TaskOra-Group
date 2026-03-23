@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from "react";
-import "./WhyChooseTaskora.css";
+import "./WhyChooseTaskOra.css";
 
 import { FaUsers, FaBolt, FaShieldAlt, FaMapMarkerAlt } from "react-icons/fa";
 

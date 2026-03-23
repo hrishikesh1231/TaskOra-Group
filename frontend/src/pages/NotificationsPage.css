@@ -55,20 +55,46 @@
   background: #146c43;
 }
 
-.delete-btn {
+.notify-delete-btn {
   position: absolute;
-  right: 10px;
   top: 10px;
+  right: 10px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   border: none;
-  background: transparent;
-  font-size: 18px;
+  border-radius: 50%;
+
+  background: rgba(0, 0, 0, 0.05);
+  color: #555;
+
+  font-size: 14px;
   cursor: pointer;
+
+  transition: all 0.25s ease;
 }
 
-.delete-btn:hover {
-  color: red;
+/* Hover Effect */
+.notify-delete-btn:hover {
+  background: #ffe5e5;
+  color: #ff4d4f;
+  transform: scale(1.1);
 }
 
+/* Click Effect */
+.notify-delete-btn:active {
+  transform: scale(0.9);
+}
+
+/* Optional: subtle shadow on hover */
+.notify-delete-btn:hover {
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.25);
+}
 .clear-all-btn {
   margin-top: 15px;
   width: 100%;

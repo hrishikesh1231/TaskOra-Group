@@ -1,106 +1,3 @@
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import "./ApplicationHistory.css"; // ✅ reuse same CSS
-
-// const ServiceApplicationHistory = () => {
-//   const [applications, setApplications] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const fetchApplications = async () => {
-//       try {
-//         // axios baseURL is already set globally
-//         const res = await axios.get("/my-service-applications");
-//         setApplications(res.data);
-//       } catch (err) {
-//         console.error("❌ Error fetching service applications:", err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchApplications();
-//   }, []);
-
-//   if (loading) {
-//     return <p className="loading">⏳ Loading your service applications...</p>;
-//   }
-
-//   return (
-//     <div className="history-container">
-//       <h2>📌 My Service Application History</h2>
-
-//       {applications.length > 0 ? (
-//         applications.map((app) => (
-//           <div key={app._id} className="history-card">
-//             <h3>{app.service?.title || "Deleted Service"}</h3>
-
-//             <p>
-//               <strong>Category:</strong> {app.service?.category || "—"}
-//             </p>
-
-//             <p>
-//               <strong>Location:</strong>{" "}
-//               {app.service?.location || app.service?.district || "—"}
-//             </p>
-
-//             <p>
-//               <strong>Service Date:</strong>{" "}
-//               {app.service?.date
-//                 ? new Date(app.service.date).toLocaleDateString("en-IN")
-//                 : "—"}
-//             </p>
-
-//             <p>
-//               <strong>Your Message:</strong> {app.message || "—"}
-//             </p>
-
-//             <p>
-//               <strong>Your Charges:</strong> {app.charges || "—"}
-//             </p>
-
-//             {/* ✅ Preview uploaded images */}
-//             {app.pictures && app.pictures.length > 0 && (
-//               <div className="preview-container">
-//                 {app.pictures.map((pic, idx) => (
-//                   <img
-//                     key={idx}
-//                     src={pic}
-//                     alt={`upload-${idx}`}
-//                     className="preview-img"
-//                   />
-//                 ))}
-//               </div>
-//             )}
-
-//             <p className="applied-date">
-//               Applied on{" "}
-//               {new Date(app.createdAt).toLocaleString("en-IN", {
-//                 day: "2-digit",
-//                 month: "short",
-//                 year: "numeric",
-//                 hour: "2-digit",
-//                 minute: "2-digit",
-//                 hour12: true,
-//               })}
-//             </p>
-//           </div>
-//         ))
-//       ) : (
-//         <p className="no-history">
-//           ❌ You haven’t applied to any services yet.
-//         </p>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default ServiceApplicationHistory;
-
-
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -173,21 +70,6 @@ const ServiceApplicationHistory = () => {
       return c.service.toString() === serviceId.toString();
 
     });
-
-  };
-
-  // 🗺 Open map
-  const openMapLocation = (service) => {
-
-    if (service.geoLocation && service.geoLocation.coordinates) {
-
-      const [lng, lat] = service.geoLocation.coordinates;
-
-      const url = `https://www.google.com/maps?q=${lat},${lng}`;
-
-      window.open(url, "_blank");
-
-    }
 
   };
 
@@ -274,33 +156,6 @@ const ServiceApplicationHistory = () => {
                 {app.service?.location || "—"}
               </p>
 
-              {/* MAP COORDINATES */}
-
-              {app.service?.geoLocation &&
-                app.service.geoLocation.coordinates && (
-
-                <>
-
-                  <p>
-                    <strong>🧭 Coordinates:</strong>{" "}
-                    {app.service.geoLocation.coordinates[1]},
-                    {" "}
-                    {app.service.geoLocation.coordinates[0]}
-                  </p>
-
-                  <button
-                    className="map-btn"
-                    onClick={() =>
-                      openMapLocation(app.service)
-                    }
-                  >
-                    🗺 View on Map
-                  </button>
-
-                </>
-
-              )}
-
               <p>
                 <strong>Service Start Date:</strong>{" "}
                 {app.service?.date
@@ -320,7 +175,6 @@ const ServiceApplicationHistory = () => {
               </p>
 
               {/* IMAGE PREVIEW */}
-
               {app.pictures &&
                 app.pictures.length > 0 && (
 
@@ -360,7 +214,6 @@ const ServiceApplicationHistory = () => {
               </p>
 
               {/* CONTRACT SECTION */}
-
               {contract && (
 
                 <div className="contract-section">
@@ -456,7 +309,6 @@ const ServiceApplicationHistory = () => {
               )}
 
               {/* DELETE HISTORY */}
-
               <button
                 className="delete-history-btn"
                 onClick={() => handleDelete(app._id)}

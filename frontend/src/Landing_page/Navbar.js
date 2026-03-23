@@ -189,7 +189,7 @@ const Navbar = () => {
             <Link className="nav-link" to="/contact" onClick={closeMenu}>
               Contact
             </Link>
-            <Link
+            {/* <Link
               className={`nav-link nearby-btn ${
                 user && nearbyAvailable ? "nearby-achievement" : ""
               }`}
@@ -197,7 +197,7 @@ const Navbar = () => {
               onClick={closeMenu}
             >
               📍 Nearby Tasks
-            </Link>
+            </Link> */}
           </div>
 
           {/* RIGHT SECTION */}

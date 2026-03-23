@@ -1,32 +1,3 @@
-// import React from 'react';
-// import "./HomePage.css";
-
-// import HeroSection from './HeroSection';
-// import WhyChooseTaskora from './WhyChooseTaskora';
-// import PopularCategories from './PopularCategories';
-// import HowItWorks from './HowItWorks';
-// import TestimonialSection from './TestimonialSection';
-
-// const HomePage = () => {
-//   return (
-//     <div className="homepage">
-
-//       <HeroSection />
-
-//       <WhyChooseTaskora />
-
-//       <PopularCategories />
-
-//       <HowItWorks />
-
-//       <TestimonialSection />
-
-//     </div>
-//   );
-// };
-
-// export default HomePage;
-
 
 
 import React from 'react';
@@ -37,11 +8,12 @@ import "./HomePage.css";
 import Features from './Features';
 import Categories from './Categories';
 import HeroSection from './HeroSection';
-import WhyChooseTaskora from './WhyChooseTaskora';
+// import WhyChooseTaskora from './WhyChooseTaskora';
 import PopularCategories from './PopularCategories';
 
 
 import Testimonials from "./Testimonials";
+import WhyChooseTaskora from './WhyChooseTaskOra';
 
 
 const HomePage = () => {
@@ -51,7 +23,7 @@ const HomePage = () => {
       <SearchBox />
       <Post /> */}
       <HeroSection />
-      <WhyChooseTaskora />
+      {/* <WhyChooseTaskora />/ */} <WhyChooseTaskora/>
       <PopularCategories></PopularCategories>
       
       <Testimonials></Testimonials>

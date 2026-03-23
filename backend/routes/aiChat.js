@@ -2,11 +2,10 @@ const express = require("express");
 const { Gig } = require("../models/Gigmodel");
 const { Service } = require("../models/Servicemodel");
 const { askAI } = require("../utils/openaiService");
+const { UserModel } = require("../models/UserModel");
+// const User = require("../models/User"); // ✅ added
 const router = express.Router();
 
-// const { askAI } = require("../utils/openaiService");
-// const Gig = require("../models/Gig");
-// const Service = require("../models/Service");
 router.post("/chat", async (req, res) => {
 
   try {
@@ -43,6 +42,15 @@ router.post("/chat", async (req, res) => {
 
     }
 
+    // ✅ CHECK TOKENS BEFORE POST
+    const user = await UserModel.findById(req.user._id);
+
+    if (!user || user.tokens < 5) {
+      return res.json({
+        reply: "❌ You don't have enough tokens to post this task."
+      });
+    }
+
     // Save Gig
     if (parsed.type === "gig") {
 
@@ -51,12 +59,17 @@ router.post("/chat", async (req, res) => {
         description: parsed.description,
         state: parsed.state,
         district: parsed.district,
+        taluka: parsed.taluka, // ✅ added
         location: parsed.location,
         category: parsed.category,
         date: parsed.date,
         contact: parsed.contact,
         postedBy: req.user._id,
       });
+
+      // ✅ DEDUCT TOKENS AFTER SUCCESS
+      user.tokens -= 5;
+      await user.save();
 
       return res.json({
         reply: "✅ Your gig has been posted successfully!",
@@ -74,12 +87,17 @@ router.post("/chat", async (req, res) => {
         salary: parsed.salary,
         state: parsed.state,
         district: parsed.district,
+        taluka: parsed.taluka, // ✅ added
         location: parsed.location,
         date: parsed.date,
         contact: parsed.contact,
         postedBy:  req.user._id, 
 
       });
+
+      // ✅ DEDUCT TOKENS AFTER SUCCESS
+      user.tokens -= 5;
+      await user.save();
 
       return res.json({
         reply: "✅ Your service job has been posted successfully!",
@@ -98,5 +116,3 @@ router.post("/chat", async (req, res) => {
 });
 
 module.exports = router;
-
-
