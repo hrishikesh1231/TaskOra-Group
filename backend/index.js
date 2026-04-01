@@ -907,26 +907,73 @@ app.get("/service/:id", isLoggedIn, async (req, res) => {
 // ================= PUT SERVICE (EDIT + AI) =================
 app.put("/service/:id", isLoggedIn, async (req, res) => {
   try {
-    // 🔥 SEND FULL ServiceData SHAPE (MANDATORY)
-    const aiRes = await axios.post(`${FASTAPI_URL}/analyze`, {
-      title: req.body.title,
-      description: req.body.description,
-      location: req.body.location || "unknown",
-      category: req.body.category || "Other",
-      date: req.body.date,
-      contact: req.body.contact,
+    const { title, description, location, category, date, contact } = req.body;
+
+    // ===============================
+    // AI PROMPT
+    // ===============================
+    const prompt = `
+You are an AI safety reviewer for a local service marketplace.
+
+Your job is to determine whether a service post is SAFE and RELEVANT.
+
+Important rules:
+
+1. Do NOT reject content just because it contains sensitive words.
+2. Reject only if the user is requesting illegal activity, violence, scams, sexual services, hacking, or dangerous activities.
+3. Reject if text is gibberish.
+4. Service must make sense as a real offering.
+
+Service to analyze:
+
+Title: ${title}
+
+Description: ${description}
+
+Respond ONLY in JSON format:
+
+{
+  "valid": true or false,
+  "reason": "short explanation"
+}
+`;
+
+    // ===============================
+    // OPENAI CALL
+    // ===============================
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for service posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
     });
 
-    if (aiRes.data.status !== "ok") {
+    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+    // ===============================
+    // REJECT IF INVALID
+    // ===============================
+    if (!aiResult.valid) {
       return res.status(400).json({
-        error: aiRes.data.message,
+        error: `Service rejected: ${aiResult.reason}`,
       });
     }
 
+    // ===============================
+    // UPDATE SERVICE
+    // ===============================
     const updatedService = await Service.findOneAndUpdate(
       { _id: req.params.id, postedBy: req.user._id },
       req.body,
-      { new: true },
+      { new: true }
     );
 
     if (!updatedService) {
@@ -939,19 +986,13 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
       message: "Service updated successfully",
       service: updatedService,
     });
+
   } catch (err) {
-    console.error(
-      "❌ UPDATE SERVICE ERROR:",
-      err.response?.data || err.message,
-    );
+    console.error("❌ UPDATE SERVICE ERROR:", err);
 
-    if (err.response?.data?.message) {
-      return res.status(400).json({
-        error: err.response.data.message,
-      });
-    }
-
-    res.status(500).json({ error: "Failed to update service" });
+    res.status(500).json({
+      error: "Failed to update service",
+    });
   }
 });
 
@@ -2204,65 +2245,176 @@ app.post(
 
 
 
-// ================= GET CURRENT USER =================
+// // ================= GET CURRENT USER =================
+// app.get("/me", isLoggedIn, (req, res) => {
+//   const user = req.user;
+
+//   res.json({
+//     _id: user._id,
+//     username: user.username,
+//     email: user.email,
+//     phone: user.phone || "",
+//     location: user.location || "",
+//     categories: user.categories || "",
+//     avatar: user.avatar || "",
+//   });
+// });
+
 app.get("/me", isLoggedIn, (req, res) => {
   const user = req.user;
 
   res.json({
     _id: user._id,
-    username: user.username,
+
+    // ✅ IMPORTANT FIX
+    name: user.name || user.username,  
+
     email: user.email,
-    phone: user.phone || "",
-    location: user.location || "",
-    categories: user.categories || "",
+    state: user.state || "",
+    district: user.district || "",
     avatar: user.avatar || "",
   });
 });
 
-/////
+
+
+// app.put(
+//   "/update-profile",
+//   isLoggedIn,
+//   upload.single("avatar"),
+//   async (req, res) => {
+//     try {
+//       const updates = {
+//         name: req.body.name,
+//         email: req.body.email,
+//         state: req.body.state,
+//         district: req.body.district,
+//       };
+
+//       if (req.file) {
+//         updates.avatar = req.file.path;
+//       }
+
+//       const updatedUser = await UserModel.findByIdAndUpdate(
+//         req.user._id,
+//         updates,
+//         { new: true }
+//       );
+
+//       req.login(updatedUser, (err) => {
+//         if (err) {
+//           return res.status(500).json({ success: false });
+//         }
+
+//         res.json({
+//           success: true,
+//           user: updatedUser,
+//         });
+//       });
+
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).json({ success: false });
+//     }
+//   }
+// );
+
+
+
 app.put(
   "/update-profile",
   isLoggedIn,
   upload.single("avatar"),
   async (req, res) => {
     try {
-      const updates = {
-        name: req.body.name,
-        phone: req.body.phone,
-        location: req.body.location,
-        categories: req.body.categories,
-      };
+      console.log("BODY:", req.body);
+      console.log("FILE:", req.file);
+
+      const updates = {};
+
+      // ✅ Only update if field exists
+      if (req.body.name) updates.name = req.body.name;
+      if (req.body.email) updates.email = req.body.email;
+      if (req.body.state) updates.state = req.body.state;
+      if (req.body.district) updates.district = req.body.district;
 
       if (req.file) {
-        updates.avatar = req.file.path; // 🔴 THIS LINE IS KEY
+        updates.avatar = req.file.path;
+      }
+
+      console.log("UPDATES:", updates);
+
+      // ❌ If nothing to update
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No data to update",
+        });
       }
 
       const updatedUser = await UserModel.findByIdAndUpdate(
         req.user._id,
         updates,
-        { new: true },
+        {
+          new: true,
+          runValidators: true,
+        }
       );
 
+      console.log("UPDATED USER:", updatedUser);
+
       if (!updatedUser) {
-        return res.status(400).json({ success: false });
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
       }
 
+      // ✅ Update session (IMPORTANT)
       req.login(updatedUser, (err) => {
         if (err) {
-          return res.status(500).json({ success: false });
+          console.error("LOGIN ERROR:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Session update failed",
+          });
         }
 
-        res.json({
+        res.status(200).json({
           success: true,
+          message: "Profile updated successfully",
           user: updatedUser,
         });
       });
+
     } catch (err) {
-      console.error("UPDATE PROFILE ERROR:", err);
-      res.status(500).json({ success: false });
+      console.error("UPDATE ERROR:", err);
+      res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
     }
-  },
+  }
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ================= EXTRA ROUTES =================
 app.use("/api", locationRoutes);

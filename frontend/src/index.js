@@ -201,7 +201,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Footer from "./Landing_page/Footer";
 import ApplyGigForm from "./Landing_page/Apply/ApplyGigForm";
 import ApplicationHistory from "./Landing_page/Apply/ApplicationHistory";
-import EditProfile from "./Update_pro/EditProfile";
+// import EditProfile from "./Update_pro/EditProfile";
 import CategoryGigs from "./Landing_page/Home/CategoryGigs";
 import MyGigsHistory from "./Landing_page/Gigs/MyGigsHistory";
 import EditGigForm from "./Landing_page/Gigs/EditGigForm";
@@ -232,6 +232,10 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import AIPost from "./pages/AIPost";
 import NearbyTasks from "./Landing_page/Gigs/NearbyTasks";
+
+
+import UpdateProfile from "./pages/UpdateProfile/UpdateProfile";
+
 
 axios.defaults.baseURL = "http://localhost:3002";
 axios.defaults.withCredentials = true;
@@ -278,7 +282,7 @@ root.render(
                       <Route path="/edit-service/:id" element={<EditServiceForm />} />
                       <Route path="/service/:id/applicants" element={<ServiceApplicantsList />} />
 
-                      <Route path="/update-profile" element={<EditProfile />} />
+                      {/* <Route path="/update-profile" element={<EditProfile />} /> */}
                       <Route path="/gigs/category/:category" element={<CategoryGigs />} />
                       <Route path="/verify-otp" element={<OtpVerify />} />
 
@@ -297,6 +301,8 @@ root.render(
                       <Route path="/profile/:userId" element={<VisitProfile />} />
                       <Route path="/ai-post" element={<AIPost />} />
                       <Route path="/nearby-tasks" element={<NearbyTasks />} />
+
+                      <Route path="/update-profile" element={<UpdateProfile />} />
                     </Routes>
                   </main>
                   <Footer />
