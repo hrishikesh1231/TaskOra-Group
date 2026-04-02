@@ -2045,49 +2045,180 @@ app.get("/me", isLoggedIn, (req, res) => {
 });
 
 /////
-app.put(
-  "/update-profile",
-  isLoggedIn,
-  upload.single("avatar"),
-  async (req, res) => {
-    try {
-      const updates = {
-        name: req.body.name,
-        phone: req.body.phone,
-        location: req.body.location,
-        categories: req.body.categories,
-      };
+app.post("/send-email-otp", isLoggedIn, async (req, res) => {
+  try {
+    const { email } = req.body;
 
-      if (req.file) {
-        updates.avatar = req.file.path; // 🔴 THIS LINE IS KEY
-      }
-
-      const updatedUser = await UserModel.findByIdAndUpdate(
-        req.user._id,
-        updates,
-        { new: true },
-      );
-
-      if (!updatedUser) {
-        return res.status(400).json({ success: false });
-      }
-
-      req.login(updatedUser, (err) => {
-        if (err) {
-          return res.status(500).json({ success: false });
-        }
-
-        res.json({
-          success: true,
-          user: updatedUser,
-        });
-      });
-    } catch (err) {
-      console.error("UPDATE PROFILE ERROR:", err);
-      res.status(500).json({ success: false });
+    // ❌ prevent duplicate email
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already in use" });
     }
-  },
-);
+
+    // 🔢 generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    // 💾 store in session
+    req.session.emailOTP = otp;
+    req.session.newEmail = email;
+
+    console.log("OTP:", otp); // later send via email
+
+    // TODO: send email using nodemailer
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+});
+
+app.post("/send-update-email-otp", isLoggedIn, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email required" });
+    }
+
+    const existing = await UserModel.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ error: "Email already in use" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await Otp.deleteMany({ email });
+
+    await Otp.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    console.log("UPDATE EMAIL OTP:", otp);
+
+    await transporter.sendMail({
+      from: `"TaskOra" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Verify your new email",
+      text: `Your OTP is ${otp}`,
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+});
+
+app.post("/verify-update-email-otp", isLoggedIn, async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    const record = await Otp.findOne({ email: req.session.newEmail });
+
+    if (!record || record.otp !== otp) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+
+    if (record.expiresAt < new Date()) {
+      return res.status(400).json({ error: "OTP expired" });
+    }
+
+    const user = await UserModel.findByIdAndUpdate(
+      req.user._id,
+      { email: req.session.newEmail },
+      { new: true }
+    );
+
+    await Otp.deleteOne({ email: req.session.newEmail });
+
+    res.json({ success: true, user });
+
+  } catch (err) {
+    res.status(500).json({ error: "Verification failed" });
+  }
+});
+
+app.post("/verify-email-otp", isLoggedIn, async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    if (parseInt(otp) !== req.session.emailOTP) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+
+    // ✅ update email ONLY after verification
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      req.user._id,
+      { email: req.session.newEmail },
+      { new: true }
+    );
+
+    // 🧹 clear session
+    req.session.emailOTP = null;
+    req.session.newEmail = null;
+
+    res.json({
+      success: true,
+      message: "Email updated successfully",
+      user: updatedUser,
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Verification failed" });
+  }
+});
+
+app.put("/update-profile", isLoggedIn, async (req, res) => {
+  try {
+    const { username, state, district } = req.body;
+
+    // 🔥 username duplicate check
+    const existingUser = await UserModel.findOne({
+      username,
+      _id: { $ne: req.user._id },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Username already taken" });
+    }
+
+    const isUsernameChanged = username !== req.user.username;
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      req.user._id,
+      { username, state, district },
+      { new: true }
+    );
+
+    // 🔐 logout if username changed
+    if (isUsernameChanged) {
+      req.logout(() => {});
+      return res.json({ success: true, logout: true });
+    }
+
+    res.json({ success: true, user: updatedUser });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Profile update failed" });
+  }
+});
+
+app.get("/current-user", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  res.json({
+    user: req.user,
+  });
+});
 
 // ================= EXTRA ROUTES =================
 app.use("/api", locationRoutes);

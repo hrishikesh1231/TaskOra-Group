@@ -19,7 +19,11 @@ const ApplicationHistory = () => {
           "http://localhost:3002/my-applications",
           { withCredentials: true }
         );
-        setApplications(res.data);
+
+        // ✅ FILTER OUT DELETED GIGS HERE
+        const filteredApps = res.data.filter(app => app.gig);
+        setApplications(filteredApps);
+
       } catch (err) {
         console.error("Error fetching applications:", err);
       } finally {
@@ -112,36 +116,36 @@ const ApplicationHistory = () => {
 
             <div key={app._id} className="history-card">
 
-              <h3>{app.gig?.title || "Deleted Gig"}</h3>
+              <h3>{app.gig?.title}</h3>
 
               <p>
                 <strong>Description:</strong>{" "}
-                {app.gig?.description || "—"}
+                {app.gig?.description}
               </p>
 
               <p>
                 <strong>Category:</strong>{" "}
-                {app.gig?.category || "—"}
+                {app.gig?.category}
               </p>
 
               <p>
                 <strong>State:</strong>{" "}
-                {app.gig?.state || "—"}
+                {app.gig?.state}
               </p>
 
               <p>
                 <strong>District:</strong>{" "}
-                {app.gig?.district || "—"}
+                {app.gig?.district}
               </p>
 
               <p>
                 <strong>Taluka:</strong>{" "}
-                {app.gig?.taluka || "—"}
+                {app.gig?.taluka}
               </p>
 
               <p>
                 <strong>📍 Location:</strong>{" "}
-                {app.gig?.location || "—"}
+                {app.gig?.location}
               </p>
 
               <p>
@@ -163,7 +167,6 @@ const ApplicationHistory = () => {
               </p>
 
               {/* Image preview */}
-
               {app.pictures &&
                 app.pictures.length > 0 && (
 
@@ -190,20 +193,17 @@ const ApplicationHistory = () => {
 
                 {new Date(app.createdAt)
                   .toLocaleString("en-IN", {
-
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
                     hour12: true
-
                   })}
 
               </p>
 
               {/* CONTRACT SECTION */}
-
               {contract && (
 
                 <div className="contract-section">
@@ -264,15 +264,11 @@ const ApplicationHistory = () => {
                         ✔ You confirmed
                       </p>
 
-                      {/* SHOW CONTACT AFTER CONFIRM */}
-
                       {app.gig?.contact && (
-
                         <p>
                           <strong>📞 Contact:</strong>{" "}
                           {app.gig.contact}
                         </p>
-
                       )}
 
                       <button
@@ -289,18 +285,14 @@ const ApplicationHistory = () => {
                   )}
 
                   {contract.status === "rejected" && (
-
                     <p style={{ color: "red" }}>
                       ❌ You rejected this contract
                     </p>
-
                   )}
 
                 </div>
 
               )}
-
-              {/* DELETE BUTTON */}
 
               <button
                 className="delete-history-btn"

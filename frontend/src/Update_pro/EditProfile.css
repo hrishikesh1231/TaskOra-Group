@@ -89,3 +89,30 @@
 .save-btn:hover {
   background: #1d4fa3;
 }
+/* email input + button layout */
+.email-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* verify button */
+.verify-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.verify-btn:hover {
+  background: linear-gradient(135deg, #218838, #17a589);
+  transform: scale(1.05);
+}
+
+.verify-btn:active {
+  transform: scale(0.95);
+}

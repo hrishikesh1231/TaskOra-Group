@@ -237,10 +237,9 @@ const MyContracts = () => {
               <div className="contract-actions">
 
                 {/* Confirm / Reject */}
-                {contract.status === "recruiter_confirmed" && (
+                {contract.status === "recruiter_confirmed" && !contract.isRecruiter && (
 
                   <>
-
                     <button
                       className="confirm-btn"
                       onClick={() => confirmContract(contract._id)}
@@ -254,9 +253,7 @@ const MyContracts = () => {
                     >
                       Reject
                     </button>
-
                   </>
-
                 )}
 
                 {/* Completed */}

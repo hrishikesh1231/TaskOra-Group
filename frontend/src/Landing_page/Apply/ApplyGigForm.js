@@ -209,7 +209,7 @@ const ApplyGigForm = () => {
           <input
             type="text"
             name="contact"
-            placeholder="Your Contact Number"
+            placeholder="Your whatsapp Number"
             value={formData.contact}
             onChange={handleChange}
             required
