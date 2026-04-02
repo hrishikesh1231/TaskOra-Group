@@ -907,26 +907,73 @@ app.get("/service/:id", isLoggedIn, async (req, res) => {
 // ================= PUT SERVICE (EDIT + AI) =================
 app.put("/service/:id", isLoggedIn, async (req, res) => {
   try {
-    // 🔥 SEND FULL ServiceData SHAPE (MANDATORY)
-    const aiRes = await axios.post(`${FASTAPI_URL}/analyze`, {
-      title: req.body.title,
-      description: req.body.description,
-      location: req.body.location || "unknown",
-      category: req.body.category || "Other",
-      date: req.body.date,
-      contact: req.body.contact,
+    const { title, description, location, category, date, contact } = req.body;
+
+    // ===============================
+    // AI PROMPT
+    // ===============================
+    const prompt = `
+You are an AI safety reviewer for a local service marketplace.
+
+Your job is to determine whether a service post is SAFE and RELEVANT.
+
+Important rules:
+
+1. Do NOT reject content just because it contains sensitive words.
+2. Reject only if the user is requesting illegal activity, violence, scams, sexual services, hacking, or dangerous activities.
+3. Reject if text is gibberish.
+4. Service must make sense as a real offering.
+
+Service to analyze:
+
+Title: ${title}
+
+Description: ${description}
+
+Respond ONLY in JSON format:
+
+{
+  "valid": true or false,
+  "reason": "short explanation"
+}
+`;
+
+    // ===============================
+    // OPENAI CALL
+    // ===============================
+    const aiResponse = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict safety validator for service posts.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0,
     });
 
-    if (aiRes.data.status !== "ok") {
+    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+    // ===============================
+    // REJECT IF INVALID
+    // ===============================
+    if (!aiResult.valid) {
       return res.status(400).json({
-        error: aiRes.data.message,
+        error: `Service rejected: ${aiResult.reason}`,
       });
     }
 
+    // ===============================
+    // UPDATE SERVICE
+    // ===============================
     const updatedService = await Service.findOneAndUpdate(
       { _id: req.params.id, postedBy: req.user._id },
       req.body,
-      { new: true },
+      { new: true }
     );
 
     if (!updatedService) {
@@ -939,19 +986,13 @@ app.put("/service/:id", isLoggedIn, async (req, res) => {
       message: "Service updated successfully",
       service: updatedService,
     });
+
   } catch (err) {
-    console.error(
-      "❌ UPDATE SERVICE ERROR:",
-      err.response?.data || err.message,
-    );
+    console.error("❌ UPDATE SERVICE ERROR:", err);
 
-    if (err.response?.data?.message) {
-      return res.status(400).json({
-        error: err.response.data.message,
-      });
-    }
-
-    res.status(500).json({ error: "Failed to update service" });
+    res.status(500).json({
+      error: "Failed to update service",
+    });
   }
 });
 
@@ -1613,48 +1654,102 @@ app.delete("/service/:id", isLoggedIn, async (req, res) => {
   }
 });
 
+// app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
+//   try {
+//     // 1️⃣ Verify gig exists
+//     const gig = await Gig.findById(req.params.id);
+
+//     if (!gig) {
+//       return res.status(404).json({ error: "Gig not found" });
+//     }
+
+//     // 2️⃣ Owner-only access
+//     if (gig.postedBy.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({
+//         error: "Not authorized to view applicants",
+//       });
+//     }
+
+//     // 🔥 CHECK IF SOMEONE IS SELECTED
+//     const selectedApp = await Application.findOne({
+//       gig: gig._id,
+//       status: "selected",
+//     });
+
+//     let applications;
+
+//     if (selectedApp) {
+//       // ✅ If selected exists → return only that one
+//       applications = await Application.find({
+//         gig: gig._id,
+//         status: "selected",
+//       })
+//         .populate("applicant", "username email state district")
+//         .sort({ createdAt: -1 });
+//     } else {
+//       // ✅ Otherwise return all (your original logic)
+//       applications = await Application.find({ gig: gig._id })
+//         .populate("applicant", "username email state district")
+//         .sort({ createdAt: -1 });
+//     }
+
+//     res.status(200).json({
+//       count: applications.length,
+//       applications,
+//     });
+//   } catch (err) {
+//     console.error("❌ Error fetching applicants:", err);
+//     res.status(500).json({
+//       error: "Failed to fetch applicants",
+//     });
+//   }
+// });
+
+
+
 app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
   try {
-    // 1️⃣ Verify gig exists
     const gig = await Gig.findById(req.params.id);
 
     if (!gig) {
       return res.status(404).json({ error: "Gig not found" });
     }
 
-    // 2️⃣ Owner-only access
     if (gig.postedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         error: "Not authorized to view applicants",
       });
     }
 
-    // 🔥 CHECK IF SOMEONE IS SELECTED
-    const selectedApp = await Application.findOne({
+    const activeContract = await Contract.findOne({
       gig: gig._id,
-      status: "selected",
+      status: {
+        $in: ["recruiter_confirmed", "applicant_confirmed", "both_confirmed"],
+      },
     });
 
-    let applications;
+    let applications = [];
 
-    if (selectedApp) {
-      // ✅ If selected exists → return only that one
+    if (activeContract) {
       applications = await Application.find({
         gig: gig._id,
-        status: "selected",
+        applicant: activeContract.applicant,
       })
-        .populate("applicant", "username email state district")
+        .populate("applicant", "username email state district tokens")
         .sort({ createdAt: -1 });
     } else {
-      // ✅ Otherwise return all (your original logic)
-      applications = await Application.find({ gig: gig._id })
-        .populate("applicant", "username email state district")
+      applications = await Application.find({
+        gig: gig._id,
+        status: { $ne: "rejected" },
+      })
+        .populate("applicant", "username email state district tokens")
         .sort({ createdAt: -1 });
     }
 
     res.status(200).json({
       count: applications.length,
       applications,
+      hasActiveContract: !!activeContract,
     });
   } catch (err) {
     console.error("❌ Error fetching applicants:", err);
@@ -1663,7 +1758,6 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
     });
   }
 });
-
 ///////////////////// email
 
 // ================= SELECT GIG APPLICANT =================
@@ -1724,6 +1818,90 @@ app.get("/gig/:id/applicants", isLoggedIn, async (req, res) => {
 //   },
 // );
 
+// app.post(
+//   "/gig-application/:applicationId/select",
+//   isLoggedIn,
+//   async (req, res) => {
+//     try {
+//       const application = await Application.findById(req.params.applicationId);
+
+//       if (!application) {
+//         return res.status(404).json({ error: "Application not found" });
+//       }
+
+//       const gig = await Gig.findById(application.gig);
+
+//       if (!gig || gig.postedBy.toString() !== req.user._id.toString()) {
+//         return res.status(403).json({ error: "Not authorized" });
+//       }
+
+//       // 🔥 Prevent double selection if active contract exists
+//       const activeContract = await Contract.findOne({
+//         gig: gig._id,
+//         status: {
+//           $in: ["pending", "recruiter_confirmed", "applicant_confirmed"],
+//         },
+//       });
+
+//       if (activeContract) {
+//         return res.status(400).json({
+//           error: "A contract is already active for this gig",
+//         });
+//       }
+
+//       // ✅ Mark application selected
+//       application.status = "selected";
+//       await application.save();
+
+//       // ✅ Close gig
+//       gig.isClosed = true;
+//       await gig.save();
+
+//       // ✅ Create contract with 12 hour expiry (GIG ONLY)
+//       const contract = await Contract.create({
+//         gig: gig._id,
+//         recruiter: gig.postedBy,
+//         applicant: application.applicant,
+//         status: "recruiter_confirmed",
+//         expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000), // 🔥 12 HOURS
+//       });
+
+//       // ================= NOTIFICATION + EMAIL =================
+//       try {
+//         const applicant = await UserModel.findById(application.applicant);
+
+//         if (applicant) {
+//           await Notification.create({
+//             user: applicant._id,
+//             title: "Application Selected 🎉",
+//             message:
+//               "You have been selected for a gig. Confirm within 12 hours.",
+//             type: "CONFIRM",
+//             link: "/my-contracts",
+//           });
+
+//           await sendEmail({
+//             to: applicant.email,
+//             subject: "You have been selected 🎉",
+//             html: `
+//               <h2>Congratulations!</h2>
+//               <p>You have been selected for the gig.</p>
+//               <p>Please confirm within 12 hours.</p>
+//             `,
+//           });
+//         }
+//       } catch (err) {
+//         console.error("STEP 4 GIG notify error:", err.message);
+//       }
+
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("❌ SELECT GIG APPLICANT ERROR:", err);
+//       res.status(500).json({ error: "Server error" });
+//     }
+//   },
+// );
+
 app.post(
   "/gig-application/:applicationId/select",
   isLoggedIn,
@@ -1741,11 +1919,11 @@ app.post(
         return res.status(403).json({ error: "Not authorized" });
       }
 
-      // 🔥 Prevent double selection if active contract exists
+      // Prevent double selection if active contract exists
       const activeContract = await Contract.findOne({
         gig: gig._id,
         status: {
-          $in: ["pending", "recruiter_confirmed", "applicant_confirmed"],
+          $in: ["recruiter_confirmed", "applicant_confirmed", "both_confirmed"],
         },
       });
 
@@ -1755,24 +1933,41 @@ app.post(
         });
       }
 
-      // ✅ Mark application selected
+      const recruiter = await UserModel.findById(req.user._id);
+      const applicantUser = await UserModel.findById(application.applicant);
+
+      if (!recruiter || !applicantUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (recruiter.tokens < 15 || applicantUser.tokens < 5) {
+        return res.status(400).json({
+          error: "Insufficient tokens for selection",
+        });
+      }
+
+      // Mark only selected applicant
       application.status = "selected";
       await application.save();
 
-      // ✅ Close gig
+      // Close gig using both flags
       gig.isClosed = true;
+      gig.isActive = false;
       await gig.save();
 
-      // ✅ Create contract with 12 hour expiry (GIG ONLY)
+      // Create contract with 12 hour expiry
       const contract = await Contract.create({
         gig: gig._id,
         recruiter: gig.postedBy,
         applicant: application.applicant,
+        applicantContact: application.contact,
+        recruiterConfirmed: true,
+        applicantConfirmed: false,
         status: "recruiter_confirmed",
-        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000), // 🔥 12 HOURS
+        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
       });
 
-      // ================= NOTIFICATION + EMAIL =================
+      // Notification + Email
       try {
         const applicant = await UserModel.findById(application.applicant);
 
@@ -1800,14 +1995,13 @@ app.post(
         console.error("STEP 4 GIG notify error:", err.message);
       }
 
-      res.json({ success: true });
+      res.json({ success: true, contract });
     } catch (err) {
       console.error("❌ SELECT GIG APPLICANT ERROR:", err);
       res.status(500).json({ error: "Server error" });
     }
-  },
+  }
 );
-
 
 app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   try {
@@ -1857,27 +2051,34 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
   }
 });
 
+
+
+
 // app.post(
 //   "/service-application/:applicationId/select",
 //   isLoggedIn,
 //   async (req, res) => {
 //     try {
 //       const application = await ServiceApplication.findById(
-//         req.params.applicationId
+//         req.params.applicationId,
 //       );
 
 //       if (!application) {
 //         return res.status(404).json({ error: "Application not found" });
 //       }
 
-//       // 🔒 Only service owner can select
 //       const service = await Service.findById(application.service);
 
-//       if (!service || service.postedBy.toString() !== req.user._id.toString()) {
+//       if (!service) {
+//         return res.status(404).json({ error: "Service not found" });
+//       }
+
+//       // 🔒 Owner only
+//       if (service.postedBy.toString() !== req.user._id.toString()) {
 //         return res.status(403).json({ error: "Not authorized" });
 //       }
 
-//       // 🔥 Prevent selecting again if already assigned
+//       // ❌ Prevent duplicate contract
 //       const existingContract = await Contract.findOne({
 //         service: service._id,
 //       });
@@ -1888,11 +2089,11 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
 //         });
 //       }
 
-//       // ✅ EXISTING LOGIC (status update)
+//       // ✅ Mark selected
 //       application.status = "selected";
 //       await application.save();
 
-//       // 🔥 NEW: CREATE CONTRACT
+//       // ✅ Create contract (same structure as Gig)
 //       const contract = new Contract({
 //         service: service._id,
 //         recruiter: req.user._id,
@@ -1902,45 +2103,39 @@ app.get("/service/:id/applicants", isLoggedIn, async (req, res) => {
 
 //       await contract.save();
 
-//       // 🔥 NEW: Auto close service
-//       service.isOpen = false;
+//       // ✅ Close service
+//       service.isActive = false; // (use isOpen if that's your field)
 //       await service.save();
 
-//       // ================= STEP 4: NOTIFICATION + EMAIL =================
-//       try {
-//         const applicant = await UserModel.findById(application.applicant);
+//       // 🔔 Notification + Email
+//       const applicant = await UserModel.findById(application.applicant);
 
-//         if (applicant) {
-//           await Notification.create({
-//             user: applicant._id,
-//             title: "Service Application Selected 🎉",
-//             message: "You have been selected for a service",
-//             type: "CONFIRM",
-//             link: "/my-contracts",
-//           });
+//       if (applicant) {
+//         await Notification.create({
+//           user: applicant._id,
+//           title: "Service Application Selected 🎉",
+//           message: "You have been selected for a service",
+//           type: "CONFIRM",
+//           link: "/my-contracts",
+//         });
 
-//           await sendEmail({
-//             to: applicant.email,
-//             subject: "You have been selected 🎉",
-//             html: `
-//               <h2>Congratulations!</h2>
-//               <p>You have been selected for the service.</p>
-//             `,
-//           });
-//         }
-//       } catch (err) {
-//         console.error("STEP 4 SERVICE notify error:", err.message);
+//         await sendEmail({
+//           to: applicant.email,
+//           subject: "You have been selected 🎉",
+//           html: `
+//             <h2>Congratulations!</h2>
+//             <p>You have been selected for the service.</p>
+//           `,
+//         });
 //       }
 
 //       res.json({ success: true });
-
 //     } catch (err) {
 //       console.error("❌ SELECT SERVICE APPLICANT ERROR:", err);
 //       res.status(500).json({ error: "Server error" });
 //     }
-//   }
+//   },
 // );
-
 
 
 app.post(
@@ -1949,7 +2144,7 @@ app.post(
   async (req, res) => {
     try {
       const application = await ServiceApplication.findById(
-        req.params.applicationId,
+        req.params.applicationId
       );
 
       if (!application) {
@@ -1962,14 +2157,17 @@ app.post(
         return res.status(404).json({ error: "Service not found" });
       }
 
-      // 🔒 Owner only
+      // Owner only
       if (service.postedBy.toString() !== req.user._id.toString()) {
         return res.status(403).json({ error: "Not authorized" });
       }
 
-      // ❌ Prevent duplicate contract
+      // Prevent duplicate ACTIVE contract only
       const existingContract = await Contract.findOne({
         service: service._id,
+        status: {
+          $in: ["recruiter_confirmed", "applicant_confirmed", "both_confirmed"],
+        },
       });
 
       if (existingContract) {
@@ -1978,32 +2176,50 @@ app.post(
         });
       }
 
-      // ✅ Mark selected
+      const recruiter = await UserModel.findById(req.user._id);
+      const applicantUser = await UserModel.findById(application.applicant);
+
+      if (!recruiter || !applicantUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (recruiter.tokens < 15 || applicantUser.tokens < 5) {
+        return res.status(400).json({
+          error: "Insufficient tokens for selection",
+        });
+      }
+
+      // Mark only selected applicant
       application.status = "selected";
       await application.save();
 
-      // ✅ Create contract (same structure as Gig)
+      // Close service with both flags
+      service.isActive = false;
+      service.isClosed = true;
+      await service.save();
+
+      // Create contract in same structure as gig flow
       const contract = new Contract({
         service: service._id,
         recruiter: req.user._id,
         applicant: application.applicant,
-        status: "pending",
+        applicantContact: application.contact,
+        recruiterConfirmed: true,
+        applicantConfirmed: false,
+        status: "recruiter_confirmed",
+        expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
       });
 
       await contract.save();
 
-      // ✅ Close service
-      service.isActive = false; // (use isOpen if that's your field)
-      await service.save();
-
-      // 🔔 Notification + Email
+      // Notification + Email
       const applicant = await UserModel.findById(application.applicant);
 
       if (applicant) {
         await Notification.create({
           user: applicant._id,
           title: "Service Application Selected 🎉",
-          message: "You have been selected for a service",
+          message: "You have been selected for a service. Confirm within 12 hours.",
           type: "CONFIRM",
           link: "/my-contracts",
         });
@@ -2014,32 +2230,48 @@ app.post(
           html: `
             <h2>Congratulations!</h2>
             <p>You have been selected for the service.</p>
+            <p>Please confirm within 12 hours.</p>
           `,
         });
       }
 
-      res.json({ success: true });
+      res.json({ success: true, contract });
     } catch (err) {
       console.error("❌ SELECT SERVICE APPLICANT ERROR:", err);
       res.status(500).json({ error: "Server error" });
     }
-  },
+  }
 );
 
 
 
+// // ================= GET CURRENT USER =================
+// app.get("/me", isLoggedIn, (req, res) => {
+//   const user = req.user;
 
-// ================= GET CURRENT USER =================
+//   res.json({
+//     _id: user._id,
+//     username: user.username,
+//     email: user.email,
+//     phone: user.phone || "",
+//     location: user.location || "",
+//     categories: user.categories || "",
+//     avatar: user.avatar || "",
+//   });
+// });
+
 app.get("/me", isLoggedIn, (req, res) => {
   const user = req.user;
 
   res.json({
     _id: user._id,
-    username: user.username,
+
+    // ✅ IMPORTANT FIX
+    name: user.name || user.username,  
+
     email: user.email,
-    phone: user.phone || "",
-    location: user.location || "",
-    categories: user.categories || "",
+    state: user.state || "",
+    district: user.district || "",
     avatar: user.avatar || "",
   });
 });
@@ -2219,6 +2451,25 @@ app.get("/current-user", (req, res) => {
     user: req.user,
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ================= EXTRA ROUTES =================
 app.use("/api", locationRoutes);

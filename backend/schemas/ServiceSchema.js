@@ -103,16 +103,16 @@ const ServiceSchema = new Schema({
   },
 
   // 📍 Exact GPS location
-  geoLocation: {
-    type: {
-      type: String,
-      enum: ["Point"],
-      default: "Point",
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-    },
-  },
+  // geoLocation: {
+  //   type: {
+  //     type: String,
+  //     enum: ["Point"],
+  //     default: "Point",
+  //   },
+  //   coordinates: {
+  //     type: [Number], // [longitude, latitude]
+  //   },
+  // },
 
   date: {
     type: Date,

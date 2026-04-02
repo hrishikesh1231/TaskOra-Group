@@ -112,17 +112,17 @@ const GigSchema = new Schema({
     required: true,
   },
 
-  // 🔥 Exact map location
-  coordinates: {
-    type: {
-      type: String,
-      enum: ["Point"],
+  // // 🔥 Exact map location
+  // coordinates: {
+  //   type: {
+  //     type: String,
+  //     enum: ["Point"],
       
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-    }
-  },
+  //   },
+  //   coordinates: {
+  //     type: [Number], // [longitude, latitude]
+  //   }
+  // },
 
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
