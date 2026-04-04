@@ -13,7 +13,7 @@ exports.applyGig = async (req, res) => {
   let application;
 
   try {
-    // ================= EXISTING LOGIC (NOT CHANGED) =================
+    // 
     application = new Application({
       gig: req.params.gigId,
       applicant: req.user._id,
