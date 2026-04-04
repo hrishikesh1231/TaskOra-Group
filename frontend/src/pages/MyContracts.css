@@ -336,3 +336,33 @@
   font-weight: bold;
   text-align: center;
 }
+
+.verification-box {
+  background: #1e1e1e;
+  color: #00ffcc;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.verified-text {
+  color: #00ffcc;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.verification-box {
+  background: #1e1e1e;
+  color: #00ffcc;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.verified-text {
+  color: #00ffcc;
+  font-weight: bold;
+  margin-top: 10px;
+}

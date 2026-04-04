@@ -1029,8 +1029,119 @@ router.get("/contracts/my", isLoggedIn, async (req, res) => {
   }
 });
 
+
+
+// // ======================================================
+// // 4️⃣ APPLICANT REJECT CONTRACT
+// // ======================================================
+// router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
+//   try {
+//     const contract = await Contract.findById(req.params.id);
+
+//     if (!contract) {
+//       return res.status(404).json({ error: "Contract not found" });
+//     }
+
+//     if (contract.applicant.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ error: "Not allowed" });
+//     }
+
+//     if (contract.status === "both_confirmed") {
+//       return res.status(400).json({ error: "Contract already confirmed" });
+//     }
+
+//     contract.status = "rejected";
+//     await contract.save();
+
+//     if (contract.gig) {
+//       await Gig.findByIdAndUpdate(contract.gig, {
+//         isClosed: false,
+//         isActive: true,
+//       });
+
+//       await Application.findOneAndUpdate(
+//         {
+//           gig: contract.gig,
+//           applicant: contract.applicant,
+//         },
+//         {
+//           $set: { status: "rejected" },
+//         }
+//       );
+//     }
+
+//     if (contract.service) {
+//       await Service.findByIdAndUpdate(contract.service, {
+//         isClosed: false,
+//         isActive: true,
+//       });
+
+//       await ServiceApplication.findOneAndUpdate(
+//         {
+//           service: contract.service,
+//           applicant: contract.applicant,
+//         },
+//         {
+//           $set: { status: "rejected" },
+//         }
+//       );
+//     }
+
+//     await Notification.create({
+//       user: contract.recruiter,
+//       title: "Contract Rejected",
+//       message: `${req.user.username} rejected your contract`,
+//       type: "CONTRACT",
+//       link: "/my-posted-tasks",
+//     });
+
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error("Reject contract error:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+// router.post("/contracts/:id/generate-code", isLoggedIn, async (req, res) => {
+//   try {
+//     const contract = await Contract.findById(req.params.id);
+
+//     if (!contract) {
+//       return res.status(404).json({ error: "Contract not found" });
+//     }
+
+//     // only recruiter can generate
+//     if (contract.recruiter.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ error: "Not authorized" });
+//     }
+
+//     if (contract.status !== "both_confirmed") {
+//       return res.status(400).json({ error: "Contract not active" });
+//     }
+
+//     const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+//     contract.arrivalCode = code;
+//     contract.arrivalCodeExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+
+//     await contract.save();
+
+//     res.json({
+//       success: true,
+//       code // show to owner
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+
+
+
 // ======================================================
-// 4️⃣ APPLICANT REJECT CONTRACT
+// 4️⃣ APPLICANT REJECT CONTRACT (ALWAYS REFUND OWNER)
 // ======================================================
 router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
   try {
@@ -1040,17 +1151,42 @@ router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
       return res.status(404).json({ error: "Contract not found" });
     }
 
+    // only applicant can reject
     if (contract.applicant.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Not allowed" });
     }
 
-    if (contract.status === "both_confirmed") {
-      return res.status(400).json({ error: "Contract already confirmed" });
-    }
+    // ===============================
+    // ✅ ALWAYS REFUND RECRUITER (OWNER)
+    // ===============================
+    const recruiterRefund = 15;
+
+    const recruiter = await UserModel.findByIdAndUpdate(
+      contract.recruiter,
+      { $inc: { tokens: recruiterRefund } },
+      { new: true }
+    );
+
+    await TokenTransaction.create({
+      user: contract.recruiter,
+      type: "credit",
+      amount: recruiterRefund,
+      reason: "Applicant Rejected Contract Refund",
+      balanceAfter: recruiter.tokens,
+      gig: contract.gig || null,
+      service: contract.service || null,
+    });
+
+    // ===============================
+    // ❌ NO REFUND TO APPLICANT
+    // ===============================
 
     contract.status = "rejected";
     await contract.save();
 
+    // ===============================
+    // 🔄 REOPEN GIG
+    // ===============================
     if (contract.gig) {
       await Gig.findByIdAndUpdate(contract.gig, {
         isClosed: false,
@@ -1068,6 +1204,9 @@ router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
       );
     }
 
+    // ===============================
+    // 🔄 REOPEN SERVICE
+    // ===============================
     if (contract.service) {
       await Service.findByIdAndUpdate(contract.service, {
         isClosed: false,
@@ -1085,18 +1224,131 @@ router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
       );
     }
 
+    // ===============================
+    // 🔔 NOTIFICATION
+    // ===============================
     await Notification.create({
       user: contract.recruiter,
-      title: "Contract Rejected",
-      message: `${req.user.username} rejected your contract`,
+      title: "Contract Rejected & Refunded 💸",
+      message: `${req.user.username} rejected your contract. 15 tokens refunded.`,
       type: "CONTRACT",
       link: "/my-posted-tasks",
     });
 
     res.json({ success: true });
+
   } catch (err) {
     console.error("Reject contract error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+
+
+
+router.post("/contracts/:id/generate-code", isLoggedIn, async (req, res) => {
+  try {
+    const contract = await Contract.findById(req.params.id);
+
+    if (!contract) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    // only recruiter
+    if (contract.recruiter.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Not allowed" });
+    }
+
+    if (contract.status !== "both_confirmed") {
+      return res.status(400).json({ error: "Contract not active" });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    contract.arrivalCode = code;
+    contract.arrivalCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    await contract.save();
+
+    res.json({
+      success: true,
+      code
+    });
+
+  } catch (err) {
+    console.error("Generate Code Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.post("/contracts/:id/verify-code", isLoggedIn, async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    const contract = await Contract.findById(req.params.id);
+
+    if (!contract) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    // only worker
+    if (contract.applicant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!contract.arrivalCode) {
+      return res.status(400).json({ error: "Code not generated" });
+    }
+
+    if (contract.arrivalCode !== code) {
+      return res.status(400).json({ error: "Invalid code" });
+    }
+
+    if (contract.arrivalCodeExpires < new Date()) {
+      return res.status(400).json({ error: "Code expired" });
+    }
+
+    contract.isVerified = true;
+    contract.arrivalCode = null;
+
+    await contract.save();
+
+    res.json({
+      success: true,
+      message: "Worker verified successfully ✅"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

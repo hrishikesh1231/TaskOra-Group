@@ -26,7 +26,7 @@
 //       ref: "user",
 //       required: true,
 //     },
-    
+
 //     applicantContact: {
 //       type: String,
 //       required: true
@@ -71,7 +71,6 @@
 // );
 
 // module.exports = { contractSchema };
-
 
 const mongoose = require("mongoose");
 const { Schema } = require("mongoose");
@@ -144,9 +143,23 @@ const contractSchema = new Schema(
       default: null,
     },
     // ================================================
+    // 🔥 Physical verification system
+    arrivalCode: {
+      type: String,
+      default: null,
+    },
 
+    arrivalCodeExpires: {
+      type: Date,
+      default: null,
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Contract", contractSchema);
