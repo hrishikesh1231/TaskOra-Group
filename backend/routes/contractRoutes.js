@@ -651,6 +651,10 @@ const Notification = require("../models/Notification");
 const Contract = require("../models/ContractModel");
 const TokenTransaction = require("../models/TokenTransaction");
 
+const generateCode = () => {
+  return "TASK-" + Math.floor(100000 + Math.random() * 900000);
+};
+
 // ======================================================
 // 1️⃣ SELECT APPLICANT + CREATE CONTRACT
 // ======================================================
@@ -762,6 +766,86 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
 // ======================================================
 // 2️⃣ APPLICANT CONFIRM CONTRACT
 // ======================================================
+// router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
+//   try {
+//     const contract = await Contract.findById(req.params.id);
+
+//     if (!contract) {
+//       return res.status(404).json({ error: "Contract not found" });
+//     }
+
+//     if (contract.applicant.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ error: "Not authorized" });
+//     }
+
+//     contract.applicantConfirmed = true;
+//     contract.status = "applicant_confirmed";
+
+//     if (contract.recruiterConfirmed && contract.applicantConfirmed) {
+//       contract.status = "both_confirmed";
+
+//       if (!contract.tokensDeducted) {
+//         const recruiter = await UserModel.findById(contract.recruiter);
+//         const applicant = await UserModel.findById(contract.applicant);
+
+//         const recruiterDeduction = 15;
+//         const applicantDeduction = 5;
+
+//         if (
+//           recruiter.tokens < recruiterDeduction ||
+//           applicant.tokens < applicantDeduction
+//         ) {
+//           return res.status(400).json({ error: "Insufficient tokens" });
+//         }
+
+//         recruiter.tokens -= recruiterDeduction;
+//         applicant.tokens -= applicantDeduction;
+
+//         await recruiter.save();
+//         await applicant.save();
+
+//         await TokenTransaction.create({
+//           user: recruiter._id,
+//           type: "debit",
+//           amount: recruiterDeduction,
+//           reason: "Contract Confirmation",
+//           balanceAfter: recruiter.tokens,
+//           gig: contract.gig || null,
+//           service: contract.service || null,
+//         });
+
+//         await TokenTransaction.create({
+//           user: applicant._id,
+//           type: "debit",
+//           amount: applicantDeduction,
+//           reason: "Contract Confirmation",
+//           balanceAfter: applicant.tokens,
+//           gig: contract.gig || null,
+//           service: contract.service || null,
+//         });
+
+//         contract.tokensDeducted = true;
+//       }
+//     }
+
+//     await contract.save();
+
+//     await Notification.create({
+//       user: contract.recruiter,
+//       title: "Contract Confirmed ✅",
+//       message: "Your contract has been confirmed.",
+//       type: "CONFIRM",
+//       link: "/my-posted-tasks",
+//     });
+
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error("❌ CONFIRM ERROR:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+
 router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
@@ -779,6 +863,11 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 
     if (contract.recruiterConfirmed && contract.applicantConfirmed) {
       contract.status = "both_confirmed";
+
+      // 🔥 NEW FEATURE (no logic change)
+      if (!contract.verificationCode) {
+        contract.verificationCode = generateCode();
+      }
 
       if (!contract.tokensDeducted) {
         const recruiter = await UserModel.findById(contract.recruiter);
@@ -834,12 +923,16 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
       link: "/my-posted-tasks",
     });
 
-    res.json({ success: true });
+    res.json({ success: true, contract });
+
   } catch (err) {
     console.error("❌ CONFIRM ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+
 
 // ======================================================
 // 3️⃣ FETCH MY CONTRACTS + CHECK EXPIRY
