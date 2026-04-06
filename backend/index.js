@@ -22,6 +22,12 @@ const { createWelcomeBonus } = require("./controllers/tokenController");
 const crypto = require("crypto");
 const aiRoutes = require("./routes/aiChat");
 
+/// with draw
+const withdrawRoutes = require("./routes/withdrawRoutes");
+
+
+
+
 
 const OpenAI = require("openai");
 
@@ -63,6 +69,8 @@ const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+
 
 // ================= MIDDLEWARE =================
 app.use(express.json());
@@ -112,6 +120,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+
+
+
+
 /// notification
 
 app.use("/api", notificationRoutes);
@@ -122,6 +135,8 @@ app.use("/api/reviews", reviewRoutes);
 //aI
 
 app.use("/api/ai", aiRoutes);
+
+app.use("/api", withdrawRoutes); // ✅
 
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
@@ -743,7 +758,7 @@ Respond ONLY in JSON:
 
       await deductTokens({
         userId: req.user._id,
-        amount: 3,
+        amount: 5,
         reason: "Post Service",
       });
 
@@ -1753,7 +1768,7 @@ app.post(
       // ================= TOKEN DEDUCTION =================
       await deductTokens({
         userId: req.user._id,
-        amount: 1,
+        amount: 2,
         reason: "Apply Service",
       });
 

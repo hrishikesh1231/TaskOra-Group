@@ -47,6 +47,11 @@ const UserSchema = new Schema(
       type: Number,
       default: 0,
     },
+    
+     lockedTokens: {
+      type: Number,
+      default: 0,
+    },
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,

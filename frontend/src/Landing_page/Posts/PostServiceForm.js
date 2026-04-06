@@ -278,7 +278,7 @@ const PostServiceForm = () => {
 
       toast.success(res.data?.message || "Service posted successfully 🎉");
 
-      toast.info("3 tokens deducted 💰");
+      toast.info("5 tokens deducted 💰");
 
       setTimeout(() => {
 
