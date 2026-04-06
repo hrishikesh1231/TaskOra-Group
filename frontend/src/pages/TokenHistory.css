@@ -1,0 +1,91 @@
+/* ===== PAGE ===== */
+.token-page {
+  padding: 20px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* ===== BUTTON ===== */
+.clear-btn {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: red;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 200px;
+}
+
+/* ===== SUMMARY ===== */
+.summary-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card {
+  flex: 1 1 250px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* COLORS */
+.credit {
+  color: green;
+}
+
+.debit {
+  color: red;
+}
+
+.balance {
+  color: #ff9800;
+}
+
+/* ===== TABLE ===== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.token-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.token-table th {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  text-align: left;
+}
+
+.token-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  .token-page {
+    padding: 15px;
+  }
+
+  .card {
+    flex: 1 1 100%;
+  }
+
+  .clear-btn {
+    max-width: 100%;
+  }
+}

@@ -1,4 +1,3 @@
-
 // // import React, { useEffect, useState } from "react";
 // // import axios from "axios";
 // // import { toast } from "react-toastify";
@@ -376,9 +375,6 @@
 // // };
 
 // // export default MyContracts;
-
-
-
 
 // // import React, { useEffect, useState } from "react";
 // // import axios from "axios";
@@ -764,9 +760,6 @@
 // // };
 
 // // export default MyContracts;
-
-
-
 
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
@@ -1156,7 +1149,6 @@
 
 // export default MyContracts;
 
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -1178,10 +1170,9 @@ const MyContracts = () => {
 
   const fetchContracts = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:3002/api/contracts/my",
-        { withCredentials: true }
-      );
+      const res = await axios.get("http://localhost:3002/api/contracts/my", {
+        withCredentials: true,
+      });
       setContracts(res.data);
     } catch (err) {
       console.error("Error fetching contracts:", err.response?.data);
@@ -1195,18 +1186,17 @@ const MyContracts = () => {
   //   fetchContracts();
   // }, []);
   useEffect(() => {
-  // initial fetch
-  fetchContracts();
-
-  // 🔄 auto refresh every 5 sec
-  const interval = setInterval(() => {
+    // initial fetch
     fetchContracts();
-  }, 3000);
 
-  // cleanup (VERY IMPORTANT)
-  return () => clearInterval(interval);
+    // 🔄 auto refresh every 5 sec
+    const interval = setInterval(() => {
+      fetchContracts();
+    }, 3000);
 
-}, []);
+    // cleanup (VERY IMPORTANT)
+    return () => clearInterval(interval);
+  }, []);
 
   // ================= CONFIRM =================
   const confirmContract = async (id) => {
@@ -1214,7 +1204,7 @@ const MyContracts = () => {
       await axios.post(
         `http://localhost:3002/api/contracts/${id}/confirm`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
       toast.success("Contract confirmed successfully ✅");
       fetchContracts();
@@ -1229,7 +1219,7 @@ const MyContracts = () => {
       await axios.post(
         `http://localhost:3002/api/contracts/${id}/reject`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
       toast.success("Contract rejected ❌");
       fetchContracts();
@@ -1241,20 +1231,17 @@ const MyContracts = () => {
   // ================= DELETE =================
   const deleteContract = async (id) => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this contract history?"
+      "Are you sure you want to delete this contract history?",
     );
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(
-        `http://localhost:3002/api/contracts/${id}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`http://localhost:3002/api/contracts/${id}`, {
+        withCredentials: true,
+      });
       toast.success("Contract history deleted 🗑");
 
-      setContracts((prev) =>
-        prev.filter((c) => c._id !== id)
-      );
+      setContracts((prev) => prev.filter((c) => c._id !== id));
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to delete contract");
     }
@@ -1266,19 +1253,18 @@ const MyContracts = () => {
       const res = await axios.post(
         `http://localhost:3002/api/contracts/${id}/generate-code`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setGeneratedCode((prev) => ({
         ...prev,
-        [id]: res.data.code
+        [id]: res.data.code,
       }));
 
       toast.success("Code generated 🔐");
 
       // 🔥 IMPORTANT
       fetchContracts();
-
     } catch (err) {
       toast.error(err.response?.data?.error || "Error generating code");
     }
@@ -1290,12 +1276,11 @@ const MyContracts = () => {
       await axios.post(
         `http://localhost:3002/api/contracts/${id}/verify-code`,
         { code: inputCode[id] },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       toast.success("Verified successfully ✅");
       fetchContracts();
-
     } catch (err) {
       toast.error(err.response?.data?.error || "Verification failed");
     }
@@ -1336,7 +1321,7 @@ const MyContracts = () => {
           rating,
           comment: review,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       alert("Review submitted successfully ⭐");
@@ -1349,7 +1334,6 @@ const MyContracts = () => {
 
   return (
     <div className="contracts-container">
-
       <h2 className="contracts-title">My Contracts</h2>
 
       {loading ? (
@@ -1358,19 +1342,16 @@ const MyContracts = () => {
         <p className="no-contracts">No contracts found.</p>
       ) : (
         contracts.map((contract) => {
-
           const gig = contract.gig;
 
           const phone = contract.isRecruiter
             ? contract.applicantContact
             : gig?.contact;
 
-          const message =
-            `Hi, I'm contacting you regarding the contract for "${gig?.title}" on TaskOra.`;
+          const message = `Hi, I'm contacting you regarding the contract for "${gig?.title}" on TaskOra.`;
 
           return (
             <div className="contract-card" key={contract._id}>
-
               <div className="contract-header">
                 <h3 className="contract-title">
                   {gig?.title || "Service Contract"}
@@ -1383,11 +1364,21 @@ const MyContracts = () => {
 
               {gig && (
                 <div className="gig-details">
-                  <p><strong>Description:</strong> {gig.description}</p>
-                  <p><strong>Category:</strong> {gig.category}</p>
-                  <p><strong>State:</strong> {gig.state}</p>
-                  <p><strong>District:</strong> {gig.district}</p>
-                  <p><strong>Location:</strong> {gig.location}</p>
+                  <p>
+                    <strong>Description:</strong> {gig.description}
+                  </p>
+                  <p>
+                    <strong>Category:</strong> {gig.category}
+                  </p>
+                  <p>
+                    <strong>State:</strong> {gig.state}
+                  </p>
+                  <p>
+                    <strong>District:</strong> {gig.district}
+                  </p>
+                  <p>
+                    <strong>Location:</strong> {gig.location}
+                  </p>
 
                   <p>
                     <strong>Work Date:</strong>{" "}
@@ -1397,36 +1388,47 @@ const MyContracts = () => {
               )}
 
               <div className="recruiter-info">
-                <p><strong>Recruiter:</strong> {contract.recruiter?.username || "N/A"}</p>
-                <p><strong>Email:</strong> {contract.recruiter?.email || "N/A"}</p>
+                <p>
+                  <strong>Recruiter:</strong>{" "}
+                  {contract.recruiter?.username || "N/A"}
+                </p>
+                <p>
+                  <strong>Email:</strong> {contract.recruiter?.email || "N/A"}
+                </p>
               </div>
 
               <div className="contract-actions">
-
                 {/* Confirm / Reject */}
-                {contract.status === "recruiter_confirmed" && !contract.isRecruiter && (
-                  <>
-                    <button className="confirm-btn" onClick={() => confirmContract(contract._id)}>
-                      Confirm Contract
-                    </button>
+                {contract.status === "recruiter_confirmed" &&
+                  !contract.isRecruiter && (
+                    <>
+                      <button
+                        className="confirm-btn"
+                        onClick={() => confirmContract(contract._id)}
+                      >
+                        Confirm Contract
+                      </button>
 
-                    <button className="reject-btn" onClick={() => rejectContract(contract._id)}>
-                      Reject
-                    </button>
-                  </>
-                )}
+                      <button
+                        className="reject-btn"
+                        onClick={() => rejectContract(contract._id)}
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
 
                 {/* BOTH CONFIRMED */}
                 {contract.status === "both_confirmed" && (
                   <>
-                    <div className="completed-text">
-                      ✅ Contract Confirmed
-                    </div>
-
+                    <div className="completed-text">✅ Contract Confirmed</div>
                     {/* 👨‍💼 OWNER */}
                     {contract.isRecruiter && !contract.isVerified && (
                       <>
-                        <button className="generate-btn" onClick={() => generateCode(contract._id)}>
+                        <button
+                          className="generate-btn"
+                          onClick={() => generateCode(contract._id)}
+                        >
                           🔐 Generate Code
                         </button>
 
@@ -1436,47 +1438,45 @@ const MyContracts = () => {
                           </div>
                         )}
 
-                        {contract.arrivalCode && !generatedCode[contract._id] && (
-                          <div className="verification-box">
-                            Code: {contract.arrivalCode}
-                          </div>
-                        )}
+                        {contract.arrivalCode &&
+                          !generatedCode[contract._id] && (
+                            <div className="verification-box">
+                              Code: {contract.arrivalCode}
+                            </div>
+                          )}
                       </>
                     )}
-
                     {/* 👷 WORKER */}
                     {!contract.isRecruiter && !contract.isVerified && (
                       <>
-                        {contract.arrivalCode && (
-                          <div className="verification-box">
-                            🔐 Code: {contract.arrivalCode}
-                          </div>
-                        )}
+                        <div className="verify-row">
+                          <input
+                            className="verify-input"
+                            placeholder="Enter code"
+                            value={inputCode[contract._id] || ""}
+                            onChange={(e) =>
+                              setInputCode({
+                                ...inputCode,
+                                [contract._id]: e.target.value,
+                              })
+                            }
+                          />
 
-                        <input
-                          placeholder="Enter code"
-                          value={inputCode[contract._id] || ""}
-                          onChange={(e) =>
-                            setInputCode({
-                              ...inputCode,
-                              [contract._id]: e.target.value
-                            })
-                          }
-                        />
-
-                        <button className="verify-btn" onClick={() => verifyCode(contract._id)}>
-                          ✅ Verify
-                        </button>
+                          <button
+                            className="verify-btn"
+                            onClick={() => verifyCode(contract._id)}
+                          >
+                            Verify
+                          </button>
+                        </div>
                       </>
                     )}
-
                     {/* VERIFIED */}
                     {contract.isVerified && (
                       <div className="verified-text">
                         ✅ Work Started (Verified)
                       </div>
                     )}
-
                     {phone && (
                       <a
                         href={`https://wa.me/${phone}?text=${encodeURIComponent(message)}`}
@@ -1487,7 +1487,6 @@ const MyContracts = () => {
                         💬 Chat on WhatsApp
                       </a>
                     )}
-
                     <button
                       className="rating-btn"
                       onClick={() => openRatingModal(contract)}
@@ -1499,16 +1498,12 @@ const MyContracts = () => {
 
                 {/* Expired */}
                 {contract.status === "expired" && (
-                  <div className="expired-text">
-                    ⏳ Contract Expired
-                  </div>
+                  <div className="expired-text">⏳ Contract Expired</div>
                 )}
 
                 {/* Rejected */}
                 {contract.status === "rejected" && (
-                  <div className="rejected-text">
-                    ❌ Contract Rejected
-                  </div>
+                  <div className="rejected-text">❌ Contract Rejected</div>
                 )}
 
                 {/* Delete */}
@@ -1518,9 +1513,7 @@ const MyContracts = () => {
                 >
                   🗑 Delete History
                 </button>
-
               </div>
-
             </div>
           );
         })
@@ -1533,11 +1526,11 @@ const MyContracts = () => {
             <h3>Give Rating</h3>
 
             <div className="stars">
-              {[1,2,3,4,5].map((star)=>(
+              {[1, 2, 3, 4, 5].map((star) => (
                 <span
                   key={star}
                   className={star <= rating ? "star active" : "star"}
-                  onClick={()=>setRating(star)}
+                  onClick={() => setRating(star)}
                 >
                   ★
                 </span>
@@ -1547,18 +1540,16 @@ const MyContracts = () => {
             <textarea
               placeholder="Write your review..."
               value={review}
-              onChange={(e)=>setReview(e.target.value)}
+              onChange={(e) => setReview(e.target.value)}
             />
 
             <div className="modal-actions">
               <button onClick={closeModal}>Cancel</button>
               <button onClick={submitReview}>Submit</button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 };
