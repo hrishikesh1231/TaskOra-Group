@@ -1,23 +1,57 @@
 import React, { useState } from "react";
-import API from "../api";   // adjust path if needed
+import API from "../api";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-  const res = await API.post(`/auth/reset-password/${token}`, { password });
+    if (loading) return;
 
-  alert(res.data.message);
-  navigate("/login");
-} catch (err) {
-  alert(err.response?.data?.message || "Something went wrong ❌");
-}
+    setLoading(true);
+
+    // 🔥 Loading toast
+    const toastId = toast.loading("Updating password...");
+
+    try {
+      const res = await API.post(`/auth/reset-password/${token}`, {
+        password,
+      });
+
+      // ✅ Success toast
+      toast.update(toastId, {
+        render: "🔐 Password updated successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 2500,
+      });
+
+      setPassword("");
+
+      // ⏳ small delay for better UX
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+
+    } catch (err) {
+      // ❌ Error toast
+      toast.update(toastId, {
+        render:
+          err.response?.data?.message || "❌ Failed to reset password",
+        type: "error",
+        isLoading: false,
+        autoClose: 2500,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,7 +67,9 @@ const ResetPassword = () => {
           required
         />
 
-        <button type="submit">Update Password</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Updating..." : "Update Password"}
+        </button>
       </form>
     </div>
   );

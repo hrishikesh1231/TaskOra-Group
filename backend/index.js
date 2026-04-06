@@ -49,6 +49,8 @@ const { upload } = require("./utils/Cloudinary");
 // ================= ROUTES =================
 const locationRoutes = require("./routes/locationRoutes");
 const contractRoutes = require("./routes/contractRoutes");
+const otpRoutes = require("./routes/otpRoutes");
+
 const ReviewModel = require("./models/ReviewModel");
 const locationMap = require("./utils/locationMap");
 
@@ -130,6 +132,10 @@ passport.deserializeUser(UserModel.deserializeUser());
 ///   token
 app.use("/api/tokens", tokenRoutes);
 app.use("/api", contractRoutes);
+
+//mobile-otp
+
+app.use("/api/otp", otpRoutes);
 
 // ================= EMAIL =================
 const transporter = nodemailer.createTransport({

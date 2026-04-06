@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-
-import API from "../api";   // adjust path if needed
+import API from "../api";
+import { toast } from "react-toastify";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -8,12 +8,30 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 🔥 Loading toast
+    const toastId = toast.loading("Sending reset link...");
+
     try {
-  const res = await API.post("/auth/forgot-password", { email });
-  alert(res.data.message);
-} catch (err) {
-  alert(err.response?.data?.message || "Something went wrong ❌");
-}
+      const res = await API.post("/auth/forgot-password", { email });
+
+      // ✅ Success update
+      toast.update(toastId, {
+        render: "📩 Reset link sent to your email",
+        type: "success",
+        isLoading: false,
+        autoClose: 2500,
+      });
+
+      setEmail(""); // clear input
+    } catch (err) {
+      // ❌ Error update
+      toast.update(toastId, {
+        render: err.response?.data?.message || "❌ Failed to send email",
+        type: "error",
+        isLoading: false,
+        autoClose: 2500,
+      });
+    }
   };
 
   return (

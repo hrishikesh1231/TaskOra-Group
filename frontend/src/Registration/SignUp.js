@@ -5,7 +5,10 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
-// 🇮🇳 India States & Districts
+
+const SignUp = () => {
+
+
 const indiaLocations = {
   AndhraPradesh: [
     "Anantapur",
@@ -685,8 +688,20 @@ const indiaLocations = {
   Puducherry: ["Karaikal", "Mahe", "Puducherry", "Yanam"],
 };
 
-const SignUp = () => {
+
+
   const navigate = useNavigate();
+
+  // 🔥 MOBILE STATES
+  const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+
+  const [emailOtp, setEmailOtp] = useState("");
+const [emailOtpSent, setEmailOtpSent] = useState(false);
+const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -704,42 +719,122 @@ const SignUp = () => {
     setFormData({
       ...formData,
       state: e.target.value,
-      district: "", // reset district when state changes
+      district: "",
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const sendOTP = async () => {
+  try {
+    await API.post("http://localhost:3002/api/otp/send-otp", { mobile });
 
-    if (!formData.state || !formData.district) {
-      return toast.error("Please select state and district");
-    }
+    setOtpSent(true);
+    toast.success("OTP sent 🚀");
+  } catch (err) {
+    toast.error("Failed to send OTP");
+  }
+};
 
-    try {
-      toast.dismiss();
-      toast.info("Processing...", { autoClose: 1000 });
-      await API.post("/auth/send-otp", {
-        name: formData.name,
-        email: formData.email,
-      });
+const verifyOTP = async () => {
+  try {
+    await API.post("http://localhost:3002/api/otp/verify-otp", { mobile, otp });
 
-      toast.dismiss();
-      toast.success("OTP sent to your email 📩");
+    setIsVerified(true);
+    setOtp("");
+    setOtpSent(false);
 
-      navigate("/verify-otp", {
-        state: formData,
-      });
-    } catch (err) {
-      toast.dismiss();
-      toast.error(err.response?.data?.message || "Failed to send OTP");
-    }
-  };
+    toast.success("Mobile verified ✅");
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Invalid OTP");
+  }
+};
+const sendEmailOtp = async () => {
+  try {
+    await API.post("/auth/send-otp", {
+      email: formData.email,
+      name: formData.name,
+    });
+
+    setEmailOtpSent(true);
+    toast.success("OTP sent to email 📩");
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed");
+  }
+};
+const verifyEmailOtp = async () => {
+  try {
+    await API.post("/auth/verify-email-otp", {
+      email: formData.email.trim().toLowerCase(), // ✅ FIX
+      otp: emailOtp.trim(), // ✅ FIX
+    });
+
+    setIsEmailVerified(true);
+    setEmailOtp("");
+    setEmailOtpSent(false);
+
+    toast.success("Email verified ✅");
+  } catch (err) {
+    console.log("ERROR:", err.response?.data); // 🔍 DEBUG
+    toast.error(err.response?.data?.message || "Invalid OTP");
+  }
+};
+  // 🔥 FORM SUBMIT
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // 🔒 Check mobile
+  if (!isVerified) {
+    return toast.error("Verify mobile first");
+  }
+
+  // 🔒 Check email
+  if (!isEmailVerified) {
+    return toast.error("Verify email first");
+  }
+
+  try {
+    // 🔥 CALL REGISTER API
+    const res = await API.post("/auth/register", {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      state: formData.state,
+      district: formData.district,
+      mobile: mobile,
+    });
+
+    // ✅ SUCCESS
+    toast.success(res.data.message || "Signup successful 🎉");
+
+    // 🔁 RESET FORM (optional)
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      state: "",
+      district: "",
+    });
+
+    setMobile("");
+    setIsVerified(false);
+    setIsEmailVerified(false);
+
+    // 🚀 REDIRECT
+    navigate("/login");
+
+  } catch (err) {
+    // ❌ ERROR HANDLING
+    toast.error(
+      err.response?.data?.message || "Signup failed ❌"
+    );
+  }
+};
 
   return (
     <div className="signup-container">
       <form className="signup-form" onSubmit={handleSubmit} autoComplete="off">
         <h2>Sign Up</h2>
 
+        {/* USERNAME */}
         <input
           type="text"
           name="name"
@@ -749,15 +844,108 @@ const SignUp = () => {
           required
         />
 
+        {/* 🔥 MOBILE INPUT + VERIFY */}
+{/* 🔥 MOBILE INPUT + VERIFY */}
+        <div className="mobile-wrapper">
+          <input
+            type="text"
+            placeholder="Mobile Number"
+            value={mobile}
+            disabled={isVerified}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              if (val.length <= 10) setMobile(val);
+            }}
+          />
+
+          {mobile.length === 10 && !otpSent && !isVerified && (
+            <button className="verify-btn" onClick={sendOTP} type="button">
+              Send OTP
+            </button>
+          )}
+
+          {isVerified && (
+            <button className="verify-btn verified" disabled>
+              Verified
+            </button>
+          )}
+        </div>
+
+
+        {/* 🔥 OTP INPUT */}
+{/* 🔥 OTP INPUT */}
+        {otpSent && !isVerified && (
+          <div className="otp-box">
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+
+            <button className="verify-btn" onClick={verifyOTP} type="button">
+              Verify
+            </button>
+          </div>
+        )}
+
+        {/* ✅ VERIFIED MESSAGE */}
+        {isVerified && (
+          <p style={{ color: "green", marginTop: "5px" }}>
+            Mobile Verified ✅
+          </p>
+        )}
+
+      <div className="email-wrapper">
         <input
           type="email"
           name="email"
           placeholder="Email Address"
           value={formData.email}
+          disabled={isEmailVerified}
           onChange={handleChange}
           required
         />
 
+        {formData.email.includes("@gmail.com") &&
+          !emailOtpSent &&
+          !isEmailVerified && (
+            <button
+              type="button"
+              className="verify-btn"
+              onClick={sendEmailOtp}
+            >
+              Verify
+            </button>
+          )}
+
+        {isEmailVerified && (
+          <button className="verify-btn verified" disabled>
+            Verified
+          </button>
+        )}
+      </div>
+
+      {emailOtpSent && !isEmailVerified && (
+        <div className="otp-box">
+          <input
+            type="text"
+            placeholder="Enter Email OTP"
+            value={emailOtp}
+            onChange={(e) => setEmailOtp(e.target.value)}
+          />
+
+          <button
+            type="button"
+            className="verify-btn"
+            onClick={verifyEmailOtp}
+          >
+            Verify
+          </button>
+        </div>
+      )}
+
+        {/* PASSWORD */}
         <input
           type="password"
           name="password"
@@ -766,9 +954,8 @@ const SignUp = () => {
           onChange={handleChange}
           required
         />
-        
 
-        {/* STATE DROPDOWN */}
+        {/* STATE */}
         <select
           name="state"
           value={formData.state}
@@ -783,7 +970,7 @@ const SignUp = () => {
           ))}
         </select>
 
-        {/* DISTRICT DROPDOWN */}
+        {/* DISTRICT */}
         <select
           name="district"
           value={formData.district}
@@ -800,7 +987,7 @@ const SignUp = () => {
             ))}
         </select>
 
-        <button type="submit">Send OTP</button>
+        <button type="submit">Register</button>
 
         <a href="/login">Already have an account?</a>
       </form>

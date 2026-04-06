@@ -47,6 +47,19 @@ const UserSchema = new Schema(
       type: Number,
       default: 0,
     },
+    mobile: {
+      type: String,
+      unique: true,
+    },
+    isMobileVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: String,
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,

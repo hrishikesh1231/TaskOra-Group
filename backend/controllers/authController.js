@@ -22,7 +22,10 @@ exports.sendOtp = async (req, res) => {
       });
     }
 
-    // 🔍 Check if username already exists
+    // ✅ ADD THIS LINE (IMPORTANT)
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 🔍 Check username
     const existingUsername = await UserModel.findOne({ username: name });
     if (existingUsername) {
       return res.status(400).json({
@@ -31,8 +34,9 @@ exports.sendOtp = async (req, res) => {
         field: "name",
       });
     }
-    // 🔍 Check if email already exists
-    const existingEmail = await UserModel.findOne({ email });
+
+    // 🔍 Check email
+    const existingEmail = await UserModel.findOne({ email: normalizedEmail });
     if (existingEmail) {
       return res.status(400).json({
         success: false,
@@ -41,76 +45,109 @@ exports.sendOtp = async (req, res) => {
       });
     }
 
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log("Generated OTP:", otp);
 
-    await Otp.deleteMany({ email });
+    await Otp.deleteMany({ email: normalizedEmail });
 
     await Otp.create({
-      email,
+      email: normalizedEmail,
       otp,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
     await transporter.sendMail({
       from: `"TaskOra" <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: normalizedEmail,
       subject: "Your OTP Code",
       text: `Your OTP is ${otp}. Valid for 5 minutes.`,
     });
 
     res.json({ success: true, message: "OTP sent" });
+
   } catch (err) {
     console.error("❌ SEND OTP ERROR:", err);
     res.status(500).json({ success: false });
   }
 };
 
-
-
-
-
-// ================= VERIFY OTP =================
-exports.verifyOtp = async (req, res) => {
+////verify otp
+exports.verifyEmailOtp = async (req, res) => {
   try {
-    const { name, email, password, otp, state, district } = req.body || {};
+    let { email, otp } = req.body;
 
-    if (!name || !email || !password || !otp || !state || !district) {
+    // ✅ Basic validation
+    if (!email || !otp) {
       return res.status(400).json({
         success: false,
-        message: "All fields required",
+        message: "Email and OTP required",
       });
     }
 
-    const existingEmail = await UserModel.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already registered",
-      });
-    }
+    // ✅ Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const otpRecord = await Otp.findOne({ email });
+    // 🔍 Find OTP record
+    const otpRecord = await Otp.findOne({ email: normalizedEmail });
 
     if (!otpRecord) {
       return res.status(400).json({
         success: false,
-        message: "OTP not found",
+        message: "OTP not found or already used",
       });
     }
 
+    // ⏰ Expiry check
     if (otpRecord.expiresAt < new Date()) {
+      await Otp.deleteOne({ email: normalizedEmail }); // cleanup
       return res.status(400).json({
         success: false,
         message: "OTP expired",
       });
     }
 
-    if (String(otpRecord.otp) !== String(otp)) {
+    // 🔑 Match OTP
+    if (String(otpRecord.otp) !== String(otp).trim()) {
       return res.status(400).json({
         success: false,
         message: "Invalid OTP",
+      });
+    }
+
+    // ✅ SUCCESS → delete OTP (one-time use)
+    await Otp.deleteOne({ email: normalizedEmail });
+
+    res.json({
+      success: true,
+      message: "Email verified successfully ✅",
+    });
+
+  } catch (err) {
+    console.error("❌ VERIFY EMAIL OTP ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password, state, district, mobile } = req.body;
+
+    if (!name || !email || !password || !state || !district || !mobile) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields required",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingEmail = await UserModel.findOne({ email: normalizedEmail });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
       });
     }
 
@@ -124,35 +161,41 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
+    const existingMobile = await UserModel.findOne({ mobile });
+    if (existingMobile) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile already registered",
+      });
+    }
+
     const newUser = new UserModel({
       username,
-      email,
+      email: normalizedEmail,
       state,
       district,
+      mobile,
+      isMobileVerified: true,
+      isVerified: true,
     });
 
     await UserModel.register(newUser, password);
 
-    // Welcome bonus
     await createWelcomeBonus(newUser._id);
-
-    await Otp.deleteOne({ email });
 
     res.json({
       success: true,
       message: "🎉 Account created successfully!",
-      username,
-      tokens: 100,
     });
+
   } catch (err) {
-    console.error("❌ VERIFY OTP ERROR:", err);
+    console.error("REGISTER ERROR:", err);
     res.status(500).json({
       success: false,
       message: "Something went wrong",
     });
   }
 };
-
 // ================= LOGIN =================
 exports.login = (req, res, next) => {
   passport.authenticate("local", (err, user) => {
@@ -247,15 +290,50 @@ exports.forgotPassword = async (req, res) => {
     await transporter.sendMail({
       from: `"TaskOra Support" <${process.env.EMAIL_USER}>`,
       to: normalizedEmail,
-      subject: "Password Reset Request",
+      subject: "Reset Your Password - TaskOra",
       html: `
-        <h2>Password Reset</h2>
-        <p>You requested to reset your password.</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p>This link expires in 15 minutes.</p>
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Password Reset Request 🔐</h2>
+
+          <p>Hello <strong>${user.name || user.username || "User"}</strong>,</p>
+
+
+          <p>You requested to reset your password for your TaskOra account.</p>
+
+          <p><strong>👤 Username:</strong> ${user.name}</p>
+
+          <p>Click the button below to reset your password:</p>
+
+          <a href="${resetUrl}" 
+            style="
+              display: inline-block;
+              padding: 10px 20px;
+              background: #2563eb;
+              color: #fff;
+              text-decoration: none;
+              border-radius: 6px;
+              margin-top: 10px;
+            ">
+            Reset Password
+          </a>
+
+          <p style="margin-top: 15px;">
+            Or copy this link:<br/>
+            ${resetUrl}
+          </p>
+
+          <p style="color: red; margin-top: 10px;">
+            ⏳ This link will expire in 15 minutes.
+          </p>
+
+          <hr/>
+
+          <p style="font-size: 12px; color: #555;">
+            If you didn’t request this, you can ignore this email.
+          </p>
+        </div>
       `,
     });
-
     res.json({
       success: true,
       message: "Reset link sent to your email",

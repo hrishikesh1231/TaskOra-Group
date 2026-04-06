@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "dotenv": "^17.2.2",
-    "joblib": "^10.1.1",
-    "node-fetch": "^3.3.2",
-    "pandas": "^0.0.3"
-  }
-}
