@@ -1,176 +1,6 @@
-
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-
-// const TokenHistory = () => {
-//   const [transactions, setTransactions] = useState([]);
-//   const [summary, setSummary] = useState({
-//     totalCredit: 0,
-//     totalDebit: 0,
-//     currentBalance: 0,
-//   });
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-
-//   useEffect(() => {
-//     fetchHistory();
-//   }, []);
-
-//   const fetchHistory = async () => {
-//     try {
-//       const res = await axios.get(
-//         "http://localhost:3002/api/tokens/history",
-//         { withCredentials: true }
-//       );
-
-//       setTransactions(res.data.transactions);
-//       setSummary(res.data.summary);
-//     } catch (err) {
-//       setError(
-//         err.response?.data?.error ||
-//         err.response?.data?.message ||
-//         "Failed to load token history"
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   if (loading) return <div style={pageStyle}>Loading...</div>;
-//   if (error) return <div style={pageStyle}>{error}</div>;
-
-//   return (
-//     <div style={pageStyle}>
-//       <h2>💰 Token Wallet</h2>
-
-//       {/* 🔹 Summary Cards */}
-//       <div style={summaryContainer}>
-//         <div style={cardStyle}>
-//           <h4>Total Credit</h4>
-//           <p style={{ color: "green" }}>+ {summary.totalCredit}</p>
-//         </div>
-
-//         <div style={cardStyle}>
-//           <h4>Total Debit</h4>
-//           <p style={{ color: "red" }}>- {summary.totalDebit}</p>
-//         </div>
-
-//         <div style={cardStyle}>
-//           <h4>Current Balance</h4>
-//           <p style={{ color: "#ff9800" }}>
-//             {summary.currentBalance} 🪙
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* 🔹 Transactions Table */}
-//       {transactions.length === 0 ? (
-//         <p>No transactions yet.</p>
-//       ) : (
-//         <table style={tableStyle}>
-//           <thead>
-//             <tr style={{ background: "#f5f5f5" }}>
-//               <th style={thStyle}>Type</th>
-//               <th style={thStyle}>Amount</th>
-//               <th style={thStyle}>Reason</th>
-//               <th style={thStyle}>Gig / Service</th>
-//               <th style={thStyle}>Location</th>
-//               <th style={thStyle}>Balance After</th>
-//               <th style={thStyle}>Date</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {transactions.map((tx) => (
-//               <tr key={tx._id}>
-//                 <td style={tdStyle}>
-//                   {tx.type === "credit" ? "🟢 Credit" : "🔴 Debit"}
-//                 </td>
-
-//                 <td style={tdStyle}>
-//                   {tx.type === "credit" ? "+" : "-"} {tx.amount}
-//                 </td>
-
-//                 <td style={tdStyle}>{tx.reason}</td>
-
-//                 <td style={tdStyle}>
-//                   {tx.gig?.title ||
-//                     tx.service?.title ||
-//                     "-"}
-//                 </td>
-
-//                 <td style={tdStyle}>
-//                   {tx.gig
-//                     ? `${tx.gig.state}, ${tx.gig.district}`
-//                     : tx.service
-//                     ? `${tx.service.state}, ${tx.service.district}`
-//                     : "-"}
-//                 </td>
-
-//                 <td style={tdStyle}>{tx.balanceAfter}</td>
-
-//                 <td style={tdStyle}>
-//                   {new Date(tx.createdAt).toLocaleString()}
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       )}
-//     </div>
-//   );
-// };
-
-// /* ================== STYLES ================== */
-
-// const pageStyle = {
-//   padding: "40px",
-//   maxWidth: "1100px",
-//   margin: "auto",
-// };
-
-// const summaryContainer = {
-//   display: "flex",
-//   gap: "20px",
-//   marginBottom: "30px",
-// };
-
-// const cardStyle = {
-//   flex: 1,
-//   background: "#fff",
-//   padding: "20px",
-//   borderRadius: "10px",
-//   boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-//   textAlign: "center",
-// };
-
-// const tableStyle = {
-//   width: "100%",
-//   borderCollapse: "collapse",
-//   background: "#fff",
-//   borderRadius: "10px",
-//   overflow: "hidden",
-//   boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-// };
-
-// const thStyle = {
-//   padding: "14px",
-//   textAlign: "left",
-//   borderBottom: "1px solid #ddd",
-// };
-
-// const tdStyle = {
-//   padding: "14px",
-//   borderBottom: "1px solid #eee",
-// };
-
-// export default TokenHistory;
-
-
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "./TokenHistory.css";
 
 const TokenHistory = () => {
   const [transactions, setTransactions] = useState([]);
@@ -206,7 +36,7 @@ const TokenHistory = () => {
     }
   };
 
-  // ✅ CLEAR HISTORY FUNCTION
+  // ✅ CLEAR HISTORY
   const handleClearHistory = async () => {
     const confirmDelete = window.confirm(
       "Are you sure you want to clear all transaction history?"
@@ -220,7 +50,6 @@ const TokenHistory = () => {
         { withCredentials: true }
       );
 
-      // ✅ clear UI instantly
       setTransactions([]);
       setSummary({
         totalCredit: 0,
@@ -234,142 +63,92 @@ const TokenHistory = () => {
     }
   };
 
-  if (loading) return <div style={pageStyle}>Loading...</div>;
-  if (error) return <div style={pageStyle}>{error}</div>;
+  if (loading) return <div className="token-page">Loading...</div>;
+  if (error) return <div className="token-page">{error}</div>;
 
   return (
-    <div style={pageStyle}>
+    <div className="token-page">
       <h2>💰 Token Wallet</h2>
 
-      {/* 🔥 CLEAR BUTTON */}
-      <button style={clearBtn} onClick={handleClearHistory}>
+      {/* CLEAR BUTTON */}
+      <button className="clear-btn" onClick={handleClearHistory}>
         🗑️ Clear History
       </button>
 
-      {/* Summary */}
-      <div style={summaryContainer}>
-        <div style={cardStyle}>
+      {/* SUMMARY */}
+      <div className="summary-container">
+        <div className="card">
           <h4>Total Credit</h4>
-          <p style={{ color: "green" }}>+ {summary.totalCredit}</p>
+          <p className="credit">+ {summary.totalCredit}</p>
         </div>
 
-        <div style={cardStyle}>
+        <div className="card">
           <h4>Total Debit</h4>
-          <p style={{ color: "red" }}>- {summary.totalDebit}</p>
+          <p className="debit">- {summary.totalDebit}</p>
         </div>
 
-        <div style={cardStyle}>
+        <div className="card">
           <h4>Current Balance</h4>
-          <p style={{ color: "#ff9800" }}>
-            {summary.currentBalance} 🪙
-          </p>
+          <p className="balance">{summary.currentBalance} 🪙</p>
         </div>
       </div>
 
-      {/* Table */}
+      {/* TABLE */}
       {transactions.length === 0 ? (
         <p>No transactions yet.</p>
       ) : (
-        <table style={tableStyle}>
-          <thead>
-            <tr style={{ background: "#f5f5f5" }}>
-              <th style={thStyle}>Type</th>
-              <th style={thStyle}>Amount</th>
-              <th style={thStyle}>Reason</th>
-              <th style={thStyle}>Gig / Service</th>
-              <th style={thStyle}>Location</th>
-              <th style={thStyle}>Balance After</th>
-              <th style={thStyle}>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((tx) => (
-              <tr key={tx._id}>
-                <td style={tdStyle}>
-                  {tx.type === "credit" ? "🟢 Credit" : "🔴 Debit"}
-                </td>
-
-                <td style={tdStyle}>
-                  {tx.type === "credit" ? "+" : "-"} {tx.amount}
-                </td>
-
-                <td style={tdStyle}>{tx.reason}</td>
-
-                <td style={tdStyle}>
-                  {tx.gig?.title || tx.service?.title || "-"}
-                </td>
-
-                <td style={tdStyle}>
-                  {tx.gig
-                    ? `${tx.gig.state}, ${tx.gig.district}`
-                    : tx.service
-                    ? `${tx.service.state}, ${tx.service.district}`
-                    : "-"}
-                </td>
-
-                <td style={tdStyle}>{tx.balanceAfter}</td>
-
-                <td style={tdStyle}>
-                  {new Date(tx.createdAt).toLocaleString()}
-                </td>
+        <div className="table-wrapper">
+          <table className="token-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Gig / Service</th>
+                <th>Location</th>
+                <th>Balance After</th>
+                <th>Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {transactions.map((tx) => (
+                <tr key={tx._id}>
+                  <td>
+                    {tx.type === "credit" ? "🟢 Credit" : "🔴 Debit"}
+                  </td>
+
+                  <td>
+                    {tx.type === "credit" ? "+" : "-"} {tx.amount}
+                  </td>
+
+                  <td>{tx.reason}</td>
+
+                  <td>
+                    {tx.gig?.title || tx.service?.title || "-"}
+                  </td>
+
+                  <td>
+                    {tx.gig
+                      ? `${tx.gig.state}, ${tx.gig.district}`
+                      : tx.service
+                      ? `${tx.service.state}, ${tx.service.district}`
+                      : "-"}
+                  </td>
+
+                  <td>{tx.balanceAfter}</td>
+
+                  <td>
+                    {new Date(tx.createdAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
-};
-
-/* ===== STYLE ===== */
-
-const clearBtn = {
-  marginBottom: "20px",
-  padding: "10px 15px",
-  background: "red",
-  color: "#fff",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
-
-const pageStyle = {
-  padding: "40px",
-  maxWidth: "1100px",
-  margin: "auto",
-};
-
-const summaryContainer = {
-  display: "flex",
-  gap: "20px",
-  marginBottom: "30px",
-};
-
-const cardStyle = {
-  flex: 1,
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "10px",
-  boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-  textAlign: "center",
-};
-
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  background: "#fff",
-  borderRadius: "10px",
-  overflow: "hidden",
-};
-
-const thStyle = {
-  padding: "14px",
-  borderBottom: "1px solid #ddd",
-};
-
-const tdStyle = {
-  padding: "14px",
-  borderBottom: "1px solid #eee",
 };
 
 export default TokenHistory;
