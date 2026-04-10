@@ -4,7 +4,7 @@ const { deductTokens } = require("../utils/tokenManager");
 const { Application } = require("../models/ApplicationModel");
 const FASTAPI_URL = process.env.FASTAPI_URL;
 
-// ================= ADD GIG =================
+//================= ADD GIG =================
 exports.addGig = async (req, res) => {
   try {
     const {
@@ -226,7 +226,7 @@ exports.myApplications = async (req, res) => {
         select: "title location date category district state",
       })
       .sort({ createdAt: -1 })
-      .lean(); // ✅ faster, read-only
+      .lean(); //  faster, read-only
 
     res.status(200).json(applications);
   } catch (err) {

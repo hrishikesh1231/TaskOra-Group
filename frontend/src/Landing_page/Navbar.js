@@ -100,30 +100,7 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ================= NEARBY TASK CHECK ================= */
 
-  // useEffect(() => {
-  //   if (!user) return;
-
-  //   if (!navigator.geolocation) return;
-
-  //   navigator.geolocation.getCurrentPosition(async (position) => {
-  //     const lat = position.coords.latitude;
-  //     const lng = position.coords.longitude;
-
-  //     try {
-  //       const res = await axios.get(`/api/gigs/nearby?lat=${lat}&lng=${lng}`);
-
-  //       if (res.data && res.data.length > 0) {
-  //         // setNearbyAvailable(true);
-  //       }
-  //     } catch (err) {
-  //       console.log("Nearby check error", err);
-  //     }
-  //   });
-  // }, [user]);
-
-  /* ================= UI ================= */
 
   return (
     <nav className="navbar navbar-expand-lg sticky-top taskora-navbar">
