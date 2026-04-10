@@ -233,6 +233,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import AIPost from "./pages/AIPost";
 import NearbyTasks from "./Landing_page/Gigs/NearbyTasks";
 import EditProfile from "./Update_pro/EditProfile";
+import Withdraw from "./pages/Withdraw";
 
 
 // import UpdateProfile from "./pages/UpdateProfile/UpdateProfile";
@@ -305,6 +306,8 @@ root.render(
                       <Route path="/nearby-tasks" element={<NearbyTasks />} />
 
                       <Route path="/update-profile" element={<EditProfile/>} />
+                      <Route path="/withdraw" element={<Withdraw />} />
+                      
                     </Routes>
                   </main>
                   <Footer />

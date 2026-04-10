@@ -58,7 +58,11 @@ const UserSchema = new Schema(
     verificationToken: String,
     isVerified: {
       type: Boolean,
-      default: false
+      default: false,
+    },
+     lockedTokens: {
+      type: Number,
+      default: 0,
     },
 
     resetPasswordToken: String,

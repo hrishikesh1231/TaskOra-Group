@@ -651,6 +651,10 @@ const Notification = require("../models/Notification");
 const Contract = require("../models/ContractModel");
 const TokenTransaction = require("../models/TokenTransaction");
 
+const generateCode = () => {
+  return "TASK-" + Math.floor(100000 + Math.random() * 900000);
+};
+
 // ======================================================
 // 1️⃣ SELECT APPLICANT + CREATE CONTRACT
 // ======================================================
@@ -762,6 +766,86 @@ router.post("/contracts/select", isLoggedIn, async (req, res) => {
 // ======================================================
 // 2️⃣ APPLICANT CONFIRM CONTRACT
 // ======================================================
+// router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
+//   try {
+//     const contract = await Contract.findById(req.params.id);
+
+//     if (!contract) {
+//       return res.status(404).json({ error: "Contract not found" });
+//     }
+
+//     if (contract.applicant.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ error: "Not authorized" });
+//     }
+
+//     contract.applicantConfirmed = true;
+//     contract.status = "applicant_confirmed";
+
+//     if (contract.recruiterConfirmed && contract.applicantConfirmed) {
+//       contract.status = "both_confirmed";
+
+//       if (!contract.tokensDeducted) {
+//         const recruiter = await UserModel.findById(contract.recruiter);
+//         const applicant = await UserModel.findById(contract.applicant);
+
+//         const recruiterDeduction = 15;
+//         const applicantDeduction = 5;
+
+//         if (
+//           recruiter.tokens < recruiterDeduction ||
+//           applicant.tokens < applicantDeduction
+//         ) {
+//           return res.status(400).json({ error: "Insufficient tokens" });
+//         }
+
+//         recruiter.tokens -= recruiterDeduction;
+//         applicant.tokens -= applicantDeduction;
+
+//         await recruiter.save();
+//         await applicant.save();
+
+//         await TokenTransaction.create({
+//           user: recruiter._id,
+//           type: "debit",
+//           amount: recruiterDeduction,
+//           reason: "Contract Confirmation",
+//           balanceAfter: recruiter.tokens,
+//           gig: contract.gig || null,
+//           service: contract.service || null,
+//         });
+
+//         await TokenTransaction.create({
+//           user: applicant._id,
+//           type: "debit",
+//           amount: applicantDeduction,
+//           reason: "Contract Confirmation",
+//           balanceAfter: applicant.tokens,
+//           gig: contract.gig || null,
+//           service: contract.service || null,
+//         });
+
+//         contract.tokensDeducted = true;
+//       }
+//     }
+
+//     await contract.save();
+
+//     await Notification.create({
+//       user: contract.recruiter,
+//       title: "Contract Confirmed ✅",
+//       message: "Your contract has been confirmed.",
+//       type: "CONFIRM",
+//       link: "/my-posted-tasks",
+//     });
+
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error("❌ CONFIRM ERROR:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+
 router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
@@ -779,6 +863,11 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
 
     if (contract.recruiterConfirmed && contract.applicantConfirmed) {
       contract.status = "both_confirmed";
+
+      // 🔥 NEW FEATURE (no logic change)
+      if (!contract.verificationCode) {
+        contract.verificationCode = generateCode();
+      }
 
       if (!contract.tokensDeducted) {
         const recruiter = await UserModel.findById(contract.recruiter);
@@ -834,12 +923,16 @@ router.post("/contracts/:id/confirm", isLoggedIn, async (req, res) => {
       link: "/my-posted-tasks",
     });
 
-    res.json({ success: true });
+    res.json({ success: true, contract });
+
   } catch (err) {
     console.error("❌ CONFIRM ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+
 
 // ======================================================
 // 3️⃣ FETCH MY CONTRACTS + CHECK EXPIRY
@@ -936,8 +1029,119 @@ router.get("/contracts/my", isLoggedIn, async (req, res) => {
   }
 });
 
+
+
+// // ======================================================
+// // 4️⃣ APPLICANT REJECT CONTRACT
+// // ======================================================
+// router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
+//   try {
+//     const contract = await Contract.findById(req.params.id);
+
+//     if (!contract) {
+//       return res.status(404).json({ error: "Contract not found" });
+//     }
+
+//     if (contract.applicant.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ error: "Not allowed" });
+//     }
+
+//     if (contract.status === "both_confirmed") {
+//       return res.status(400).json({ error: "Contract already confirmed" });
+//     }
+
+//     contract.status = "rejected";
+//     await contract.save();
+
+//     if (contract.gig) {
+//       await Gig.findByIdAndUpdate(contract.gig, {
+//         isClosed: false,
+//         isActive: true,
+//       });
+
+//       await Application.findOneAndUpdate(
+//         {
+//           gig: contract.gig,
+//           applicant: contract.applicant,
+//         },
+//         {
+//           $set: { status: "rejected" },
+//         }
+//       );
+//     }
+
+//     if (contract.service) {
+//       await Service.findByIdAndUpdate(contract.service, {
+//         isClosed: false,
+//         isActive: true,
+//       });
+
+//       await ServiceApplication.findOneAndUpdate(
+//         {
+//           service: contract.service,
+//           applicant: contract.applicant,
+//         },
+//         {
+//           $set: { status: "rejected" },
+//         }
+//       );
+//     }
+
+//     await Notification.create({
+//       user: contract.recruiter,
+//       title: "Contract Rejected",
+//       message: `${req.user.username} rejected your contract`,
+//       type: "CONTRACT",
+//       link: "/my-posted-tasks",
+//     });
+
+//     res.json({ success: true });
+//   } catch (err) {
+//     console.error("Reject contract error:", err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+// router.post("/contracts/:id/generate-code", isLoggedIn, async (req, res) => {
+//   try {
+//     const contract = await Contract.findById(req.params.id);
+
+//     if (!contract) {
+//       return res.status(404).json({ error: "Contract not found" });
+//     }
+
+//     // only recruiter can generate
+//     if (contract.recruiter.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ error: "Not authorized" });
+//     }
+
+//     if (contract.status !== "both_confirmed") {
+//       return res.status(400).json({ error: "Contract not active" });
+//     }
+
+//     const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+//     contract.arrivalCode = code;
+//     contract.arrivalCodeExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+
+//     await contract.save();
+
+//     res.json({
+//       success: true,
+//       code // show to owner
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+
+
+
 // ======================================================
-// 4️⃣ APPLICANT REJECT CONTRACT
+// 4️⃣ APPLICANT REJECT CONTRACT (ALWAYS REFUND OWNER)
 // ======================================================
 router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
   try {
@@ -947,17 +1151,42 @@ router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
       return res.status(404).json({ error: "Contract not found" });
     }
 
+    // only applicant can reject
     if (contract.applicant.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Not allowed" });
     }
 
-    if (contract.status === "both_confirmed") {
-      return res.status(400).json({ error: "Contract already confirmed" });
-    }
+    // ===============================
+    // ✅ ALWAYS REFUND RECRUITER (OWNER)
+    // ===============================
+    const recruiterRefund = 15;
+
+    const recruiter = await UserModel.findByIdAndUpdate(
+      contract.recruiter,
+      { $inc: { tokens: recruiterRefund } },
+      { new: true }
+    );
+
+    await TokenTransaction.create({
+      user: contract.recruiter,
+      type: "credit",
+      amount: recruiterRefund,
+      reason: "Applicant Rejected Contract Refund",
+      balanceAfter: recruiter.tokens,
+      gig: contract.gig || null,
+      service: contract.service || null,
+    });
+
+    // ===============================
+    // ❌ NO REFUND TO APPLICANT
+    // ===============================
 
     contract.status = "rejected";
     await contract.save();
 
+    // ===============================
+    // 🔄 REOPEN GIG
+    // ===============================
     if (contract.gig) {
       await Gig.findByIdAndUpdate(contract.gig, {
         isClosed: false,
@@ -975,6 +1204,9 @@ router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
       );
     }
 
+    // ===============================
+    // 🔄 REOPEN SERVICE
+    // ===============================
     if (contract.service) {
       await Service.findByIdAndUpdate(contract.service, {
         isClosed: false,
@@ -992,18 +1224,131 @@ router.post("/contracts/:id/reject", isLoggedIn, async (req, res) => {
       );
     }
 
+    // ===============================
+    // 🔔 NOTIFICATION
+    // ===============================
     await Notification.create({
       user: contract.recruiter,
-      title: "Contract Rejected",
-      message: `${req.user.username} rejected your contract`,
+      title: "Contract Rejected & Refunded 💸",
+      message: `${req.user.username} rejected your contract. 15 tokens refunded.`,
       type: "CONTRACT",
       link: "/my-posted-tasks",
     });
 
     res.json({ success: true });
+
   } catch (err) {
     console.error("Reject contract error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+
+
+
+router.post("/contracts/:id/generate-code", isLoggedIn, async (req, res) => {
+  try {
+    const contract = await Contract.findById(req.params.id);
+
+    if (!contract) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    // only recruiter
+    if (contract.recruiter.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Not allowed" });
+    }
+
+    if (contract.status !== "both_confirmed") {
+      return res.status(400).json({ error: "Contract not active" });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    contract.arrivalCode = code;
+    contract.arrivalCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    await contract.save();
+
+    res.json({
+      success: true,
+      code
+    });
+
+  } catch (err) {
+    console.error("Generate Code Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.post("/contracts/:id/verify-code", isLoggedIn, async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    const contract = await Contract.findById(req.params.id);
+
+    if (!contract) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    // only worker
+    if (contract.applicant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (!contract.arrivalCode) {
+      return res.status(400).json({ error: "Code not generated" });
+    }
+
+    if (contract.arrivalCode !== code) {
+      return res.status(400).json({ error: "Invalid code" });
+    }
+
+    if (contract.arrivalCodeExpires < new Date()) {
+      return res.status(400).json({ error: "Code expired" });
+    }
+
+    contract.isVerified = true;
+    contract.arrivalCode = null;
+
+    await contract.save();
+
+    res.json({
+      success: true,
+      message: "Worker verified successfully ✅"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

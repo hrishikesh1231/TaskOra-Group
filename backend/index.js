@@ -22,6 +22,12 @@ const { createWelcomeBonus } = require("./controllers/tokenController");
 const crypto = require("crypto");
 const aiRoutes = require("./routes/aiChat");
 
+/// with draw
+const withdrawRoutes = require("./routes/withdrawRoutes");
+
+
+
+
 
 const OpenAI = require("openai");
 
@@ -65,6 +71,8 @@ const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+
 
 // ================= MIDDLEWARE =================
 app.use(express.json());
@@ -114,6 +122,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+
+
+
+
 /// notification
 
 app.use("/api", notificationRoutes);
@@ -124,6 +137,8 @@ app.use("/api/reviews", reviewRoutes);
 //aI
 
 app.use("/api/ai", aiRoutes);
+
+app.use("/api", withdrawRoutes); // ✅
 
 passport.use(new LocalStrategy(UserModel.authenticate()));
 passport.serializeUser(UserModel.serializeUser());
@@ -151,6 +166,8 @@ const transporter = nodemailer.createTransport({
 app.use("/api/auth", require("./routes/authRoutes"));
 
 
+
+
 // app.post("/addGig", isLoggedIn, async (req, res) => {
 //   try {
 //     const {
@@ -159,11 +176,12 @@ app.use("/api/auth", require("./routes/authRoutes"));
 //       category,
 //       state,
 //       district,
+//       taluka,
 //       location,
 //       date,
 //       contact,
-//        latitude,
-//   longitude
+//       latitude,
+//       longitude
 //     } = req.body;
 
 //     /**
@@ -175,6 +193,8 @@ app.use("/api/auth", require("./routes/authRoutes"));
 //       !category ||
 //       !state ||
 //       !district ||
+//       !taluka ||
+//       !location ||
 //       !date ||
 //       !contact
 //     ) {
@@ -261,29 +281,32 @@ app.use("/api/auth", require("./routes/authRoutes"));
 //     }
 
 //     /**
-//      * 2️⃣ SAVE GIG (UNCHANGED)
+//      * 2️⃣ SAVE GIG
 //      */
+
 //     const newGig = new Gig({
 //       title,
 //       description,
 //       category,
 //       state,
 //       district,
+//       taluka,
 //       location,
 //       date,
 //       contact,
 //       postedBy: req.user._id,
-//        coordinates: {
-//     type: "Point",
-//     coordinates: [Number(longitude), Number(latitude)]
-//   }
+//       coordinates: {
+//         type: "Point",
+//         coordinates: [Number(longitude), Number(latitude)]
+//       }
 //     });
 
 //     await newGig.save();
 
 //     /**
-//      * 3️⃣ TOKEN DEDUCTION (UNCHANGED)
+//      * 3️⃣ TOKEN DEDUCTION
 //      */
+
 //     await deductTokens({
 //       userId: req.user._id,
 //       amount: 5,
@@ -306,44 +329,36 @@ app.use("/api/auth", require("./routes/authRoutes"));
 // });
 
 
-app.post("/addGig", isLoggedIn, async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      category,
-      state,
-      district,
-      taluka,
-      location,
-      date,
-      contact,
-      latitude,
-      longitude
-    } = req.body;
+const gigSchema = require("./validators/gigValidator");
+const validate = require("./middlewares/validate");
 
-    /**
-     * 0️⃣ Hard backend validation
-     */
-    if (
-      !title ||
-      !description ||
-      !category ||
-      !state ||
-      !district ||
-      !taluka ||
-      !location ||
-      !date ||
-      !contact
-    ) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+app.post(
+  "/addGig",
+  isLoggedIn,
+  validate(gigSchema), // ✅ Joi validation added
+  async (req, res) => {
+    try {
+      const {
+        title,
+        description,
+        category,
+        state,
+        district,
+        taluka,
+        location,
+        date,
+        contact,
+        latitude,
+        longitude
+      } = req.body;
 
-    /**
-     * 1️⃣ AI VALIDATION (OpenAI)
-     */
+      // ❌ REMOVED manual validation (Joi handles it now)
 
-    const prompt = `
+      /**
+       * 1️⃣ AI VALIDATION (UNCHANGED)
+       */
+
+      const prompt = `
 You are an AI safety reviewer for a local job marketplace called TaskOra.
 
 Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
@@ -395,76 +410,77 @@ Respond ONLY in JSON format:
 }
 `;
 
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a strict safety validator for job posts.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0,
-    });
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a strict safety validator for job posts.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0,
+      });
 
-    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+      const aiResult = JSON.parse(aiResponse.choices[0].message.content);
 
-    if (!aiResult.valid) {
+      if (!aiResult.valid) {
+        return res.status(400).json({
+          error: `Gig rejected: ${aiResult.reason}`,
+        });
+      }
+
+      /**
+       * 2️⃣ SAVE GIG (UNCHANGED)
+       */
+
+      const newGig = new Gig({
+        title,
+        description,
+        category,
+        state,
+        district,
+        taluka,
+        location,
+        date,
+        contact,
+        postedBy: req.user._id,
+        coordinates: {
+          type: "Point",
+          coordinates: [Number(longitude), Number(latitude)]
+        }
+      });
+
+      await newGig.save();
+
+      /**
+       * 3️⃣ TOKEN DEDUCTION (UNCHANGED)
+       */
+
+      await deductTokens({
+        userId: req.user._id,
+        amount: 5,
+        reason: "Post Gig",
+        gig: newGig._id,
+      });
+
+      return res.status(201).json({
+        message: "Gig created successfully",
+        gig: newGig,
+      });
+
+    } catch (err) {
+      console.error("ADD GIG ERROR:", err);
+
       return res.status(400).json({
-        error: `Gig rejected: ${aiResult.reason}`,
+        error: "Gig rejected by AI or invalid data",
       });
     }
-
-    /**
-     * 2️⃣ SAVE GIG
-     */
-
-    const newGig = new Gig({
-      title,
-      description,
-      category,
-      state,
-      district,
-      taluka,
-      location,
-      date,
-      contact,
-      postedBy: req.user._id,
-      coordinates: {
-        type: "Point",
-        coordinates: [Number(longitude), Number(latitude)]
-      }
-    });
-
-    await newGig.save();
-
-    /**
-     * 3️⃣ TOKEN DEDUCTION
-     */
-
-    await deductTokens({
-      userId: req.user._id,
-      amount: 5,
-      reason: "Post Gig",
-      gig: newGig._id,
-    });
-
-    return res.status(201).json({
-      message: "Gig created successfully",
-      gig: newGig,
-    });
-
-  } catch (err) {
-    console.error("ADD GIG ERROR:", err);
-
-    return res.status(400).json({
-      error: "Gig rejected by AI or invalid data",
-    });
   }
-});
+);
 
 
 
@@ -479,9 +495,12 @@ Respond ONLY in JSON format:
 //       salary,
 //       state,
 //       district,
+//       taluka,   // ✅ added
 //       location,
 //       date,
 //       contact,
+//       lat,      // ✅ added
+//       lng       // ✅ added
 //     } = req.body;
 
 //     /**
@@ -493,6 +512,7 @@ Respond ONLY in JSON format:
 //       salary === undefined ||
 //       !state ||
 //       !district ||
+//       !taluka ||   // ✅ added
 //       !date ||
 //       !contact
 //     ) {
@@ -578,10 +598,19 @@ Respond ONLY in JSON format:
 //       salary,
 //       state,
 //       district,
+//       taluka,     // ✅ added
 //       location,
 //       date,
 //       contact,
 //       postedBy: req.user._id,
+
+//       // ✅ coordinates (optional)
+//       geoLocation: lat && lng
+//         ? {
+//             type: "Point",
+//             coordinates: [lng, lat], // important order
+//           }
+//         : undefined,
 //     });
 
 //     await newService.save();
@@ -610,46 +639,36 @@ Respond ONLY in JSON format:
 // });
 
 
-// ================= ADD SERVICE (BASELINE + AI) =================
-app.post("/addService", isLoggedIn, async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      salary,
-      state,
-      district,
-      taluka,   // ✅ added
-      location,
-      date,
-      contact,
-      lat,      // ✅ added
-      lng       // ✅ added
-    } = req.body;
+const serviceSchema = require("./validators/serviceValidator");
 
-    /**
-     * 0️⃣ Hard backend validation
-     */
-    if (
-      !title ||
-      !description ||
-      salary === undefined ||
-      !state ||
-      !district ||
-      !taluka ||   // ✅ added
-      !date ||
-      !contact
-    ) {
-      return res.status(400).json({
-        error: "Missing required fields",
-      });
-    }
 
-    /**
-     * 1️⃣ AI VALIDATION (OpenAI)
-     */
+app.post(
+  "/addService",
+  isLoggedIn,
+  validate(serviceSchema), // ✅ Joi validation added
+  async (req, res) => {
+    try {
+      const {
+        title,
+        description,
+        salary,
+        state,
+        district,
+        taluka,
+        location,
+        date,
+        contact,
+        lat,
+        lng
+      } = req.body;
 
-    const prompt = `
+      // ❌ REMOVED manual validation (Joi handles it)
+
+      /**
+       * 1️⃣ AI VALIDATION (UNCHANGED)
+       */
+
+      const prompt = `
 You are an AI safety reviewer for a local job marketplace called TaskOra.
 
 Determine whether the following SERVICE post is safe and valid.
@@ -685,82 +704,98 @@ Respond ONLY in JSON:
 }
 `;
 
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a strict safety validator for job marketplace posts.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0,
-    });
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a strict safety validator for job marketplace posts.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0,
+      });
 
-    const content = aiResponse.choices[0].message.content
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+      const content = aiResponse.choices[0].message.content
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-    const aiResult = JSON.parse(content);
+      const aiResult = JSON.parse(content);
 
-    if (!aiResult.valid) {
-      return res.status(400).json({
-        error: `Service rejected: ${aiResult.reason}`,
+      if (!aiResult.valid) {
+        return res.status(400).json({
+          error: `Service rejected: ${aiResult.reason}`,
+        });
+      }
+
+      /**
+       * 2️⃣ SAVE SERVICE (UNCHANGED)
+       */
+
+      const newService = new Service({
+        title,
+        description,
+        salary,
+        state,
+        district,
+        taluka,
+        location,
+        date,
+        contact,
+        postedBy: req.user._id,
+
+        geoLocation: lat && lng
+          ? {
+              type: "Point",
+              coordinates: [lng, lat],
+            }
+          : undefined,
+      });
+
+      await newService.save();
+
+      /**
+       * 3️⃣ TOKEN DEDUCTION (UNCHANGED)
+       */
+
+      await deductTokens({
+        userId: req.user._id,
+        amount: 5,
+        reason: "Post Service",
+      });
+
+      return res.status(201).json({
+        message: "Service created successfully",
+        service: newService,
+      });
+
+    } catch (err) {
+      console.error("🔥 ADD SERVICE ERROR:", err);
+
+      return res.status(500).json({
+        error: "Internal server error while creating service",
       });
     }
-
-    /**
-     * 2️⃣ SAVE SERVICE (Baseline logic unchanged)
-     */
-    const newService = new Service({
-      title,
-      description,
-      salary,
-      state,
-      district,
-      taluka,     // ✅ added
-      location,
-      date,
-      contact,
-      postedBy: req.user._id,
-
-      // ✅ coordinates (optional)
-      geoLocation: lat && lng
-        ? {
-            type: "Point",
-            coordinates: [lng, lat], // important order
-          }
-        : undefined,
-    });
-
-    await newService.save();
-
-    /**
-     * 3️⃣ TOKEN DEDUCTION
-     */
-    await deductTokens({
-      userId: req.user._id,
-      amount: 3,
-      reason: "Post Service",
-    });
-
-    return res.status(201).json({
-      message: "Service created successfully",
-      service: newService,
-    });
-
-  } catch (err) {
-    console.error("🔥 ADD SERVICE ERROR:", err);
-
-    return res.status(500).json({
-      error: "Internal server error while creating service",
-    });
   }
-});
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ///////
 console.log("🔥 REGISTERING GIG ROUTES");
@@ -786,17 +821,126 @@ app.get("/gig/:id", isLoggedIn, async (req, res) => {
   }
 });
 
+// // ================= PUT GIG (EDIT + AI) =================
+// app.put("/gig/:id", isLoggedIn, async (req, res) => {
+//   try {
+
+//     const { title, description, location, category, date, contact } = req.body;
+
+//     // ===============================
+//     // AI PROMPT
+//     // ===============================
+
+//     const prompt = `
+// You are an AI safety reviewer for a local job marketplace called TaskOra.
+
+// Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
+
+// Think carefully about the INTENT and CONTEXT of the text before deciding.
+
+// Important rules:
+
+// 1. Do NOT reject content just because it contains sensitive words like "kill", "drug", "hack".
+// 2. Reject only if the user is requesting illegal activity, violence, sexual services, scams, hacking, or dangerous activities.
+// 3. Reject if text is gibberish.
+// 4. Gig must make sense as a real local job.
+
+// Gig to analyze:
+
+// Title: ${title}
+
+// Description: ${description}
+
+// Respond ONLY in JSON format:
+
+// {
+//   "valid": true or false,
+//   "reason": "short explanation"
+// }
+// `;
+
+//     // ===============================
+//     // OPENAI CALL
+//     // ===============================
+
+//     const aiResponse = await openai.chat.completions.create({
+//       model: "gpt-4.1-mini",
+//       messages: [
+//         {
+//           role: "system",
+//           content: "You are a strict safety validator for job posts.",
+//         },
+//         {
+//           role: "user",
+//           content: prompt,
+//         },
+//       ],
+//       temperature: 0,
+//     });
+
+//     const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+//     // ===============================
+//     // REJECT IF AI SAYS INVALID
+//     // ===============================
+
+//     if (!aiResult.valid) {
+//       return res.status(400).json({
+//         error: `Gig rejected: ${aiResult.reason}`,
+//       });
+//     }
+
+//     // ===============================
+//     // UPDATE GIG
+//     // ===============================
+
+//     const updatedGig = await Gig.findOneAndUpdate(
+//       { _id: req.params.id, postedBy: req.user._id },
+//       req.body,
+//       { new: true }
+//     );
+
+//     if (!updatedGig) {
+//       return res.status(404).json({
+//         error: "Gig not found or not authorized",
+//       });
+//     }
+
+//     res.json({
+//       message: "Gig updated successfully",
+//       gig: updatedGig,
+//     });
+
+//   } catch (err) {
+
+//     console.error("❌ UPDATE GIG ERROR:", err);
+
+//     res.status(500).json({
+//       error: "Failed to update gig",
+//     });
+
+//   }
+// });
+
+
+
+
+
 // ================= PUT GIG (EDIT + AI) =================
-app.put("/gig/:id", isLoggedIn, async (req, res) => {
-  try {
+app.put(
+  "/gig/:id",
+  isLoggedIn,
+  validate(gigSchema), // ✅ Joi added
+  async (req, res) => {
+    try {
 
-    const { title, description, location, category, date, contact } = req.body;
+      const { title, description, location, category, date, contact } = req.body;
 
-    // ===============================
-    // AI PROMPT
-    // ===============================
+      // ===============================
+      // AI PROMPT (UNCHANGED)
+      // ===============================
 
-    const prompt = `
+      const prompt = `
 You are an AI safety reviewer for a local job marketplace called TaskOra.
 
 Your job is to determine whether a gig post is SAFE and RELEVANT for a local job platform.
@@ -824,68 +968,72 @@ Respond ONLY in JSON format:
 }
 `;
 
-    // ===============================
-    // OPENAI CALL
-    // ===============================
+      // ===============================
+      // OPENAI CALL (UNCHANGED)
+      // ===============================
 
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a strict safety validator for job posts.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0,
-    });
-
-    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
-
-    // ===============================
-    // REJECT IF AI SAYS INVALID
-    // ===============================
-
-    if (!aiResult.valid) {
-      return res.status(400).json({
-        error: `Gig rejected: ${aiResult.reason}`,
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a strict safety validator for job posts.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0,
       });
-    }
 
-    // ===============================
-    // UPDATE GIG
-    // ===============================
+      const aiResult = JSON.parse(aiResponse.choices[0].message.content);
 
-    const updatedGig = await Gig.findOneAndUpdate(
-      { _id: req.params.id, postedBy: req.user._id },
-      req.body,
-      { new: true }
-    );
+      // ===============================
+      // REJECT IF INVALID (UNCHANGED)
+      // ===============================
 
-    if (!updatedGig) {
-      return res.status(404).json({
-        error: "Gig not found or not authorized",
+      if (!aiResult.valid) {
+        return res.status(400).json({
+          error: `Gig rejected: ${aiResult.reason}`,
+        });
+      }
+
+      // ===============================
+      // UPDATE GIG (UNCHANGED)
+      // ===============================
+
+      const updatedGig = await Gig.findOneAndUpdate(
+        { _id: req.params.id, postedBy: req.user._id },
+        req.body,
+        { new: true }
+      );
+
+      if (!updatedGig) {
+        return res.status(404).json({
+          error: "Gig not found or not authorized",
+        });
+      }
+
+      res.json({
+        message: "Gig updated successfully",
+        gig: updatedGig,
       });
+
+    } catch (err) {
+
+      console.error("❌ UPDATE GIG ERROR:", err);
+
+      res.status(500).json({
+        error: "Failed to update gig",
+      });
+
     }
-
-    res.json({
-      message: "Gig updated successfully",
-      gig: updatedGig,
-    });
-
-  } catch (err) {
-
-    console.error("❌ UPDATE GIG ERROR:", err);
-
-    res.status(500).json({
-      error: "Failed to update gig",
-    });
-
   }
-});
+);
+
+
+
 ///////
 console.log("🔥 REGISTERING SERVICE ROUTES");
 
@@ -910,15 +1058,115 @@ app.get("/service/:id", isLoggedIn, async (req, res) => {
   }
 });
 
-// ================= PUT SERVICE (EDIT + AI) =================
-app.put("/service/:id", isLoggedIn, async (req, res) => {
-  try {
-    const { title, description, location, category, date, contact } = req.body;
 
-    // ===============================
-    // AI PROMPT
-    // ===============================
-    const prompt = `
+
+
+// // ================= PUT SERVICE (EDIT + AI) =================
+// app.put("/service/:id", isLoggedIn, async (req, res) => {
+//   try {
+//     const { title, description, location, category, date, contact } = req.body;
+
+//     // ===============================
+//     // AI PROMPT
+//     // ===============================
+//     const prompt = `
+// You are an AI safety reviewer for a local service marketplace.
+
+// Your job is to determine whether a service post is SAFE and RELEVANT.
+
+// Important rules:
+
+// 1. Do NOT reject content just because it contains sensitive words.
+// 2. Reject only if the user is requesting illegal activity, violence, scams, sexual services, hacking, or dangerous activities.
+// 3. Reject if text is gibberish.
+// 4. Service must make sense as a real offering.
+
+// Service to analyze:
+
+// Title: ${title}
+
+// Description: ${description}
+
+// Respond ONLY in JSON format:
+
+// {
+//   "valid": true or false,
+//   "reason": "short explanation"
+// }
+// `;
+
+//     // ===============================
+//     // OPENAI CALL
+//     // ===============================
+//     const aiResponse = await openai.chat.completions.create({
+//       model: "gpt-4.1-mini",
+//       messages: [
+//         {
+//           role: "system",
+//           content: "You are a strict safety validator for service posts.",
+//         },
+//         {
+//           role: "user",
+//           content: prompt,
+//         },
+//       ],
+//       temperature: 0,
+//     });
+
+//     const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+
+//     // ===============================
+//     // REJECT IF INVALID
+//     // ===============================
+//     if (!aiResult.valid) {
+//       return res.status(400).json({
+//         error: `Service rejected: ${aiResult.reason}`,
+//       });
+//     }
+
+//     // ===============================
+//     // UPDATE SERVICE
+//     // ===============================
+//     const updatedService = await Service.findOneAndUpdate(
+//       { _id: req.params.id, postedBy: req.user._id },
+//       req.body,
+//       { new: true }
+//     );
+
+//     if (!updatedService) {
+//       return res.status(404).json({
+//         error: "Service not found or not authorized",
+//       });
+//     }
+
+//     res.json({
+//       message: "Service updated successfully",
+//       service: updatedService,
+//     });
+
+//   } catch (err) {
+//     console.error("❌ UPDATE SERVICE ERROR:", err);
+
+//     res.status(500).json({
+//       error: "Failed to update service",
+//     });
+//   }
+// });
+
+
+// ================= PUT SERVICE (EDIT + AI) =================
+app.put(
+  "/service/:id",
+  isLoggedIn,
+  validate(serviceSchema), // ✅ Joi added
+  async (req, res) => {
+    try {
+      const { title, description, location, category, date, contact } = req.body;
+
+      // ===============================
+      // AI PROMPT (UNCHANGED)
+      // ===============================
+      const prompt = `
 You are an AI safety reviewer for a local service marketplace.
 
 Your job is to determine whether a service post is SAFE and RELEVANT.
@@ -944,63 +1192,65 @@ Respond ONLY in JSON format:
 }
 `;
 
-    // ===============================
-    // OPENAI CALL
-    // ===============================
-    const aiResponse = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a strict safety validator for service posts.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0,
-    });
+      // ===============================
+      // OPENAI CALL (UNCHANGED)
+      // ===============================
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a strict safety validator for service posts.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0,
+      });
 
-    const aiResult = JSON.parse(aiResponse.choices[0].message.content);
+      const aiResult = JSON.parse(aiResponse.choices[0].message.content);
 
-    // ===============================
-    // REJECT IF INVALID
-    // ===============================
-    if (!aiResult.valid) {
-      return res.status(400).json({
-        error: `Service rejected: ${aiResult.reason}`,
+      // ===============================
+      // REJECT IF INVALID (UNCHANGED)
+      // ===============================
+      if (!aiResult.valid) {
+        return res.status(400).json({
+          error: `Service rejected: ${aiResult.reason}`,
+        });
+      }
+
+      // ===============================
+      // UPDATE SERVICE (UNCHANGED)
+      // ===============================
+      const updatedService = await Service.findOneAndUpdate(
+        { _id: req.params.id, postedBy: req.user._id },
+        req.body,
+        { new: true }
+      );
+
+      if (!updatedService) {
+        return res.status(404).json({
+          error: "Service not found or not authorized",
+        });
+      }
+
+      res.json({
+        message: "Service updated successfully",
+        service: updatedService,
+      });
+
+    } catch (err) {
+      console.error("❌ UPDATE SERVICE ERROR:", err);
+
+      res.status(500).json({
+        error: "Failed to update service",
       });
     }
-
-    // ===============================
-    // UPDATE SERVICE
-    // ===============================
-    const updatedService = await Service.findOneAndUpdate(
-      { _id: req.params.id, postedBy: req.user._id },
-      req.body,
-      { new: true }
-    );
-
-    if (!updatedService) {
-      return res.status(404).json({
-        error: "Service not found or not authorized",
-      });
-    }
-
-    res.json({
-      message: "Service updated successfully",
-      service: updatedService,
-    });
-
-  } catch (err) {
-    console.error("❌ UPDATE SERVICE ERROR:", err);
-
-    res.status(500).json({
-      error: "Failed to update service",
-    });
   }
-});
+);
+
 
 ////////////////   my service application histroy
 
@@ -1113,10 +1363,137 @@ app.get("/services-near-me", isLoggedIn, async (req, res) => {
 
 
 
+// app.post(
+//   "/applyGig/:gigId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     let application;
+
+//     try {
+//       // ================= FETCH GIG =================
+
+//       const gig = await Gig.findById(req.params.gigId);
+
+//       // if (!gig) {
+//       //   return res.status(404).json({ error: "Gig not found" });
+//       // }
+
+//       if (!gig) {
+//         return res.status(404).json({ error: "Gig not found" });
+//       }
+
+//       if (!gig.isActive) {
+//         return res.status(400).json({
+//           error: "This gig is no longer accepting applications",
+//         });
+//       }
+
+//       // ================= OWNER CANNOT APPLY =================
+
+//       if (gig.postedBy.toString() === req.user._id.toString()) {
+//         return res.status(400).json({
+//           error: "You cannot apply to your own gig",
+//         });
+//       }
+
+//       // ================= PREVENT DUPLICATE APPLY =================
+
+//       const existingApplication = await Application.findOne({
+//         gig: req.params.gigId,
+//         applicant: req.user._id,
+//       });
+
+//       if (existingApplication) {
+//         return res.status(400).json({
+//           error: "You have already applied to this gig",
+//         });
+//       }
+
+//       // ================= CREATE APPLICATION =================
+
+//       application = new Application({
+//         gig: req.params.gigId,
+//         applicant: req.user._id,
+//         ...req.body,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
+
+//       await application.save();
+
+//       // ================= STEP 3: TOKEN DEDUCTION =================
+//       await deductTokens({
+//         userId: req.user._id,
+//         amount: 2,
+//         reason: "Apply Gig",
+//         gig: req.params.gigId,
+//       });
+
+//       await TokenTransaction.findOneAndUpdate(
+//         {
+//           user: req.user._id,
+//           reason: "Apply Gig",
+//         },
+//         {
+//           $set: { gig: req.params.gigId },
+//         },
+//         { sort: { createdAt: -1 } },
+//       );
+
+//       // ================= SEND RESPONSE FAST =================
+//       res.json({ success: true });
+
+//       // ================= BACKGROUND NOTIFICATION + EMAIL =================
+//       (async () => {
+//         try {
+//           const owner = await UserModel.findById(gig.postedBy);
+
+//           if (owner) {
+//             await Notification.create({
+//               user: owner._id,
+//               title: "New Application",
+//               message: `${req.user.username} applied to your gig "${gig.title}"`,
+//               type: "APPLY",
+//               link: `/gig/${gig._id}/applicants`,
+//             });
+
+//             await sendEmail({
+//               to: owner.email,
+//               subject: "New Application Received",
+//               html: `
+//                 <h2>New Application</h2>
+//                 <p><b>${req.user.username}</b> has applied to your gig.</p>
+//               `,
+//             });
+//           }
+//         } catch (err) {
+//           console.error("Notification/Email error:", err.message);
+//         }
+//       })();
+//     } catch (err) {
+//       console.error("❌ APPLY GIG ERROR:", err.message);
+
+//       // 🧹 Rollback application if token deduction fails
+//       if (application && application._id) {
+//         await Application.findByIdAndDelete(application._id);
+//       }
+
+//       return res.status(400).json({
+//         error: err.message || "Insufficient tokens to apply",
+//       });
+//     }
+//   },
+// );
+
+
+const { applyGigSchema } = require("./validators/applicationValidator");
+
+
 app.post(
   "/applyGig/:gigId",
   isLoggedIn,
   upload.array("pictures", 5),
+  validate(applyGigSchema), // ✅ Joi added
   async (req, res) => {
     let application;
 
@@ -1124,10 +1501,6 @@ app.post(
       // ================= FETCH GIG =================
 
       const gig = await Gig.findById(req.params.gigId);
-
-      // if (!gig) {
-      //   return res.status(404).json({ error: "Gig not found" });
-      // }
 
       if (!gig) {
         return res.status(404).json({ error: "Gig not found" });
@@ -1171,7 +1544,8 @@ app.post(
 
       await application.save();
 
-      // ================= STEP 3: TOKEN DEDUCTION =================
+      // ================= TOKEN DEDUCTION =================
+
       await deductTokens({
         userId: req.user._id,
         amount: 2,
@@ -1190,10 +1564,12 @@ app.post(
         { sort: { createdAt: -1 } },
       );
 
-      // ================= SEND RESPONSE FAST =================
+      // ================= SEND RESPONSE =================
+
       res.json({ success: true });
 
-      // ================= BACKGROUND NOTIFICATION + EMAIL =================
+      // ================= BACKGROUND TASK =================
+
       (async () => {
         try {
           const owner = await UserModel.findById(gig.postedBy);
@@ -1220,10 +1596,10 @@ app.post(
           console.error("Notification/Email error:", err.message);
         }
       })();
+
     } catch (err) {
       console.error("❌ APPLY GIG ERROR:", err.message);
 
-      // 🧹 Rollback application if token deduction fails
       if (application && application._id) {
         await Application.findByIdAndDelete(application._id);
       }
@@ -1232,14 +1608,125 @@ app.post(
         error: err.message || "Insufficient tokens to apply",
       });
     }
-  },
+  }
 );
+
+
+
+
+
+
+// app.post(
+//   "/applyService/:serviceId",
+//   isLoggedIn,
+//   upload.array("pictures", 5),
+//   async (req, res) => {
+//     let application;
+
+//     try {
+//       console.log("🔥 APPLY SERVICE ROUTE HIT");
+
+//       // ================= FETCH SERVICE =================
+//       const service = await Service.findById(req.params.serviceId);
+//       if (!service) {
+//         return res.status(404).json({ error: "Service not found" });
+//       }
+
+//       // ================= OWNER CANNOT APPLY =================
+//       if (service.postedBy.toString() === req.user._id.toString()) {
+//         return res.status(400).json({
+//           error: "You cannot apply to your own service",
+//         });
+//       }
+
+//       // ================= PREVENT DUPLICATE APPLY =================
+//       const existingApplication = await ServiceApplication.findOne({
+//         service: req.params.serviceId,
+//         applicant: req.user._id,
+//       });
+
+//       if (existingApplication) {
+//         return res.status(400).json({
+//           error: "You have already applied to this service",
+//         });
+//       }
+
+//       // ================= CREATE APPLICATION =================
+//       application = await ServiceApplication.create({
+//         service: req.params.serviceId,
+//         applicant: req.user._id,
+//         name: req.body.name,
+//         message: req.body.message,
+//         contact: req.body.contact,
+//         charges: req.body.charges,
+//         pictures: (req.files || []).map((f) => f.path),
+//       });
+
+//       console.log("✅ Service application saved");
+
+//       // ================= TOKEN DEDUCTION =================
+//       await deductTokens({
+//         userId: req.user._id,
+//         amount: 1,
+//         reason: "Apply Service",
+//       });
+
+//       // ================= SEND RESPONSE FAST =================
+//       res.json({ success: true });
+
+//       // ================= BACKGROUND WORK =================
+//       (async () => {
+//         try {
+//           const owner = await UserModel.findById(service.postedBy);
+//           if (!owner) return;
+
+//           await Notification.create({
+//             user: owner._id,
+//             title: "New Service Application",
+//             message: `${req.user.username} applied to your service`,
+//             type: "APPLY",
+//             link: `/service/${service._id}/applicants`,
+//           });
+
+//           console.log("🔔 Service notification created");
+
+//           await sendEmail({
+//             to: owner.email,
+//             subject: "New Service Application",
+//             html: `
+//               <h3>New Service Application</h3>
+//               <p><b>${req.user.username}</b> applied to your service.</p>
+//             `,
+//           });
+
+//           console.log("📧 Service email sent");
+//         } catch (err) {
+//           console.error("Background service error:", err.message);
+//         }
+//       })();
+//     } catch (err) {
+//       console.error("❌ APPLY SERVICE ERROR:", err.message);
+
+//       if (application && application._id) {
+//         await ServiceApplication.findByIdAndDelete(application._id);
+//       }
+
+//       return res.status(400).json({
+//         error: err.message || "Insufficient tokens to apply",
+//       });
+//     }
+//   },
+// );
+
+
+const { applyServiceSchema } = require("./validators/applicationValidator");
 
 
 app.post(
   "/applyService/:serviceId",
   isLoggedIn,
   upload.array("pictures", 5),
+  validate(applyServiceSchema), // ✅ Joi added
   async (req, res) => {
     let application;
 
@@ -1287,7 +1774,7 @@ app.post(
       // ================= TOKEN DEDUCTION =================
       await deductTokens({
         userId: req.user._id,
-        amount: 1,
+        amount: 2,
         reason: "Apply Service",
       });
 
@@ -1324,6 +1811,7 @@ app.post(
           console.error("Background service error:", err.message);
         }
       })();
+
     } catch (err) {
       console.error("❌ APPLY SERVICE ERROR:", err.message);
 
@@ -1335,8 +1823,20 @@ app.post(
         error: err.message || "Insufficient tokens to apply",
       });
     }
-  },
+  }
 );
+
+
+
+
+
+
+
+
+
+
+
+
 
 // app.get("/my-applications", isLoggedIn, async (req, res) => {
 //   const apps = await Application.find({
