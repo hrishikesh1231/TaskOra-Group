@@ -1800,9 +1800,10 @@ app.put("/update-profile", isLoggedIn, async (req, res) => {
   try {
     const { username, state, district } = req.body;
 
+    const newUsername=username.trim();
     // 🔥 username duplicate check
     const existingUser = await UserModel.findOne({
-      username,
+      newUsername,
       _id: { $ne: req.user._id },
     });
 
@@ -1810,11 +1811,11 @@ app.put("/update-profile", isLoggedIn, async (req, res) => {
       return res.status(400).json({ error: "Username already taken" });
     }
 
-    const isUsernameChanged = username !== req.user.username;
+    const isUsernameChanged = newUsername !== req.user.username;
 
     const updatedUser = await UserModel.findByIdAndUpdate(
       req.user._id,
-      { username, state, district },
+      {  username: newUsername, state, district },
       { new: true }
     );
 

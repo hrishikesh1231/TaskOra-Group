@@ -151,7 +151,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    const username = name.trim().toLowerCase();
+    const username = name.trim();
 
     const existingUser = await UserModel.findOne({ username });
     if (existingUser) {
@@ -198,6 +198,12 @@ exports.register = async (req, res) => {
 };
 // ================= LOGIN =================
 exports.login = (req, res, next) => {
+
+  // ✅ trim only start & end spaces
+  if (req.body.username) {
+    req.body.username = req.body.username.trim();
+  }
+
   passport.authenticate("local", (err, user) => {
     if (err) return next(err);
 
